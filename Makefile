@@ -106,11 +106,11 @@ $(BUILD)/three.d.ts: | $(BUILD)
 #	cd $(BUILD); if [ -d bacon-typescript-definitions ]; then cd bacon-typescript-definitions; git pull; else git clone https://github.com/skepner/bacon-typescript-definitions.git; fi
 #	ln -sf $(call RELPATH,$(BUILD)/bacon-typescript-definitions,$(BUILD))/bacon.d.ts $@
 
-$(DIST)/css.js: | $(BUILD) $(DIST)
+$(DIST)/css.js: | $(BUILD) $(DIST) $(DIST)/require.js
 	cd $(BUILD) && curl -sLO 'https://raw.github.com/dimaxweb/CSSLoader/master/dist/css.js'
 	ln -sf $(call RELPATH,$(BUILD),$(dir $@))/css.js $@
 
-$(DIST)/json.js: | $(BUILD) $(DIST)
+$(DIST)/json.js: | $(BUILD) $(DIST) $(DIST)/require.js
 	cd $(BUILD) && bower install requirejs-plugins
 	ln -sf $(call RELPATH,$(BUILD)/bower_components/requirejs-plugins/lib,$(dir $@))/text.js $(dir $@)text.js
 	ln -sf $(call RELPATH,$(BUILD)/bower_components/requirejs-plugins/src,$(dir $@))/json.js $@
