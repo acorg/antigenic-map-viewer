@@ -44,6 +44,8 @@ endif
 install: all
 	/usr/bin/install -d -m 0755 $(PREFIX)/share/antigenic-map-viewer
 	/usr/bin/install -pv -m 0644 $(INSTALL_FILES) $(PREFIX)/share/antigenic-map-viewer
+	/usr/bin/install -d -m 0755 $(PREFIX)/share/antigenic-map-viewer/ts
+	/usr/bin/install -pv -m 0644 $(AMV_LIB) $(PREFIX)/share/antigenic-map-viewer/ts
 	/usr/bin/awk "{ sub(/%PREFIX%/, \"$(PREFIX)\"); sub(/%VERSION%/, \"$(VERSION)\"); print }" antigenic-map-viewer.pc >$(PKG_CONFIG_PATH)/antigenic-map-viewer.pc
 
 clean:
