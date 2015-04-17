@@ -40,7 +40,7 @@ endif
 
 install: all
 	/usr/bin/install -d -m 0755 $(PREFIX)/share/acmacs-map-viewer
-	/usr/bin/install -CpSv -m 0644 $(INSTALL_FILES) $(PREFIX)/share/acmacs-map-viewer
+	/usr/bin/install -pv -m 0644 $(INSTALL_FILES) $(PREFIX)/share/acmacs-map-viewer
 
 clean:
 	rm -rf $(DIST)
