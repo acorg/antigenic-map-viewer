@@ -26,6 +26,8 @@ BUILD_TYPINGS = $(patsubst %,$(BUILD)/%.d.ts,$(LIB_TYPINGS))
 # ----------------------------------------------------------------------
 
 all: libs $(DIST) $(TARGET_JS) $(TARGET_CSS) $(TARGET_HTML)
+
+test: all
 ifeq ($(shell uname -s),Darwin)
 	open $(TARGET_HTML)
 endif
