@@ -68,7 +68,7 @@ $(BUILD)/jquery.d.ts: | $(BUILD)
 	cd $(BUILD) && tsd query jquery --action install
 	ln -sf $(call RELPATH,$(BUILD)/typings/jquery,$(dir $@))/jquery.d.ts $@
 
-$(DIST)/jquery.mousewheel.js: | $(BUILD) $(DIST)
+$(DIST)/jquery.mousewheel.js: | $(BUILD) $(DIST) $(DIST)/jquery.js
 	cd $(BUILD) && bower install jquery-mousewheel
 	ln -sf $(call RELPATH,$(BUILD)/bower_components/jquery-mousewheel,$(dir $@))/jquery.mousewheel.min.js $@
 
