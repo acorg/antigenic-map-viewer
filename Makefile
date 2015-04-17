@@ -62,11 +62,11 @@ $(DIST)/jquery.mousewheel.js:
 	cd $(BUILD) && bower install jquery-mousewheel
 	ln -sf $(call RELPATH,$(BUILD)/bower_components/jquery-mousewheel,$(dir $@))/jquery.mousewheel.min.js $@
 
-$(DIST)/jquery-ui.js:
+$(DIST)/jquery-ui.js: $(DIST)/jquery.js
 	cd $(BUILD) && bower install jquery-ui
 	ln -sf $(call RELPATH,$(BUILD)/bower_components/jquery-ui,$(dir $@))/jquery-ui.min.js $@
-	ln -sf $(call RELPATH,$(BUILD)/bower_components/jquery-ui/themes/smoothness,$(dir $@))/jquery-ui.min.css $(dir $@)/jquery-ui.css
-	ln -sf $(call RELPATH,$(BUILD)/bower_components/jquery-ui/themes/smoothness,$(dir $@))/images $(dir $@)/images
+	ln -sf $(call RELPATH,$(BUILD)/bower_components/jquery-ui/themes/smoothness,$(dir $@))/jquery-ui.min.css $(dir $@)jquery-ui.css
+	ln -sf $(call RELPATH,$(BUILD)/bower_components/jquery-ui/themes/smoothness,$(dir $@))/images $(dir $@)images
 
 $(BUILD)/jqueryui.d.ts:
 	cd $(BUILD) && tsd query jqueryui --action install
@@ -102,13 +102,13 @@ $(DIST)/css.js:
 
 $(DIST)/json.js:
 	cd $(BUILD) && bower install requirejs-plugins
-	ln -sf $(call RELPATH,$(BUILD)/bower_components/requirejs-plugins/lib,$(dir $@))/text.js $(dir $@)/text.js
+	ln -sf $(call RELPATH,$(BUILD)/bower_components/requirejs-plugins/lib,$(dir $@))/text.js $(dir $@)text.js
 	ln -sf $(call RELPATH,$(BUILD)/bower_components/requirejs-plugins/src,$(dir $@))/json.js $@
 
 # ----------------------------------------------------------------------
 
-$(DIST)/%.js: %.ts
-	tsc --outDir $(DIST) -m amd -t ES5 --noEmitOnError --noImplicitAny $^
+$(DIST)/%.js: %.ts libs
+	tsc --outDir $(DIST) -m amd -t ES5 --noEmitOnError --noImplicitAny $<
 
 $(DIST)/%.js: %.js
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@
