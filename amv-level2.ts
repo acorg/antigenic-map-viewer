@@ -99,16 +99,19 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
         });
         menu.show($(e.currentTarget));
     }
+
 }
 
+// ----------------------------------------------------------------------
+
 export function make_widget(container :JQuery, size :number, plot_data :AntigenicMapViewer.PlotDataInterface) :MapWidgetLevel2
-{
-    if (size === null || size === undefined) {
-        size = 500;
+    {
+        if (size === null || size === undefined) {
+            size = 500;
+        }
+        var widget = new MapWidgetLevel2(container, size);
+        widget.plot_data(plot_data);
+        return widget;
     }
-    var widget = new MapWidgetLevel2(container, size);
-    widget.plot_data(plot_data);
-    return widget;
-}
 
 // ----------------------------------------------------------------------
