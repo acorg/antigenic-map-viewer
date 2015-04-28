@@ -8,7 +8,7 @@ AMV_TEST = amv-config.js test-3d.html test-3d.ts test.less test-3d.json
 AMV_LIB = acmacs-plot-data.ts amv-level1.ts amv-level2.ts amv-manipulator.ts amv-manipulator-3d.ts amv-3d.ts amv-utils.ts \
 	  acmacs-toolkit.ts
 AMV_LESS = acmacs-toolkit.less amv.less
-AMV_TYPINGS = acmacs-plot-data.d.ts
+AMV_TYPINGS = antigenic-map-viewer.d.ts
 
 LIB_JS = jquery jquery.mousewheel jquery-ui require three css json
 LIB_TYPINGS = jquery jqueryui require three

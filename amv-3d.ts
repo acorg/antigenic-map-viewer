@@ -1,11 +1,11 @@
 /// <reference path="build/jquery" />
 /// <reference path="build/three" />
 
-/// <reference path="acmacs-plot-data.d.ts" />
+/// <reference path="antigenic-map-viewer.d.ts" />
 
 import AmvUtils = require("amv-utils");
 import AmvLevel1 = require("amv-level1");
-import AcmacsPlotData = require("acmacs-plot-data");
+import AntigenicMapViewer = require("acmacs-plot-data");
 import AmvManipulator = require("amv-manipulator");
 import AmvManipulator3d = require("amv-manipulator-3d");
 
@@ -147,7 +147,7 @@ export class Objects extends AmvLevel1.Objects
 {
     private static geometry_size = 0.2;
 
-    constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects :AcmacsPlotData.PlotData) {
+    constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects :AntigenicMapViewer.PlotData) {
         super(widget);
         var ball_segments = 32; // depends on the number of objects
         var sphere_geometry = new THREE.SphereGeometry(Objects.geometry_size, ball_segments, ball_segments);

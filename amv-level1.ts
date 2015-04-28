@@ -1,7 +1,7 @@
 /// <reference path="build/jquery" />
 /// <reference path="build/three" />
 
-/// <reference path="acmacs-plot-data.d.ts" />
+/// <reference path="antigenic-map-viewer.d.ts" />
 
 // ----------------------------------------------------------------------
 // Level 1 (the most inner) map widget
@@ -10,8 +10,8 @@
 "use strict";
 
 import AmvUtils = require("amv-utils");
+import AntigenicMapViewer = require("acmacs-plot-data");
 import Amv3d = require("amv-3d");
-import AcmacsPlotData = require("acmacs-plot-data");
 import AmvManipulator = require("amv-manipulator");
 
 // ----------------------------------------------------------------------
@@ -43,7 +43,7 @@ export class MapWidgetLevel1
         }
     }
 
-    public user_objects(user_objects :AcmacsPlotData.PlotData) {
+    public user_objects(user_objects :AntigenicMapViewer.PlotData) {
         $.when(AmvUtils.require_deferred(['amv-' + user_objects.number_of_dimensions() + 'd'])).done((Amv :typeof Amv3d) => {
             this.viewer = new Amv.Viewer(this, 10);
             this.viewer_created.resolve();
@@ -137,7 +137,7 @@ export class Objects
         this.objects.map(o => o.scale.multiplyScalar(scale))
     }
 
-    protected calculate_bounding_sphere(layout :PlotDataLayout) :void {
+    protected calculate_bounding_sphere(layout :AntigenicMapViewer.PlotDataLayout) :void {
         var point_max = [-Infinity, -Infinity, -Infinity];
         var point_min = [Infinity, Infinity, Infinity];
         layout.map((elt) => elt.map((v, dim) => { point_max[dim] = Math.max(point_max[dim], v); point_min[dim] = Math.min(point_min[dim], v); }));

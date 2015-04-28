@@ -1,15 +1,17 @@
 /// <reference path="build/jquery" />
 
+/// <reference path="antigenic-map-viewer.d.ts" />
+
 "use strict";
 
 import AmvUtils = require("amv-utils");
-import AmvLevel1 = require("amv-level1");
 import AcmacsPlotData = require("acmacs-plot-data");
+import AmvLevel1 = require("amv-level1");
 import AcmacsToolkit = require("acmacs-toolkit");
 
 // ----------------------------------------------------------------------
 
-export class MapWidgetLevel2
+export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
 {
     private map :AmvLevel1.MapWidgetLevel1;
     private map_created :JQueryDeferred<{}>;
@@ -61,11 +63,11 @@ export class MapWidgetLevel2
         this.container.find('.amv-level2-title-text').text(title || "");
     }
 
-    public plot_data(plot_data :AcmacsPlotData.PlotData) :void {
-        this._plot_data = plot_data;
-        this.user_object_label_type = plot_data.default_label_type();
+    public plot_data(plot_data :AntigenicMapViewer.PlotDataInterface) :void {
+        this._plot_data = new AcmacsPlotData.PlotData(plot_data);
+        this.user_object_label_type = this._plot_data.default_label_type();
         $.when(this.map_created).done(() => {
-            this.map.user_objects(plot_data);
+            this.map.user_objects(this._plot_data);
         });
     }
 
@@ -97,6 +99,16 @@ export class MapWidgetLevel2
         });
         menu.show($(e.currentTarget));
     }
+}
+
+export function make_widget(container :JQuery, size :number, plot_data :AntigenicMapViewer.PlotDataInterface) :MapWidgetLevel2
+{
+    if (size === null || size === undefined) {
+        size = 500;
+    }
+    var widget = new MapWidgetLevel2(container, size);
+    widget.plot_data(plot_data);
+    return widget;
 }
 
 // ----------------------------------------------------------------------

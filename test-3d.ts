@@ -1,12 +1,9 @@
 /// <reference path="build/jquery" />
 /// <reference path="build/require" />
 
-/// <reference path="acmacs-plot-data.d.ts" />
+/// <reference path="antigenic-map-viewer.d.ts" />
 
 "use strict";
-
-import AcmacsPlotData = require("acmacs-plot-data");
-import Amv2 = require("amv-level2");
 
 // ----------------------------------------------------------------------
 
@@ -16,12 +13,14 @@ export class Application
     }
 
     public run() :void {
-        require(["css!test", "json!test-3d.json", "acmacs-toolkit", "acmacs-plot-data", "amv-utils", "amv-level2"], (_css :any, test_data_3d :PlotDataInterface) => {
+        require(["json!test-3d.json", "amv-level2", "css!test", "acmacs-toolkit", "acmacs-plot-data", "amv-utils"], (test_data_3d :AntigenicMapViewer.PlotDataInterface, maker :AntigenicMapViewer.MapWidgetLevel2Maker) => {
             console.log('amv-test', new Date());
             $('body').append('<div class="amv-test-widget-wrapper" />');
 
-            var widget = new Amv2.MapWidgetLevel2($('body').find('div'), 500);
-            widget.plot_data(new AcmacsPlotData.PlotData(test_data_3d));
+            // var widget = new Amv2.MapWidgetLevel2($('body').find('div'), 500);
+            // widget.plot_data(test_data_3d);
+            var widget = maker.make_widget($('body').find('div'), null, test_data_3d);
+
             // $.when(widget.hover_stream()).then(function (stream) { stream.onValue(function(elts) { show_point_info('#blue > pre', test_data_3d, elts); }); });
             // $.when(widget.hover_stream()).then(function (stream) { stream.onValue(function(elts) { console.log(elts); }); });
         });
