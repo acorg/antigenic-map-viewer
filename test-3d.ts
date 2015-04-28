@@ -1,6 +1,8 @@
 /// <reference path="build/jquery" />
 /// <reference path="build/require" />
 
+/// <reference path="acmacs-plot-data.d.ts" />
+
 "use strict";
 
 import AcmacsPlotData = require("acmacs-plot-data");
@@ -14,7 +16,7 @@ export class Application
     }
 
     public run() :void {
-        require(["css!test", "json!test-3d.json", "acmacs-toolkit", "acmacs-plot-data", "amv-utils", "amv-level2"], (_css :any, test_data_3d :AcmacsPlotData.PlotDataInterface) => {
+        require(["css!test", "json!test-3d.json", "acmacs-toolkit", "acmacs-plot-data", "amv-utils", "amv-level2"], (_css :any, test_data_3d :PlotDataInterface) => {
             console.log('amv-test', new Date());
             $('body').append('<div class="amv-test-widget-wrapper" />');
 

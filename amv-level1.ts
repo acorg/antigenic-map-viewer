@@ -1,6 +1,8 @@
 /// <reference path="build/jquery" />
 /// <reference path="build/three" />
 
+/// <reference path="acmacs-plot-data.d.ts" />
+
 // ----------------------------------------------------------------------
 // Level 1 (the most inner) map widget
 // ----------------------------------------------------------------------
@@ -135,7 +137,7 @@ export class Objects
         this.objects.map(o => o.scale.multiplyScalar(scale))
     }
 
-    protected calculate_bounding_sphere(layout :AcmacsPlotData.PlotDataLayout) :void {
+    protected calculate_bounding_sphere(layout :PlotDataLayout) :void {
         var point_max = [-Infinity, -Infinity, -Infinity];
         var point_min = [Infinity, Infinity, Infinity];
         layout.map((elt) => elt.map((v, dim) => { point_max[dim] = Math.max(point_max[dim], v); point_min[dim] = Math.min(point_min[dim], v); }));

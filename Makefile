@@ -8,6 +8,7 @@ AMV_TEST = amv-config.js test-3d.html test-3d.ts test.less test-3d.json
 AMV_LIB = acmacs-plot-data.ts amv-level1.ts amv-level2.ts amv-manipulator.ts amv-manipulator-3d.ts amv-3d.ts amv-utils.ts \
 	  acmacs-toolkit.ts
 AMV_LESS = acmacs-toolkit.less amv.less
+AMV_TYPINGS = acmacs-plot-data.d.ts
 
 LIB_JS = jquery jquery.mousewheel jquery-ui require three css json
 LIB_TYPINGS = jquery jqueryui require three
@@ -25,7 +26,7 @@ TARGET_JS = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV))) $(patsubst %.js,
 TARGET_CSS = $(patsubst %.less,$(DIST)/%.css,$(filter %.less,$(AMV)))
 TARGET_HTML = $(patsubst %,$(DIST)/%,$(filter %.html,$(AMV)))
 
-BUILD_TYPINGS = $(patsubst %,$(BUILD)/%.d.ts,$(LIB_TYPINGS))
+BUILD_TYPINGS = $(patsubst %,$(BUILD)/%.d.ts,$(LIB_TYPINGS)) $(AMV_TYPINGS)
 
 INSTALL_FILES = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV_LIB))) $(AMV_LESS)
 
@@ -44,8 +45,8 @@ endif
 install: all
 	/usr/bin/install -d -m 0755 $(PREFIX)/share/antigenic-map-viewer
 	/usr/bin/install -pv -m 0644 $(INSTALL_FILES) $(PREFIX)/share/antigenic-map-viewer
-	/usr/bin/install -d -m 0755 $(PREFIX)/share/antigenic-map-viewer/ts
-	/usr/bin/install -pv -m 0644 $(AMV_LIB) $(PREFIX)/share/antigenic-map-viewer/ts
+	/usr/bin/install -d -m 0755 $(PREFIX)/share/antigenic-map-viewer/typings
+	/usr/bin/install -pv -m 0644 $(AMV_TYPINGS) $(PREFIX)/share/antigenic-map-viewer/typings
 	/usr/bin/awk "{ sub(/%PREFIX%/, \"$(PREFIX)\"); sub(/%VERSION%/, \"$(VERSION)\"); print }" antigenic-map-viewer.pc >$(PKG_CONFIG_PATH)/antigenic-map-viewer.pc
 
 clean:
@@ -124,7 +125,7 @@ $(DIST)/json.js: | $(BUILD) $(DIST) $(DIST)/require.js
 # ----------------------------------------------------------------------
 
 $(DIST)/%.js: %.ts $(BUILD_TYPINGS) | $(DIST)
-	tsc --outDir $(DIST) -m amd -t ES5 --noEmitOnError --noImplicitAny $<
+	tsc --outDir $(DIST) --removeComments -m amd -t ES5 --noEmitOnError --noImplicitAny $<
 
 $(DIST)/%.js: %.js | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@

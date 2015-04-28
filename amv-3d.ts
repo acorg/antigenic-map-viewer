@@ -1,6 +1,8 @@
 /// <reference path="build/jquery" />
 /// <reference path="build/three" />
 
+/// <reference path="acmacs-plot-data.d.ts" />
+
 import AmvUtils = require("amv-utils");
 import AmvLevel1 = require("amv-level1");
 import AcmacsPlotData = require("acmacs-plot-data");
