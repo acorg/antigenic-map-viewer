@@ -13,6 +13,7 @@ import AcmacsToolkit = require("acmacs-toolkit");
 
 export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
 {
+    private wrapper :JQuery;
     private map :AmvLevel1.MapWidgetLevel1;
     private map_created :JQueryDeferred<{}>;
     private _plot_data :AcmacsPlotData.PlotData;
@@ -23,12 +24,17 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
     private static popup_hovered_message_suffix = "</li></ul>";
     private static popup_hovered_message_infix =  "</li><li>";
 
-    constructor(private container :JQuery, size :number) {
+    constructor(container :JQuery, size :number) {
         this.map_created = $.Deferred();
-        container.append('<div class="amv-level2-title"><span class="amv-level2-title-text"></span><div class="amv-level2-title-menu-button"></div></div>'
-                         + '<div class="amv-level2-map-wrapper"></div>'); // '<div class="amv-level2-hovered-points"></div>');
+        this.wrapper = $('<div class="amv-widget-wrapper">\
+                            <div class="amv-level2-title">\
+                              <span class="amv-level2-title-text"></span>\
+                              <div class="amv-level2-title-menu-button"></div>\
+                            </div>\
+                            <div class="amv-level2-map-wrapper"></div>\
+                          </div>').appendTo(container); // '<div class="amv-level2-hovered-points"></div>');
         $.when(AmvUtils.require_deferred(['amv-level1'])).done(() => {
-            var map_container = container.find('.amv-level2-map-wrapper');
+            var map_container = this.wrapper.find('.amv-level2-map-wrapper');
             map_container.css({width: size, height: size});
             map_container.resizable({aspectRatio: 1.0, minWidth: 100});
             map_container.on("resize", (e :Event, ui :JQueryUI.ResizableUIParams) => this.resized(ui.size.width));
@@ -45,7 +51,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
         });
 
         // menu button
-        this.container.find('.amv-level2-title-menu-button').append('<div class="ui-icon ui-icon-grip-dotted-vertical"></div>').on('click', (e :JQueryEventObject) => this.popup_menu(e));
+        this.wrapper.find('.amv-level2-title-menu-button').append('<div class="ui-icon ui-icon-grip-dotted-vertical"></div>').on('click', (e :JQueryEventObject) => this.popup_menu(e));
 
         this.title('' + new Date());
      }
@@ -60,7 +66,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
     }
 
     public title(title? :string) :void {
-        this.container.find('.amv-level2-title-text').text(title || "");
+        this.wrapper.find('.amv-level2-title-text').text(title || "");
     }
 
     public plot_data(plot_data :AntigenicMapViewer.PlotDataInterface) :void {
@@ -83,9 +89,9 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
     }
 
     private resized(size :number) :void {
-        //this.container.find('.amv-level2-title').css({width: size});
+        //this.wrapper.find('.amv-level2-title').css({width: size});
         this.map.size(size);
-        this.container.find('.amv-level2-title-text').css({maxWidth: size - 10});
+        this.wrapper.find('.amv-level2-title-text').css({maxWidth: size - 10});
     }
 
     private popup_menu(e :JQueryEventObject) :void {
