@@ -463,5 +463,8 @@
         "size":4.5
       }
     ]
+  },
+  "title": {
+      "text": ["Antigenic map", "Example"]
   }
 }

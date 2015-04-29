@@ -133,7 +133,7 @@ $(DIST)/%.js: %.js | $(DIST)
 $(DIST)/%.json: %.json | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@
 
-$(DIST)/%.css: %.less | $(DIST)
+$(DIST)/%.css: %.less $(AMV_LESS) | $(DIST)
 	lessc $< $@
 
 # $(DIST)/%.min.map: build/js/%.min.map

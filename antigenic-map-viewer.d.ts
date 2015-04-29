@@ -11,6 +11,7 @@ declare module AntigenicMapViewer {
         number_of_antigens :number;
         point_info :Object[];
         styles :PlotDataStyles;
+        title :PlotDataTitle;
     }
 
     type PlotDataLayout = number[][];
@@ -31,6 +32,11 @@ declare module AntigenicMapViewer {
         shape :string;
         size :number;
         shown :Boolean;
+    }
+
+    interface PlotDataTitle
+    {
+        text :string[];
     }
 
 // ----------------------------------------------------------------------

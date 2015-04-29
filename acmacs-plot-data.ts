@@ -86,6 +86,15 @@ export class PlotData
         }
         return label;
     }
+
+    public title() :string[] {
+        try {
+            return this.plot_data.title.text;
+        }
+        catch (e) {
+            return ['no title'];
+        }
+    }
 }
 
 // ----------------------------------------------------------------------

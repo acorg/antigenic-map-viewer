@@ -17,10 +17,7 @@ export class Application
             console.log('amv-test', new Date());
 
             var widget1 = amv.make_widget($('body'), null, test_data_3d);
-            var widget2 = amv.make_widget($('body'), null, test_data_3d);
-
-            // $.when(widget.hover_stream()).then(function (stream) { stream.onValue(function(elts) { show_point_info('#blue > pre', test_data_3d, elts); }); });
-            // $.when(widget.hover_stream()).then(function (stream) { stream.onValue(function(elts) { console.log(elts); }); });
+            // var widget2 = amv.make_widget($('body'), null, test_data_3d);
         });
     }
 }

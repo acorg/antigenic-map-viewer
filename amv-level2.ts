@@ -28,7 +28,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
         this.map_created = $.Deferred();
         this.wrapper = $('<div class="amv-widget-wrapper">\
                             <div class="amv-level2-title">\
-                              <span class="amv-level2-title-text"></span>\
+                              <div class="amv-level2-title-text"></div>\
                               <div class="amv-level2-title-menu-button"></div>\
                             </div>\
                             <div class="amv-level2-map-wrapper"></div>\
@@ -52,8 +52,6 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
 
         // menu button
         this.wrapper.find('.amv-level2-title-menu-button').append('<div class="ui-icon ui-icon-grip-dotted-vertical"></div>').on('click', (e :JQueryEventObject) => this.popup_menu(e));
-
-        this.title('' + new Date());
      }
 
     public destroy() :void {
@@ -65,12 +63,18 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
         }
     }
 
-    public title(title? :string) :void {
-        this.wrapper.find('.amv-level2-title-text').text(title || "");
+    public title(title? :string[]) :void {
+        if (!!title) {
+            this.wrapper.find('.amv-level2-title-text').html(title.map((s) => ('<p>' + s + '</p>')).join(''));
+        }
+        else {
+            this.wrapper.find('.amv-level2-title-text').html("");
+        }
     }
 
     public plot_data(plot_data :AntigenicMapViewer.PlotDataInterface) :void {
         this._plot_data = new AcmacsPlotData.PlotData(plot_data);
+        this.title(this._plot_data.title());
         this.user_object_label_type = this._plot_data.default_label_type();
         $.when(this.map_created).done(() => {
             this.map.user_objects(this._plot_data);
