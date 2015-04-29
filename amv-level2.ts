@@ -65,7 +65,8 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
 
     public title(title? :string[]) :void {
         if (!!title) {
-            this.wrapper.find('.amv-level2-title-text').html(title.map((s) => ('<p>' + s + '</p>')).join(''));
+            var t = this.wrapper.find('.amv-level2-title-text').empty();
+            title.map((s) => $('<p />').text(s).appendTo(t));
         }
         else {
             this.wrapper.find('.amv-level2-title-text').html("");

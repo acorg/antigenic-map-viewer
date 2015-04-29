@@ -466,7 +466,7 @@
   },
   "title": {
     "0" : {
-      "text": ["Antigenic map", "Example"]
+        "text": ["Antigenic map", "Example <9.99> &", "MAL A(H3N2) 20150429 guinea-pig <9.5557> [12:13]"]
     }
   }
 }
