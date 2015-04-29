@@ -89,7 +89,7 @@ export class PlotData
 
     public title() :string[] {
         try {
-            return this.plot_data.title.text;
+            return this.plot_data.title["0"].text;
         }
         catch (e) {
             return ['no title'];

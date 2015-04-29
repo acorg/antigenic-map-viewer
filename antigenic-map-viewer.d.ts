@@ -36,6 +36,11 @@ declare module AntigenicMapViewer {
 
     interface PlotDataTitle
     {
+        "0": PlotDataTitlePage;
+    }
+
+    interface PlotDataTitlePage
+    {
         text :string[];
     }
 
