@@ -124,12 +124,12 @@ class Grid
         }
         this.size = Math.ceil(this.viewer.widget.objects.diameter() * 1.2);
         var lines_geometry = new THREE.Geometry();
-        Grid.components.map((component_order) => this.add_veritce(component_order, lines_geometry));
+        Grid.components.map((component_order) => this.add_vertice(component_order, lines_geometry));
         this.lines = new THREE.Line(lines_geometry, new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.2, transparent: true}), THREE.LinePieces)
         this.grid.add(this.lines)
     }
 
-    private add_veritce(component_order :number[], lines_geometry :THREE.Geometry) :void {
+    private add_vertice(component_order :number[], lines_geometry :THREE.Geometry) :void {
         for (var offset = 0; offset < this.size; ++offset) {
             var vertex = new THREE.Vector3();
             vertex.setComponent(component_order[1], offset);
