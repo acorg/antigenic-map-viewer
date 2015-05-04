@@ -89,20 +89,36 @@ export class PopupMenu
 export class PopupMessage
 {
     private node :JQuery;
+    private click_handler :JQuery;
 
-    constructor(private parent :JQuery) {
-        parent.prepend('<div class="acmacs-toolkit-popup-message"></div>');
-        this.node = parent.find('div.acmacs-toolkit-popup-message');
+    constructor(private parent :JQuery, class_? :string) {
+        var wrapper = $('<div class="acmacs-toolkit-popup-message-wrapper"><div class="acmacs-toolkit-popup-message"></div></div>').prependTo(parent);
+        this.node = wrapper.find('div.acmacs-toolkit-popup-message');
+        if (class_) {
+            this.node.addClass(class_);
+        }
     }
 
     public destroy() :void {
         this.hide();
+        if (this.click_handler) {
+            this.click_handler.off();
+        }
     }
 
-    public show(message :string) :void {
-        this.node
-              .css({left: this.parent.width()})
-              .html(message).show();
+    public show(message :string, css?: any) :void {
+        if (css) {
+            this.node.css(css);
+        }
+        this.node.html(message).show();
+    }
+
+    public hide_on_click() :PopupMessage {
+        if (this.click_handler) {
+            this.click_handler.off();
+        }
+        this.click_handler = this.node.on('click', (e) => { e.stopPropagation(); this.hide() });
+        return this;
     }
 
     public hide() :void {

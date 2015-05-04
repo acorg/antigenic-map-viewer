@@ -45,25 +45,31 @@
 
 // ----------------------------------------------------------------------
 
-.acmacs-toolkit-popup-message {
-    position: absolute;
-    z-index: 99;
-    box-shadow: @shadow;
-    display: none;
-    padding: 1em;
-    left: 0;
+.acmacs-toolkit-popup-message-wrapper {
+    position: relative;
     top: 0;
-    background: #EEE;
-    font-family: sans-serif;
+    left: 0;
 
-    ul {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-        white-space: nowrap;
+    .acmacs-toolkit-popup-message {
+        position: absolute;
+        z-index: 99;
+        box-shadow: @shadow;
+        display: none;
+        padding: 1em;
+        left: 0;
+        top: 0;
+        background: #EEE;
+        font-family: sans-serif;
 
-        li:not(:last-child) {
-            margin-bottom: 0.3em;
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            white-space: nowrap;
+
+            li:not(:last-child) {
+                margin-bottom: 0.3em;
+            }
         }
     }
 }

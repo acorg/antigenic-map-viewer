@@ -19,17 +19,28 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
     private _plot_data :AcmacsPlotData.PlotData;
     private user_object_label_type :string;
     private popup_hovered :AcmacsToolkit.PopupMessage;
+    private help_popup :AcmacsToolkit.PopupMessage;
 
     private static popup_hovered_message_prefix = "<ul><li>";
     private static popup_hovered_message_suffix = "</li></ul>";
     private static popup_hovered_message_infix =  "</li><li>";
+
+    private static help_text = '<p class="title">Help</p>\
+                                <ul>\
+                                  <li>Zoom - <span class="mouse-action">Shift-Wheel</span></li>\
+                                  <li>Point size - <span class="mouse-action">Alt-Wheel</span></li>\
+                                  <li>Rotate - <span class="mouse-action">MouseDrag</span></li>\
+                                  <li>Pan - <span class="mouse-action">Shift-MouseDrag</span></li>\
+                                  <li>Reset map - press <span class="mouse-action">r</span> or choose reset in the menu<br>(next to the Help button at the top right corner)</li>\
+                                </ul>\
+                                <p class="footer">Click to hide this popup.</p>';
 
     constructor(container :JQuery, size :number) {
         this.map_created = $.Deferred();
         this.wrapper = $('<div class="amv-widget-wrapper">\
                             <div class="amv-level2-title">\
                               <div class="amv-level2-title-text"></div>\
-                              <div class="amv-level2-title-menu-button"></div>\
+                              <table class="amv-level2-title-buttons"><tr></tr></table>\
                             </div>\
                             <div class="amv-level2-map-wrapper"></div>\
                           </div>').appendTo(container); // '<div class="amv-level2-hovered-points"></div>');
@@ -45,13 +56,15 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
             this.map.on("hover:amv", (object_indice :number[]) => this.show_hovered(object_indice));
             this.resized(size);
             this.popup_hovered = new AcmacsToolkit.PopupMessage(map_container);
+            this.help_popup = (new AcmacsToolkit.PopupMessage(this.wrapper, 'amv2-help-popup')).hide_on_click();
 
             // change label type via popup menu
             this.map.on("label-type:amv", (data :any) :void => { this.user_object_label_type = data.label_type || this._plot_data.default_label_type(); });
         });
 
-        // menu button
-        this.wrapper.find('.amv-level2-title-menu-button').append('<div class="ui-icon ui-icon-grip-dotted-vertical"></div>').on('click', (e :JQueryEventObject) => this.popup_menu(e));
+        // buttons
+        $('<td><div class="ui-icon ui-icon-help" title="Help"></div></td>').appendTo(this.wrapper.find('.amv-level2-title-buttons tr')).on('click', (e :JQueryEventObject) => this.help(e));
+        $('<td><div class="ui-icon ui-icon-grip-dotted-vertical" title="Menu"></div></td>').appendTo(this.wrapper.find('.amv-level2-title-buttons tr')).on('click', (e :JQueryEventObject) => this.popup_menu(e));
      }
 
     public destroy() :void {
@@ -60,6 +73,9 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
         }
         if (!!this.popup_hovered) {
             this.popup_hovered.destroy();
+        }
+        if (!!this.help_popup) {
+            this.help_popup.destroy();
         }
     }
 
@@ -86,7 +102,8 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
         if (indice.length) {
             this.popup_hovered.show(MapWidgetLevel2.popup_hovered_message_prefix
                                     + indice.map((index :number) => this._plot_data.label_of(index, this.user_object_label_type)).join(MapWidgetLevel2.popup_hovered_message_infix)
-                                    + MapWidgetLevel2.popup_hovered_message_suffix);
+                                    + MapWidgetLevel2.popup_hovered_message_suffix,
+                                   {left: this.wrapper.find('.amv-level2-map-wrapper').width()});
         }
         else {
             this.popup_hovered.hide();
@@ -111,6 +128,9 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
         menu.show($(e.currentTarget));
     }
 
+    private help(e :JQueryEventObject) :void {
+        this.help_popup.show(MapWidgetLevel2.help_text)
+    }
 }
 
 // ----------------------------------------------------------------------

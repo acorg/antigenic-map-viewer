@@ -3,10 +3,33 @@
     padding: 10px;
     box-shadow: @shadow;
     display: table;             // to make it shrink/expand with widget size chainging
+
+    .amv2-help-popup {
+        background-color: white;
+        color: black;
+        // z-index: 101;
+        left: -5px;
+        top: 10px;
+
+        p.title {
+            font-weight: bold;
+            text-align: center;
+            margin-top: 0;
+        }
+
+        span.mouse-action {
+            font-weight: bold;
+        }
+
+        p.footer {
+            margin-bottom: 0;
+            color: #888;
+            text-align: center;
+        }
+    }
 }
 
 .amv-level2-title {
-    // border: 1px solid red;
     margin-bottom: 5px;
 
     .amv-level2-title-text {
@@ -21,15 +44,25 @@
         }
     }
 
-    .amv-level2-title-menu-button {
+    .amv-level2-title-buttons {
         float: right;
         cursor: default;
-        border-radius: 10px;
+
+        td {
+            padding: 0;
+
+            div {
+                overflow: visible;
+            }
+
+            div:hover {
+                background-color: #E0E0E0;
+                border-radius: 10px;
+            }
+        }
+
     }
 
-    .amv-level2-title-menu-button:hover {
-        background-color: #E0E0E0;
-    }
 }
 
 .amv-level2-map-wrapper {
