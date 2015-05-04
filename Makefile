@@ -4,9 +4,10 @@ MAKEFLAGS = -w
 
 AMV = $(AMV_LIB) $(AMV_TEST)
 
-AMV_TEST = amv-config.js test-3d.html test-3d.ts test.less test-3d.json
-AMV_LIB = acmacs-plot-data.ts amv-level1.ts amv-level2.ts amv-manipulator.ts amv-manipulator-3d.ts amv-3d.ts amv-utils.ts \
-	  acmacs-toolkit.ts
+AMV_TEST = amv-config.js test-3d.html test-3d.ts test.less test-3d.json test-2d.html test-2d.ts
+AMV_LIB = acmacs-plot-data.ts amv-level1.ts amv-level2.ts \
+	  amv-manipulator.ts amv-manipulator-2d.ts amv-manipulator-3d.ts amv-2d.ts amv-3d.ts \
+	  amv-utils.ts acmacs-toolkit.ts
 AMV_LESS = acmacs-toolkit.less amv.less
 AMV_TYPINGS = antigenic-map-viewer.d.ts
 

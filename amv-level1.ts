@@ -45,7 +45,7 @@ export class MapWidgetLevel1
 
     public user_objects(user_objects :AntigenicMapViewer.PlotData) {
         $.when(AmvUtils.require_deferred(['amv-' + user_objects.number_of_dimensions() + 'd'])).done((Amv :typeof Amv3d) => {
-            this.viewer = new Amv.Viewer(this, 10);
+            this.viewer = new Amv.Viewer(this);
             this.viewer_created.resolve();
             this.objects = new Amv.Objects(this, user_objects);
             this.viewer.objects_updated();

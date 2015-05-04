@@ -25,7 +25,7 @@ export class Viewer extends AmvLevel1.Viewer
     private hover_control :AmvManipulator3d.HoverControl;
     private fov_control :AmvManipulator3d.FovControl;
 
-    constructor(widget :AmvLevel1.MapWidgetLevel1, private initial_distance :number, private initial_fov :number = 75) {
+    constructor(widget :AmvLevel1.MapWidgetLevel1, private initial_distance :number = 10, private initial_fov :number = 75) {
         super(widget);
         this.camera = new THREE.PerspectiveCamera(this.initial_fov, 1.0, 0.1, 1000);
         widget.add(this.camera);
