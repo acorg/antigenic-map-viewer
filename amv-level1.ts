@@ -192,7 +192,7 @@ export class Viewer
         this.camera.lookAt(this.camera_looking_at);
     }
 
-    public camera_fov() :number {
+    public camera_fov(fov?: number) :number {
         return 1.0;
     }
 

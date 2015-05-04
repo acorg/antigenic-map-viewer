@@ -73,7 +73,7 @@ class WorldControl extends Control
 
 export class OrbitControl extends WorldControl
 {
-    private rotate_speed :number = 1.0
+    private rotate_speed :number = 1.0;
 
     public operate(data :AmvManipulator.MouseMovement) :void {
         this.update(- 2 * Math.PI * data.deltaX / this.viewer.width() * this.rotate_speed, - 2 * Math.PI * data.deltaY / this.viewer.height() * this.rotate_speed, 1.0, null)
@@ -84,7 +84,7 @@ export class OrbitControl extends WorldControl
 
 export class ZoomControl extends WorldControl
 {
-    private static scale = 0.95
+    private static scale = 0.95;
 
     constructor(viewer :AmvLevel1.Viewer, event :string, private widget :AmvLevel1.MapWidgetLevel1) {
         super(viewer, event);
@@ -101,7 +101,7 @@ export class ZoomControl extends WorldControl
 
 export class ScaleControl extends Control
 {
-    private static scale = 0.95
+    private static scale = 0.95;
 
     constructor(viewer :AmvLevel1.Viewer, event :string, private widget :AmvLevel1.MapWidgetLevel1) {
         super(viewer, event);
@@ -185,6 +185,23 @@ export class HoverControl extends Control
             this.viewer.trigger_on_element("hover:amv", [objects]);
             this.last = objects;
         }
+    }
+}
+
+// ----------------------------------------------------------------------
+
+export class FovControl extends WorldControl
+{
+    private static scale = 0.98;
+
+    constructor(viewer :AmvLevel1.Viewer, event :string) {
+        super(viewer, event);
+    }
+
+    public operate(data :AmvManipulator.WheelMovement) :void {
+        var scale :number = (data.deltaY > 0) ? FovControl.scale : (data.deltaY < 0 ? 1.0 / FovControl.scale : 1.0);
+        this.viewer.camera_fov(this.viewer.camera_fov() * scale);
+        this.update(0.0, 0.0, 1.0 / scale, null);
     }
 }
 

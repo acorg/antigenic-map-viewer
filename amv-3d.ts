@@ -23,10 +23,11 @@ export class Viewer extends AmvLevel1.Viewer
     private pan_control :AmvManipulator3d.PanControl;
     private reset_control :AmvManipulator3d.ResetControl;
     private hover_control :AmvManipulator3d.HoverControl;
+    private fov_control :AmvManipulator3d.FovControl;
 
-    constructor(widget :AmvLevel1.MapWidgetLevel1, private initial_distance :number, fov :number = 75) {
+    constructor(widget :AmvLevel1.MapWidgetLevel1, private initial_distance :number, private initial_fov :number = 75) {
         super(widget);
-        this.camera = new THREE.PerspectiveCamera(fov, 1.0, 0.1, 1000);
+        this.camera = new THREE.PerspectiveCamera(this.initial_fov, 1.0, 0.1, 1000);
         widget.add(this.camera);
         this.ambient_light = new THREE.AmbientLight(0x404040);
         widget.add(this.ambient_light);
@@ -41,6 +42,7 @@ export class Viewer extends AmvLevel1.Viewer
         this.widget.reset_objects();
         this.camera.position.set(0, 0, this.initial_distance);
         this.camera_look_at(AmvLevel1.Viewer.const_vector3_zero);
+        this.camera_fov(this.initial_fov);
         this.camera_update();
     }
 
@@ -61,7 +63,7 @@ export class Viewer extends AmvLevel1.Viewer
     // Returns node triggering events
     public bind_manipulators(widget :AmvLevel1.MapWidgetLevel1) :void {
         $.when(AmvUtils.require_deferred(['amv-manipulator', 'amv-manipulator-3d'])).done(() => {
-            this.manipulator.make_event_generators(["move::amv", "drag::amv", "drag:shift:amv", "wheel:shift:amv", "wheel:alt:amv", "key::amv"]);
+            this.manipulator.make_event_generators(["move::amv", "drag::amv", "drag:shift:amv", "wheel:shift:amv", "wheel:alt:amv", "wheel:shift-alt:amv", "key::amv"]);
 
             // this.element.on("move::amv", (e :Event, a :any) => console.log('move::amv', JSON.stringify(a)));
             // this.element.on("drag::amv", (e :Event, a :any) => console.log('drag::amv', JSON.stringify(a)));
@@ -75,13 +77,19 @@ export class Viewer extends AmvLevel1.Viewer
             this.pan_control = new AmvManipulator3d.PanControl(this, "drag:shift:amv");
             this.reset_control = new AmvManipulator3d.ResetControl(this, "key::amv", 114); // 'r'
             this.hover_control = new AmvManipulator3d.HoverControl(this, "move::amv", this.widget); // triggers "hover:amv" on this.element
+            this.fov_control = new AmvManipulator3d.FovControl(this, "wheel:shift-alt:amv");
 
             // this.element.on("hover:amv", (e :Event, object_indice :number[]) => console.log('hover', JSON.stringify(object_indice)));
         });
     }
 
-    public camera_fov() :number {
-        return (<THREE.PerspectiveCamera>this.camera).fov;
+    public camera_fov(fov?: number) :number {
+        var camera = <THREE.PerspectiveCamera>this.camera;
+        if (fov && fov < 175 && fov > 5) {
+            camera.fov = fov;
+            camera.updateProjectionMatrix();
+        }
+        return camera.fov;
     }
 }
 
