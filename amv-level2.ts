@@ -32,7 +32,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
                                   <li>Rotate - <span class="mouse-action">MouseDrag</span></li>\
                                   <li>Pan - <span class="mouse-action">Shift-MouseDrag</span></li>\
                                   <li>Field of view - <span class="mouse-action">Shift-Alt-Wheel</span></li>\
-                                  <li>Reset map - press <span class="mouse-action">r</span> or choose reset in the menu<br />(next to the Help button at the top right corner)</li>\
+                                  <li>Reset map - choose reset in the menu<br />(next to the Help button at the top right corner)</li>\
                                 </ul>\
                                 <p class="footer">Click to hide this popup.</p>';
 
@@ -112,9 +112,8 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
     }
 
     private resized(size :number) :void {
-        //this.wrapper.find('.amv-level2-title').css({width: size});
         this.map.size(size);
-        this.wrapper.find('.amv-level2-title-text').css({maxWidth: size - 10});
+        this.wrapper.find('.amv-level2-title-text').css({maxWidth: size - this.wrapper.find('.amv-level2-title-buttons').width()});
     }
 
     private popup_menu(e :JQueryEventObject) :void {
