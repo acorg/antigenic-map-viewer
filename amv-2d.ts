@@ -13,7 +13,6 @@ import AmvManipulator2d = require("amv-manipulator-2d");
 
 export class Viewer extends AmvLevel1.Viewer
 {
-    private ambient_light :THREE.AmbientLight;
     private grid :Grid;
 
     // private rotate_control :AmvManipulator2d.RotateControl;
@@ -24,36 +23,24 @@ export class Viewer extends AmvLevel1.Viewer
     // private reset_control :AmvManipulator2d.ResetControl;
     // private hover_control :AmvManipulator2d.HoverControl;
 
-    constructor(widget :AmvLevel1.MapWidgetLevel1, private initial_size :number = 15) {
+    constructor(widget :AmvLevel1.MapWidgetLevel1, public initial_size :number = 5, private maximum_drawing_order :number = 1000) {
         super(widget);
-        this.camera = new THREE.OrthographicCamera(this.initial_size / - 2, this.initial_size / 2, this.initial_size / 2, this.initial_size / - 2, 0.1, 1000);
+        this.camera = new THREE.OrthographicCamera(this.initial_size / - 2, this.initial_size / 2, this.initial_size / 2, this.initial_size / - 2, 0, this.maximum_drawing_order + 2);
         widget.add(this.camera);
-        this.ambient_light = new THREE.AmbientLight(0x404040);
-        widget.add(this.ambient_light);
-        this.grid = new Grid(this);
+        this.grid = new Grid(this, 0);
         this.reset()
     }
 
     public reset() :void {
         this.widget.reset_objects();
-        // this.camera.position.set(0, 0, this.initial_distance);
+        this.camera.position.set(0, 0, this.maximum_drawing_order + 1);
         this.camera_look_at(AmvLevel1.Viewer.const_vector3_zero);
-        this.camera_frustum(this.initial_size);
         this.camera_update();
     }
-
-    // view_size(target?: THREE.Vector3): number {
-    //     return 2.0 * Math.tan(this.camera_fov() * Math.PI / 360.0) * this.camera.position.distanceTo(target || AmvLevel1.Viewer.const_vector3_zero);
-    // }
 
     public objects_updated() :void {
         super.objects_updated();
         this.grid.reset();
-    }
-
-    public camera_update() :void {
-        super.camera_update();
-        this.grid.position();
     }
 
     // Returns node triggering events
@@ -71,9 +58,8 @@ export class Viewer extends AmvLevel1.Viewer
         });
     }
 
-    public camera_frustum(size? :number) :number {
-        var camera = <THREE.OrthographicCamera>this.camera;
-        return camera.right - camera.left;
+    public orthographic_camera() :THREE.OrthographicCamera {
+        return <THREE.OrthographicCamera>this.camera;
     }
 }
 
@@ -85,70 +71,54 @@ class Grid
     private grid :THREE.Object3D;
     private lines :THREE.Line;
 
-    private static components = [[1,2,0],[1,0,2],[2,1,0],[2,0,1],[0,2,1],[0,1,2]];
+    private static components = [[0,1],[1,0]];
 
-    constructor(public viewer :Viewer) {
+    constructor(public viewer :Viewer, private position_z :number) {
         this.grid = new THREE.Object3D();
         this.viewer.widget.add(this.grid);
-    }
-
-    public position() :void {
-        // var camera = this.viewer.camera;
-        // var offset = this.size / 2.0;
-        // var eye = this.viewer.camera_looking_at.clone().sub(camera.position);
-        // var up = eye.clone().cross(camera.up).cross(eye).setLength(offset);
-
-        // this.grid.up.copy(up).normalize();
-
-        // this.grid.position.copy(this.viewer.camera_looking_at)
-        //       .add(eye.clone().setLength(offset))
-        //       .sub(up);
-
-        // var look_at = camera.position.clone()
-        //       .sub(up)
-        //       .add(up.clone().cross(eye).setLength(this.grid.position.distanceTo(camera.position)));
-        // this.grid.lookAt(look_at);
+        this.grid.position.set(0, 0, this.position_z);
+        this.grid.lookAt(this.viewer.camera.position);
     }
 
     public reset() :void {
-        // if (this.lines) {
-        //     this.grid.remove(this.lines)
-        // }
-        // this.size = Math.ceil(this.viewer.widget.objects.diameter() * 1.2);
-        // var lines_geometry = new THREE.Geometry();
-        // Grid.components.map((component_order) => this.add_vertice(component_order, lines_geometry));
-        // this.lines = new THREE.Line(lines_geometry, new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.2, transparent: true}), THREE.LinePieces)
-        // this.grid.add(this.lines)
+        if (this.lines) {
+            this.grid.remove(this.lines)
+        }
+        var camera = this.viewer.orthographic_camera()
+        var lines_geometry = new THREE.Geometry();
+        var offset :number;
+        for (offset = camera.left; offset < camera.right; ++offset) {
+            lines_geometry.vertices.push(new THREE.Vector3(offset, camera.bottom, 0));
+            lines_geometry.vertices.push(new THREE.Vector3(offset, camera.top, 0));
+        }
+        for (offset = camera.bottom; offset < camera.top; ++offset) {
+            lines_geometry.vertices.push(new THREE.Vector3(camera.left,  offset, 0));
+            lines_geometry.vertices.push(new THREE.Vector3(camera.right, offset, 0));
+        }
+        this.lines = new THREE.Line(lines_geometry, new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.2, transparent: true}), THREE.LinePieces)
+        this.grid.add(this.lines)
     }
 
-    // private add_vertice(component_order :number[], lines_geometry :THREE.Geometry) :void {
-    //     for (var offset = 0; offset < this.size; ++offset) {
-    //         var vertex = new THREE.Vector3();
-    //         vertex.setComponent(component_order[1], offset);
-    //         lines_geometry.vertices.push(vertex);
-    //         vertex = vertex.clone();
-    //         vertex.setComponent(component_order[0], this.size);
-    //         lines_geometry.vertices.push(vertex);
-    //     }
-    // }
 }
 
 // ----------------------------------------------------------------------
 
 export class Objects extends AmvLevel1.Objects
 {
-    private static geometry_size = 0.2;
+    private static geometry_size = 1.0;
 
     constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects :AntigenicMapViewer.PlotData) {
         super(widget);
         var ball_segments = 32; // depends on the number of objects
-        var sphere_geometry = new THREE.SphereGeometry(Objects.geometry_size, ball_segments, ball_segments);
+        var sphere_geometry = new THREE.SphereGeometry(Objects.geometry_size / 2, ball_segments, ball_segments);
         var box_geometry = new THREE.BoxGeometry(Objects.geometry_size, Objects.geometry_size, Objects.geometry_size);
-        var styles = user_objects.make_styles(sphere_geometry, box_geometry, THREE.MeshPhongMaterial);
-        this.objects = user_objects.layout().map((elt, index) => styles[user_objects.style_no(index)].make(elt, {index: index}));
+        var styles = user_objects.make_styles(sphere_geometry, box_geometry, THREE.MeshBasicMaterial);
+        var z_pos = 1;
+        this.objects = user_objects.layout()
+              .map((elt, index) => { if (elt.length === 2) elt.push(z_pos); else elt[2] = z_pos; return elt; }) // drawing order
+              .map((elt, index) => styles[user_objects.style_no(index)].make(elt, {index: index}));
         this.widget.add_array(this.objects);
         this.calculate_bounding_sphere(user_objects.layout());
-        console.log('objects in 2d', JSON.stringify(this.center()), this.diameter());
     }
 }
 

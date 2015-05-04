@@ -158,7 +158,7 @@ export class Objects extends AmvLevel1.Objects
     constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects :AntigenicMapViewer.PlotData) {
         super(widget);
         var ball_segments = 32; // depends on the number of objects
-        var sphere_geometry = new THREE.SphereGeometry(Objects.geometry_size, ball_segments, ball_segments);
+        var sphere_geometry = new THREE.SphereGeometry(Objects.geometry_size / 2, ball_segments, ball_segments);
         var box_geometry = new THREE.BoxGeometry(Objects.geometry_size, Objects.geometry_size, Objects.geometry_size);
         var styles = user_objects.make_styles(sphere_geometry, box_geometry, THREE.MeshPhongMaterial);
         this.objects = user_objects.layout().map((elt, index) => styles[user_objects.style_no(index)].make(elt, {index: index}));
