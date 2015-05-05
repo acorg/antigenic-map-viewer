@@ -126,7 +126,7 @@ export class ObjectFactory
         this.geometries = {};
     }
 
-    public make_geometry_material(plot_style :AntigenicMapViewer.PlotDataStyle) :[THREE.Geometry, THREE.Material] {
+    public make_geometry_material(plot_style :AntigenicMapViewer.PlotDataStyle) :[string, THREE.Geometry, THREE.Material] {
         var material = new this.material({color: this.convert_color(plot_style.fill_color)});
         var shape :string = (plot_style.shape === undefined || plot_style.shape === null) ? "circle" : (plot_style.shape === "cube" ? "box" : plot_style.shape);
         var geometry = this.geometries[shape];
@@ -141,10 +141,10 @@ export class ObjectFactory
             }
             geometry = this.geometries[shape];
         }
-        return [geometry, material];
+        return [shape, geometry, material];
     }
 
-    public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
+    public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, shape :string, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
         var aspect :number = (plot_style.aspect === undefined || plot_style.aspect === null) ? 1.0 : plot_style.aspect;
         var rotation :number = (plot_style.rotation === undefined || plot_style.rotation === null) ? 0.0 : plot_style.rotation;
         var mesh = new THREE.Mesh(geometry, material);
@@ -170,12 +170,17 @@ export class ObjectFactory
     protected convert_color(source :any) :number {
         var color = new THREE.Color()
         if ($.type(source) === "string") {
-            color.set(source)
+            if (source === "transparent") {
+                color = null;
+            }
+            else {
+                color.set(source);
+            }
         }
         else if ($.type(source) === "array") {
             color.set(source[0])
         }
-        return color.getHex()
+        return color && color.getHex()
     }
 }
 
@@ -183,20 +188,20 @@ export class ObjectFactory
 
 export class ObjectStyle
 {
-
-    private material :THREE.Material
-    private geometry :THREE.Geometry
-    private shown :Boolean
+    private shape :string;
+    private material :THREE.Material;
+    private geometry :THREE.Geometry;
+    private shown :Boolean;
 
     constructor(private plot_style :AntigenicMapViewer.PlotDataStyle, private factory :ObjectFactory) {
-        [this.geometry, this.material] = this.factory.make_geometry_material(plot_style);
+        [this.shape, this.geometry, this.material] = this.factory.make_geometry_material(plot_style);
         this.shown = this.plot_style.shown === undefined || this.plot_style.shown
     }
 
     public make(position :number[], user_data :ObjectUserData) :THREE.Mesh {
         var obj :THREE.Mesh = null;
         if (this.shown) {
-            obj = this.factory.make_mesh(this.plot_style, this.geometry, this.material);
+            obj = this.factory.make_mesh(this.plot_style, this.shape, this.geometry, this.material);
             obj.position.set.apply(obj.position, position);
             obj.scale.multiplyScalar(this.plot_style.size)
             obj.userData = user_data;

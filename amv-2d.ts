@@ -124,25 +124,42 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
     private geometry_size :number;
     private ball_segments :number; // depends on the number of objects
     private outline_width_scale :number;
+    private outline_materials :any; // color: THREE.Material
 
     constructor(number_of_objects :number) {
         super();
         this.material = THREE.MeshBasicMaterial;
-        this.geometry_size = 1.0;
+        this.geometry_size = 0.2;
         this.ball_segments = 32;
         this.outline_width_scale = 0.1;
+        this.outline_materials = {};
+    }
+
+    public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, shape :string, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
+        var mesh = super.make_mesh(plot_style, shape, geometry, material);
+        var outline_color = this.convert_color(plot_style.outline_color);
+        var outline_material = this.outline_materials[outline_color] || this.make_outline_material(outline_color);
+        var outline = new THREE.Mesh(this.geometries[`${shape}-outline-${plot_style.outline_width}`], outline_material);
+        mesh.add(outline);
+        return mesh;
     }
 
     // adds to this.geometries
-    protected make_circle(outline_width :number = 1.0) :void {
+    protected make_circle(outline_width :number) :void {
         this.geometries["circle"] = new THREE.CircleGeometry(this.geometry_size / 2, this.ball_segments);
-        outline_width = (outline_width === undefined || outline_width === null) ? 1.0 : outline_width;
-        this.geometries[`circle-outline-${outline_width}`] = new THREE.RingGeometry(this.geometry_size / 2 - outline_width * this.outline_width_scale, this.geometry_size / 2, this.ball_segments);
+        var n_outline_width = (outline_width === undefined || outline_width === null) ? 1.0 : outline_width;
+        this.geometries[`circle-outline-${outline_width}`] = new THREE.RingGeometry(this.geometry_size / 2 - n_outline_width * this.outline_width_scale * this.geometry_size, this.geometry_size / 2, this.ball_segments);
     }
 
     // adds to this.geometries
-    protected make_box(outline_width :number = 1.0) :void {
+    protected make_box(outline_width :number) :void {
         this.geometries["box"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
+    }
+
+    private make_outline_material(outline_color :number) :THREE.Material {
+        var outline_material = new this.material({color: outline_color});
+        this.outline_materials[outline_color] = outline_material;
+        return outline_material;
     }
 }
 
