@@ -140,14 +140,12 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
         var outline_color = this.convert_color(plot_style.outline_color);
         var n_outline_width = (plot_style.outline_width === undefined || plot_style.outline_width === null) ? 1.0 : plot_style.outline_width;
         var outline_material = this.outline_materials[outline_color] || this.make_outline_material(outline_color, n_outline_width);
-        var outline :THREE.Mesh;
         if (shape === "circle") {
-            outline = new THREE.Mesh(this.geometries[`${shape}-outline-${plot_style.outline_width}`], outline_material);
+            mesh.add(new THREE.Mesh(this.geometries[`${shape}-outline-${plot_style.outline_width}`], outline_material));
         }
         else {
-            outline = new THREE.Mesh(this.geometries[`${shape}-outline`], outline_material);
+            mesh.add(new THREE.Line(this.geometries[`${shape}-outline`], outline_material));
         }
-        mesh.add(outline);
         return mesh;
     }
 
@@ -181,6 +179,7 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
         shape.lineTo(      0,  offset);
         shape.lineTo(-offset, -offset);
         this.geometries["triangle"] = new THREE.ShapeGeometry(shape);
+        this.geometries["triangle-outline"] = (<any>shape).createPointsGeometry();
     }
 
     private make_outline_material(outline_color :number, line_width :number) :THREE.Material {
