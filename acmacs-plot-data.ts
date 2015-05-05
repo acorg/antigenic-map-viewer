@@ -22,6 +22,10 @@ export class PlotData
         return this.plot_data.layout[0].length;
     }
 
+    public number_of_objects() :number {
+        return this.plot_data.layout.length;
+    }
+
     public styles() :AntigenicMapViewer.PlotDataStyle[] {
         return this.plot_data.styles.styles;
     }
@@ -34,9 +38,14 @@ export class PlotData
         return this.plot_data.layout;
     }
 
-    public make_styles(circle_geometry :THREE.Geometry, box_geometry :THREE.Geometry, material_class :MaterialClass) :ObjectStyle[] {
-        return this.styles().map((style :AntigenicMapViewer.PlotDataStyle) => new ObjectStyle(style, circle_geometry, box_geometry, material_class));
+    public make_styles(ObjectStyleClass :typeof ObjectStyle) :ObjectStyle[] {
+        const number_of_objects = this.number_of_objects();
+        return this.styles().map((style :AntigenicMapViewer.PlotDataStyle) => new ObjectStyleClass(style, number_of_objects));
     }
+
+    // public make_styles(circle_geometry :THREE.Geometry, box_geometry :THREE.Geometry, material_class :MaterialClass) :ObjectStyle[] {
+    //     return this.styles().map((style :AntigenicMapViewer.PlotDataStyle) => new ObjectStyle(style, circle_geometry, box_geometry, material_class));
+    // }
 
     public label_types() :string[] {
         if (!this._label_types) {
@@ -115,23 +124,27 @@ export interface MaterialClass
 
 export class ObjectStyle
 {
+    protected material_class :MaterialClass;
+    protected circle_geometry :THREE.Geometry;
+    protected box_geometry :THREE.Geometry;
+
     private material :THREE.Material
     private shown :Boolean
     private size :number
     private geometry :THREE.Geometry
 
-    constructor(plot_style :AntigenicMapViewer.PlotDataStyle, circle_geometry :THREE.Geometry, box_geometry :THREE.Geometry, material_class :MaterialClass) {
-        this.material = new material_class({color: this.convert_color(plot_style.fill_color)})
+    constructor(plot_style :AntigenicMapViewer.PlotDataStyle, number_of_objects :number) {
+        this.material = new this.material_class({color: this.convert_color(plot_style.fill_color)})
         this.shown = plot_style.shown === undefined || plot_style.shown
         this.size = plot_style.size
         switch (plot_style.shape) {
         case "box":
         case "cube":
-            this.geometry = box_geometry;
+            this.geometry = this.box_geometry;
             break;
         case "circle":
         default:
-            this.geometry = circle_geometry;
+            this.geometry = this.circle_geometry;
             break;
         }
     }

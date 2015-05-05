@@ -5,7 +5,7 @@
 
 import AmvUtils = require("amv-utils");
 import AmvLevel1 = require("amv-level1");
-import AntigenicMapViewer = require("acmacs-plot-data");
+import AcmacsPlotData = require("acmacs-plot-data");
 import AmvManipulator = require("amv-manipulator");
 import AmvManipulator2d = require("amv-manipulator-2d");
 
@@ -105,14 +105,9 @@ class Grid
 
 export class Objects extends AmvLevel1.Objects
 {
-    private static geometry_size = 1.0;
-
-    constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects :AntigenicMapViewer.PlotData) {
+    constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects :AcmacsPlotData.PlotData) {
         super(widget);
-        var ball_segments = 32; // depends on the number of objects
-        var sphere_geometry = new THREE.SphereGeometry(Objects.geometry_size / 2, ball_segments, ball_segments);
-        var box_geometry = new THREE.BoxGeometry(Objects.geometry_size, Objects.geometry_size, Objects.geometry_size);
-        var styles = user_objects.make_styles(sphere_geometry, box_geometry, THREE.MeshBasicMaterial);
+        var styles = user_objects.make_styles(ObjectStyle);
         var z_pos = 1;
         this.objects = user_objects.layout()
               .map((elt, index) => { if (elt.length === 2) elt.push(z_pos); else elt[2] = z_pos; return elt; }) // drawing order
@@ -120,6 +115,22 @@ export class Objects extends AmvLevel1.Objects
         this.widget.add_array(this.objects);
         this.calculate_bounding_sphere(user_objects.layout());
     }
+}
+
+// ----------------------------------------------------------------------
+
+export class ObjectStyle extends AcmacsPlotData.ObjectStyle
+{
+    private static geometry_size = 1.0;
+
+    constructor(plot_style :AntigenicMapViewer.PlotDataStyle, number_of_objects :number) {
+        this.material_class = THREE.MeshBasicMaterial;
+        const ball_segments = 32; // depends on the number of objects
+        this.circle_geometry = new THREE.CircleGeometry(ObjectStyle.geometry_size / 2, ball_segments);
+        this.box_geometry = new THREE.BoxGeometry(ObjectStyle.geometry_size, ObjectStyle.geometry_size, ObjectStyle.geometry_size);
+        super(plot_style, number_of_objects);
+    }
+
 }
 
 // ----------------------------------------------------------------------
