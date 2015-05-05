@@ -107,7 +107,7 @@ export class Objects extends AmvLevel1.Objects
 {
     constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects :AcmacsPlotData.PlotData) {
         super(widget);
-        var styles = user_objects.make_styles(ObjectStyle);
+        var styles = user_objects.make_styles(new ObjectFactory(user_objects.number_of_objects()));
         var z_pos = 1;
         this.objects = user_objects.layout()
               .map((elt, index) => { if (elt.length === 2) elt.push(z_pos); else elt[2] = z_pos; return elt; }) // drawing order
@@ -119,18 +119,28 @@ export class Objects extends AmvLevel1.Objects
 
 // ----------------------------------------------------------------------
 
-export class ObjectStyle extends AcmacsPlotData.ObjectStyle
+export class ObjectFactory extends AcmacsPlotData.ObjectFactory
 {
-    private static geometry_size = 1.0;
+    private geometry_size :number;
+    private ball_segments :number; // depends on the number of objects
 
-    constructor(plot_style :AntigenicMapViewer.PlotDataStyle, number_of_objects :number) {
-        this.material_class = THREE.MeshBasicMaterial;
-        const ball_segments = 32; // depends on the number of objects
-        this.circle_geometry = new THREE.CircleGeometry(ObjectStyle.geometry_size / 2, ball_segments);
-        this.box_geometry = new THREE.BoxGeometry(ObjectStyle.geometry_size, ObjectStyle.geometry_size, ObjectStyle.geometry_size);
-        super(plot_style, number_of_objects);
+    constructor(number_of_objects :number) {
+        super();
+        this.material = THREE.MeshBasicMaterial;
+        this.geometry_size = 1.0;
+        this.ball_segments = 32;
     }
 
+    // adds to this.geometries
+    protected make_circle(geometry_name :string, aspect: number = 1.0, rotation :number = 0.0, outline_width :number = 1.0) :void {
+        this.geometries[geometry_name] = new THREE.CircleGeometry(this.geometry_size / 2, this.ball_segments);
+        outline_width = (outline_width === undefined || outline_width === null) ? 1.0 : outline_width;
+    }
+
+    // adds to this.geometries
+    protected make_box(geometry_name :string, aspect: number = 1.0, rotation :number = 0.0, outline_width :number = 1.0) :void {
+        this.geometries[geometry_name] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
+    }
 }
 
 // ----------------------------------------------------------------------

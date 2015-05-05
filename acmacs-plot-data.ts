@@ -38,14 +38,9 @@ export class PlotData
         return this.plot_data.layout;
     }
 
-    public make_styles(ObjectStyleClass :typeof ObjectStyle) :ObjectStyle[] {
-        const number_of_objects = this.number_of_objects();
-        return this.styles().map((style :AntigenicMapViewer.PlotDataStyle) => new ObjectStyleClass(style, number_of_objects));
+    public make_styles(factory :ObjectFactory) :ObjectStyle[] {
+        return this.styles().map((style :AntigenicMapViewer.PlotDataStyle) => new ObjectStyle(style, factory));
     }
-
-    // public make_styles(circle_geometry :THREE.Geometry, box_geometry :THREE.Geometry, material_class :MaterialClass) :ObjectStyle[] {
-    //     return this.styles().map((style :AntigenicMapViewer.PlotDataStyle) => new ObjectStyle(style, circle_geometry, box_geometry, material_class));
-    // }
 
     public label_types() :string[] {
         if (!this._label_types) {
@@ -122,31 +117,72 @@ export interface MaterialClass
 
 // ----------------------------------------------------------------------
 
+export class ObjectFactory
+{
+    protected material :MaterialClass;
+    protected geometries :any;  // "shape-aspect-rotation[-outline_width]": THREE.Geometry, e.g  "circle-1.0-0.0", "box-1.0-0.0", "circle-outline-1.0-0.0-1.0", "box-outline-1.0-0.0-1.0"
+
+    constructor() {
+        this.geometries = {};
+    }
+
+    public make(plot_style :AntigenicMapViewer.PlotDataStyle) :[THREE.Geometry, THREE.Material] {
+        var material = new this.material({color: this.convert_color(plot_style.fill_color)});
+        var shape :string = (plot_style.shape === undefined || plot_style.shape === null) ? "circle" : (plot_style.shape === "cube" ? "box" : plot_style.shape);
+        var aspect :number = (plot_style.aspect === undefined || plot_style.aspect === null) ? 1.0 : plot_style.aspect;
+        var rotation :number = (plot_style.rotation === undefined || plot_style.rotation === null) ? 0.0 : plot_style.rotation;
+        var geometry_name = `${shape}-${aspect}-${rotation}`;
+        var geometry = this.geometries[geometry_name];
+        if (!geometry) {
+            switch (shape) {
+            case "box":
+                this.make_box(geometry_name, aspect, rotation, plot_style.outline_width);
+                break;
+            case "circle":
+                this.make_circle(geometry_name, aspect, rotation, plot_style.outline_width);
+                break;
+            }
+            geometry = this.geometries[geometry_name];
+        }
+        return [geometry, material];
+    }
+
+    // adds to this.geometries
+    protected make_circle(geometry_name :string, aspect: number = 1.0, rotation :number = 0.0, outline_width :number = 1.0) :void {
+        throw "Override in derived of acmacs-plot-data::ObjectFactory";
+    }
+
+    // adds to this.geometries
+    protected make_box(geometry_name :string, aspect: number = 1.0, rotation :number = 0.0, outline_width :number = 1.0) :void {
+        throw "Override in derived of acmacs-plot-data::ObjectFactory";
+    }
+
+    protected convert_color(source :any) :number {
+        var color = new THREE.Color()
+        if ($.type(source) === "string") {
+            color.set(source)
+        }
+        else if ($.type(source) === "array") {
+            color.set(source[0])
+        }
+        return color.getHex()
+    }
+}
+
+// ----------------------------------------------------------------------
+
 export class ObjectStyle
 {
-    protected material_class :MaterialClass;
-    protected circle_geometry :THREE.Geometry;
-    protected box_geometry :THREE.Geometry;
 
     private material :THREE.Material
+    private geometry :THREE.Geometry
     private shown :Boolean
     private size :number
-    private geometry :THREE.Geometry
 
-    constructor(plot_style :AntigenicMapViewer.PlotDataStyle, number_of_objects :number) {
-        this.material = new this.material_class({color: this.convert_color(plot_style.fill_color)})
+    constructor(plot_style :AntigenicMapViewer.PlotDataStyle, factory :ObjectFactory) {
+        [this.geometry, this.material] = factory.make(plot_style);
         this.shown = plot_style.shown === undefined || plot_style.shown
         this.size = plot_style.size
-        switch (plot_style.shape) {
-        case "box":
-        case "cube":
-            this.geometry = this.box_geometry;
-            break;
-        case "circle":
-        default:
-            this.geometry = this.circle_geometry;
-            break;
-        }
     }
 
     public make(position :number[], user_data :ObjectUserData) :THREE.Mesh {
@@ -160,16 +196,6 @@ export class ObjectStyle
         return obj
     }
 
-    private convert_color(source :any) :number {
-        var color = new THREE.Color()
-        if ($.type(source) === "string") {
-            color.set(source)
-        }
-        else if ($.type(source) === "array") {
-            color.set(source[0])
-        }
-        return color.getHex()
-    }
 }
 
 // ----------------------------------------------------------------------

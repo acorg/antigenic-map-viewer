@@ -28,6 +28,7 @@ declare module AntigenicMapViewer {
         aspect? :number;
         fill_color :string|any[];
         outline_color :string|any[];
+        outline_width? :number;
         rotation? :number;
         shape :string;
         size :number;
