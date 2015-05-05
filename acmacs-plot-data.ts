@@ -126,34 +126,44 @@ export class ObjectFactory
         this.geometries = {};
     }
 
-    public make(plot_style :AntigenicMapViewer.PlotDataStyle) :[THREE.Geometry, THREE.Material] {
+    public make_geometry_material(plot_style :AntigenicMapViewer.PlotDataStyle) :[THREE.Geometry, THREE.Material] {
         var material = new this.material({color: this.convert_color(plot_style.fill_color)});
         var shape :string = (plot_style.shape === undefined || plot_style.shape === null) ? "circle" : (plot_style.shape === "cube" ? "box" : plot_style.shape);
-        var aspect :number = (plot_style.aspect === undefined || plot_style.aspect === null) ? 1.0 : plot_style.aspect;
-        var rotation :number = (plot_style.rotation === undefined || plot_style.rotation === null) ? 0.0 : plot_style.rotation;
-        var geometry_name = `${shape}-${aspect}-${rotation}`;
-        var geometry = this.geometries[geometry_name];
+        var geometry = this.geometries[shape];
         if (!geometry) {
             switch (shape) {
             case "box":
-                this.make_box(geometry_name, aspect, rotation, plot_style.outline_width);
+                this.make_box(plot_style.outline_width);
                 break;
             case "circle":
-                this.make_circle(geometry_name, aspect, rotation, plot_style.outline_width);
+                this.make_circle(plot_style.outline_width);
                 break;
             }
-            geometry = this.geometries[geometry_name];
+            geometry = this.geometries[shape];
         }
         return [geometry, material];
     }
 
+    public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
+        var aspect :number = (plot_style.aspect === undefined || plot_style.aspect === null) ? 1.0 : plot_style.aspect;
+        var rotation :number = (plot_style.rotation === undefined || plot_style.rotation === null) ? 0.0 : plot_style.rotation;
+        var mesh = new THREE.Mesh(geometry, material);
+        if (aspect !== 1) {
+            mesh.scale.set(aspect, 1, aspect);
+        }
+        if (rotation !== 0) {
+            mesh.rotation.set(0, 0, rotation);
+        }
+        return mesh;
+    }
+
     // adds to this.geometries
-    protected make_circle(geometry_name :string, aspect: number = 1.0, rotation :number = 0.0, outline_width :number = 1.0) :void {
+    protected make_circle(outline_width :number = 1.0) :void {
         throw "Override in derived of acmacs-plot-data::ObjectFactory";
     }
 
     // adds to this.geometries
-    protected make_box(geometry_name :string, aspect: number = 1.0, rotation :number = 0.0, outline_width :number = 1.0) :void {
+    protected make_box(outline_width :number = 1.0) :void {
         throw "Override in derived of acmacs-plot-data::ObjectFactory";
     }
 
@@ -177,20 +187,18 @@ export class ObjectStyle
     private material :THREE.Material
     private geometry :THREE.Geometry
     private shown :Boolean
-    private size :number
 
-    constructor(plot_style :AntigenicMapViewer.PlotDataStyle, factory :ObjectFactory) {
-        [this.geometry, this.material] = factory.make(plot_style);
-        this.shown = plot_style.shown === undefined || plot_style.shown
-        this.size = plot_style.size
+    constructor(private plot_style :AntigenicMapViewer.PlotDataStyle, private factory :ObjectFactory) {
+        [this.geometry, this.material] = this.factory.make_geometry_material(plot_style);
+        this.shown = this.plot_style.shown === undefined || this.plot_style.shown
     }
 
     public make(position :number[], user_data :ObjectUserData) :THREE.Mesh {
         var obj :THREE.Mesh = null;
         if (this.shown) {
-            obj = new THREE.Mesh(this.geometry, this.material);
+            obj = this.factory.make_mesh(this.plot_style, this.geometry, this.material);
             obj.position.set.apply(obj.position, position);
-            obj.scale.multiplyScalar(this.size)
+            obj.scale.multiplyScalar(this.plot_style.size)
             obj.userData = user_data;
         }
         return obj

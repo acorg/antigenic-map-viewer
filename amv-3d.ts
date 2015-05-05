@@ -177,13 +177,13 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
     }
 
     // adds to this.geometries
-    protected make_circle(geometry_name :string, aspect: number = 1.0, rotation :number = 0.0, outline_width :number = 1.0) :void {
-        this.geometries[geometry_name] = new THREE.SphereGeometry(this.geometry_size / 2, this.ball_segments, this.ball_segments);
+    protected make_circle(outline_width :number = 1.0) :void {
+        this.geometries["circle"] = new THREE.SphereGeometry(this.geometry_size / 2, this.ball_segments, this.ball_segments);
     }
 
     // adds to this.geometries
-    protected make_box(geometry_name :string, aspect: number = 1.0, rotation :number = 0.0, outline_width :number = 1.0) :void {
-        this.geometries[geometry_name] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
+    protected make_box(outline_width :number = 1.0) :void {
+        this.geometries["box"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
     }
 }
 

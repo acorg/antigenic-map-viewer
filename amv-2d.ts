@@ -123,23 +123,26 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
 {
     private geometry_size :number;
     private ball_segments :number; // depends on the number of objects
+    private outline_width_scale :number;
 
     constructor(number_of_objects :number) {
         super();
         this.material = THREE.MeshBasicMaterial;
         this.geometry_size = 1.0;
         this.ball_segments = 32;
+        this.outline_width_scale = 0.1;
     }
 
     // adds to this.geometries
-    protected make_circle(geometry_name :string, aspect: number = 1.0, rotation :number = 0.0, outline_width :number = 1.0) :void {
-        this.geometries[geometry_name] = new THREE.CircleGeometry(this.geometry_size / 2, this.ball_segments);
+    protected make_circle(outline_width :number = 1.0) :void {
+        this.geometries["circle"] = new THREE.CircleGeometry(this.geometry_size / 2, this.ball_segments);
         outline_width = (outline_width === undefined || outline_width === null) ? 1.0 : outline_width;
+        this.geometries[`circle-outline-${outline_width}`] = new THREE.RingGeometry(this.geometry_size / 2 - outline_width * this.outline_width_scale, this.geometry_size / 2, this.ball_segments);
     }
 
     // adds to this.geometries
-    protected make_box(geometry_name :string, aspect: number = 1.0, rotation :number = 0.0, outline_width :number = 1.0) :void {
-        this.geometries[geometry_name] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
+    protected make_box(outline_width :number = 1.0) :void {
+        this.geometries["box"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
     }
 }
 
