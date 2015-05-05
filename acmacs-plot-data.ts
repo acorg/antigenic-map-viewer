@@ -138,6 +138,9 @@ export class ObjectFactory
             case "circle":
                 this.make_circle(plot_style.outline_width);
                 break;
+            case "triangle":
+                this.make_triangle(plot_style.outline_width);
+                break;
             }
             geometry = this.geometries[shape];
         }
@@ -164,6 +167,10 @@ export class ObjectFactory
 
     // adds to this.geometries
     protected make_box(outline_width :number = 1.0) :void {
+        throw "Override in derived of acmacs-plot-data::ObjectFactory";
+    }
+
+    protected make_triangle(outline_width :number = 1.0) :void {
         throw "Override in derived of acmacs-plot-data::ObjectFactory";
     }
 

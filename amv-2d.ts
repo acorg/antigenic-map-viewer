@@ -138,8 +138,15 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
     public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, shape :string, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
         var mesh = super.make_mesh(plot_style, shape, geometry, material);
         var outline_color = this.convert_color(plot_style.outline_color);
-        var outline_material = this.outline_materials[outline_color] || this.make_outline_material(outline_color);
-        var outline = new THREE.Mesh(this.geometries[`${shape}-outline-${plot_style.outline_width}`], outline_material);
+        var n_outline_width = (plot_style.outline_width === undefined || plot_style.outline_width === null) ? 1.0 : plot_style.outline_width;
+        var outline_material = this.outline_materials[outline_color] || this.make_outline_material(outline_color, n_outline_width);
+        var outline :THREE.Mesh;
+        if (shape === "circle") {
+            outline = new THREE.Mesh(this.geometries[`${shape}-outline-${plot_style.outline_width}`], outline_material);
+        }
+        else {
+            outline = new THREE.Mesh(this.geometries[`${shape}-outline`], outline_material);
+        }
         mesh.add(outline);
         return mesh;
     }
@@ -153,11 +160,31 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
 
     // adds to this.geometries
     protected make_box(outline_width :number) :void {
-        this.geometries["box"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
+        // this.geometries["box"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
+        var offset = this.geometry_size / 2;
+        var shape = new THREE.Shape();
+        shape.moveTo(-offset, -offset);
+        shape.lineTo(-offset,  offset);
+        shape.lineTo( offset,  offset);
+        shape.lineTo( offset, -offset);
+        shape.lineTo(-offset, -offset);
+        this.geometries["box"] = new THREE.ShapeGeometry(shape);
+        this.geometries["box-outline"] = (<any>shape).createPointsGeometry();
     }
 
-    private make_outline_material(outline_color :number) :THREE.Material {
-        var outline_material = new this.material({color: outline_color});
+    protected make_triangle(outline_width :number = 1.0) :void {
+        // this.geometries["triangle"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
+        var offset = this.geometry_size / 2;
+        var shape = new THREE.Shape();
+        shape.moveTo(-offset, -offset);
+        shape.lineTo( offset, -offset);
+        shape.lineTo(      0,  offset);
+        shape.lineTo(-offset, -offset);
+        this.geometries["triangle"] = new THREE.ShapeGeometry(shape);
+    }
+
+    private make_outline_material(outline_color :number, line_width :number) :THREE.Material {
+        var outline_material = new this.material({color: outline_color, linewidth: line_width, transparent: true});
         this.outline_materials[outline_color] = outline_material;
         return outline_material;
     }

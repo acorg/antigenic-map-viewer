@@ -185,6 +185,10 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
     protected make_box(outline_width :number = 1.0) :void {
         this.geometries["box"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
     }
+
+    protected make_triangle(outline_width :number = 1.0) :void {
+        this.geometries["triangle"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
+    }
 }
 
 // ----------------------------------------------------------------------
