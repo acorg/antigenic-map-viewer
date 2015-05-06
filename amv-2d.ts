@@ -131,20 +131,20 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
         this.material = THREE.MeshBasicMaterial;
         this.geometry_size = 0.2;
         this.ball_segments = 32;
-        this.outline_width_scale = 0.1;
+        this.outline_width_scale = 0.03;
         this.outline_materials = {};
     }
 
     public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, shape :string, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
         var mesh = super.make_mesh(plot_style, shape, geometry, material);
-        var outline_color = this.convert_color(plot_style.outline_color);
-        var n_outline_width = (plot_style.outline_width === undefined || plot_style.outline_width === null) ? 1.0 : plot_style.outline_width;
-        var outline_material = this.outline_materials[outline_color] || this.make_outline_material(outline_color, n_outline_width);
+        //var outline_color = this.convert_color(plot_style.outline_color);
+        //var n_outline_width = (plot_style.outline_width === undefined || plot_style.outline_width === null) ? 1.0 : plot_style.outline_width;
+        var outline_material = this.outline_material(this.convert_color(plot_style.outline_color), plot_style.outline_width);
         if (shape === "circle") {
             mesh.add(new THREE.Mesh(this.geometries[`${shape}-outline-${plot_style.outline_width}`], outline_material));
         }
         else {
-            mesh.add(new THREE.Line(this.geometries[`${shape}-outline`], outline_material));
+            mesh.add(new THREE.Line(this.geometries[`${shape}-outline`], <THREE.ShaderMaterial>outline_material));
         }
         return mesh;
     }
@@ -182,9 +182,14 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
         this.geometries["triangle-outline"] = (<any>shape).createPointsGeometry();
     }
 
-    private make_outline_material(outline_color :number, line_width :number) :THREE.Material {
-        var outline_material = new this.material({color: outline_color, linewidth: line_width, transparent: true});
-        this.outline_materials[outline_color] = outline_material;
+    private outline_material(outline_color :number, outline_width :number) :THREE.Material {
+        var key = `${outline_color}-${outline_width}`;
+        var outline_material = this.outline_materials[key];
+        if (!outline_material) {
+            var n_outline_width = (outline_width === undefined || outline_width === null) ? 5.0 : outline_width;
+            outline_material = new THREE.LineBasicMaterial({color: outline_color, linewidth: n_outline_width, transparent: true});
+            this.outline_materials[key] = outline_material;
+        }
         return outline_material;
     }
 }
