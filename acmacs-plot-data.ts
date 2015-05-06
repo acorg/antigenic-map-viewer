@@ -112,7 +112,7 @@ export interface ObjectUserData
 
 export interface MaterialClass
 {
-    new (parameters: THREE.MaterialParameters): THREE.Material;
+    new (parameters: THREE.MeshBasicMaterialParameters): THREE.Material;
 }
 
 // ----------------------------------------------------------------------
@@ -127,7 +127,7 @@ export class ObjectFactory
     }
 
     public make_geometry_material(plot_style :AntigenicMapViewer.PlotDataStyle) :[string, THREE.Geometry, THREE.Material] {
-        var material = new this.material({color: this.convert_color(plot_style.fill_color)});
+        var material = new this.material(this.convert_color(plot_style.fill_color));
         var shape :string = (plot_style.shape === undefined || plot_style.shape === null) ? "circle" : (plot_style.shape === "cube" ? "box" : plot_style.shape);
         var geometry = this.geometries[shape];
         if (!geometry) {
@@ -174,20 +174,23 @@ export class ObjectFactory
         throw "Override in derived of acmacs-plot-data::ObjectFactory";
     }
 
-    protected convert_color(source :any) :number {
-        var color = new THREE.Color()
+    protected convert_color(source :any) :THREE.MeshBasicMaterialParameters {
+        var material_color :THREE.MeshBasicMaterialParameters = {};
         if ($.type(source) === "string") {
             if (source === "transparent") {
-                color = null;
+                material_color["transparent"] = true;
+                material_color["opacity"] = 0.0;
             }
             else {
-                color.set(source);
+                material_color["color"] = (new THREE.Color(source)).getHex();
             }
         }
         else if ($.type(source) === "array") {
-            color.set(source[0])
+            material_color["transparent"] = true;
+            material_color["opacity"] = source[1];
+            material_color["color"] = (new THREE.Color(source[0])).getHex();
         }
-        return color && color.getHex()
+        return material_color;
     }
 }
 
