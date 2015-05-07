@@ -102,6 +102,10 @@ export class MapWidgetLevel1
     public domElement() :Element {
         return this.renderer.domElement;
     }
+
+    public help_text() :string {
+        return this.viewer.help_text();
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -219,6 +223,10 @@ export class Viewer
     // public hover_stream(deferred :JQueryDeferred<AmvManipulator.HoverStream>) :JQueryDeferred<AmvManipulator.HoverStream> {
     //     return deferred;        // override
     // }
+
+    public help_text() :string {
+        throw "override in derived";
+    }
 }
 
 // ----------------------------------------------------------------------

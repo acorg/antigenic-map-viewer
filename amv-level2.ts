@@ -25,17 +25,6 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
     private static popup_hovered_message_suffix = "</li></ul>";
     private static popup_hovered_message_infix =  "</li><li>";
 
-    private static help_text = '<p class="title">Help</p>\
-                                <ul>\
-                                  <li>Zoom - <span class="mouse-action">Shift-Wheel</span></li>\
-                                  <li>Point size - <span class="mouse-action">Alt-Wheel</span></li>\
-                                  <li>Rotate - <span class="mouse-action">MouseDrag</span></li>\
-                                  <li>Pan - <span class="mouse-action">Shift-MouseDrag</span></li>\
-                                  <li>Field of view - <span class="mouse-action">Shift-Alt-Wheel</span></li>\
-                                  <li>Reset map - choose reset in the menu<br />(next to the Help button at the top right corner)</li>\
-                                </ul>\
-                                <p class="footer">Click to hide this popup.</p>';
-
     constructor(container :JQuery, size :number) {
         this.map_created = $.Deferred();
         this.wrapper = $('<div class="amv-widget-wrapper">\
@@ -129,7 +118,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
     }
 
     private help(e :JQueryEventObject) :void {
-        this.help_popup.show(MapWidgetLevel2.help_text)
+        this.help_popup.show(this.map.help_text())
     }
 }
 

@@ -91,6 +91,21 @@ export class Viewer extends AmvLevel1.Viewer
         }
         return camera.fov;
     }
+
+    private static s_help_text = '<p class="title">Help</p>\
+                                <ul>\
+                                  <li>Zoom - <span class="mouse-action">Shift-Wheel</span></li>\
+                                  <li>Point size - <span class="mouse-action">Alt-Wheel</span></li>\
+                                  <li>Rotate - <span class="mouse-action">MouseDrag</span></li>\
+                                  <li>Pan - <span class="mouse-action">Shift-MouseDrag</span></li>\
+                                  <li>Field of view - <span class="mouse-action">Shift-Alt-Wheel</span></li>\
+                                  <li>Reset map - choose reset in the menu<br />(next to the Help button at the top right corner)</li>\
+                                </ul>\
+                                <p class="footer">Click to hide this popup.</p>';
+
+    public help_text() :string {
+        return Viewer.s_help_text;
+    }
 }
 
 // ----------------------------------------------------------------------

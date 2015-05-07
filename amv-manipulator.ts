@@ -77,6 +77,19 @@ class ModifierKeys
     public filter(e :JQueryInputEventObject) :Boolean {
         return e.shiftKey == this.shift && e.ctrlKey == this.ctrl && e.altKey == this.alt && e.metaKey == this.meta;
     }
+
+    public name() :string {
+        var n :string[] = [];
+        if (this.shift)
+            n.push("Shift");
+        if (this.ctrl)
+            n.push("Ctrl");
+        if (this.alt)
+            n.push("Alt");
+        if (this.meta)
+            n.push("Cmd");
+        return n.join("-");
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -199,125 +212,53 @@ export class Manipulator implements Object
         });
     }
 
+    public static event_to_description(event :string) :string {
+        var [action, modifier_desc, _] = event.split(':');
+        var mods = ModifierKeys.make_from_string(modifier_desc).name();
+        var r :string[] = [];
+        if (mods.length)
+            r.push(mods);
+        switch (action) {
+        case "left":
+            r.push("LeftClick");
+            break;
+        case "right":
+            r.push("RightClick");
+            break;
+        case "middle":
+            r.push("MiddleClick");
+            break;
+        case "wheel":
+            r.push("Wheel");
+            break;
+        case "drag":
+            r.push("Drag");
+            break;
+        case "key":
+            r.push("*key*");
+            break;
+        }
+        return r.join("-");
+    }
 }
 
 // ----------------------------------------------------------------------
 
-// export class ManipulatorBacon
-// {
-//     private static wheel_sensitivity = 1.0
-//     private static mouse_movement_sensitivity = 1.0
-//     private static mouse_move_page :Bacon.EventStream<JQueryEventObject> = $("html").asEventStream("mousemove");
+export class Control
+{
+    constructor(public viewer :AmvLevel1.Viewer, private event_description :string) {
+        viewer.on(event_description, (data :ManipulatorEvent) => this.operate(data));
+    }
 
-//     private move :Bacon.EventStream<MousePosition>;
-//     private drag :Bacon.EventStream<MousePosition>;
-//     private shift_drag :Bacon.EventStream<MousePosition>;
-//     private shift_wheel :Bacon.EventStream<MousePosition>;
-//     private alt_wheel :Bacon.EventStream<MousePosition>;
+    public operate(data :ManipulatorEvent) :void {
+    }
 
-//     constructor(private element :JQuery) {
-//     }
+    public trigger_description() :string {
+        return Manipulator.event_to_description(this.event_description);
+    }
+}
 
-//     public bind_move_without_drag(control :MouseMoveControl) :MouseMoveControl {
-//         if (!this.move) {
-//             this.move = this.make_mod_move(new ModifierKeys(false, false, false, false));
-//         }
-//         this.move.map(this.mousePositionToVector2).onValue((v) => control.operate(v, new THREE.Vector2(this.element.width(), this.element.height())))
-//         return control;
-//     }
+// ----------------------------------------------------------------------
 
-//     public bind_drag(control :MouseDragControl) :MouseDragControl {
-//         if (!this.drag) {
-//             this.drag = this.make_mod_drag(new ModifierKeys(false, false, false, false));
-//         }
-//         this.drag.map(this.mouseMovementToVector3).onValue((v) => control.operate(v, new THREE.Vector2(this.element.width(), this.element.height())))
-//         return control;
-//     }
-
-//     public bind_shift_drag(control :MouseDragControl) :MouseDragControl {
-//         if (!this.shift_drag) {
-//             this.shift_drag = this.make_mod_drag(new ModifierKeys(true, false, false, false));
-//         }
-//         this.shift_drag.map(this.mouseMovementToVector3).onValue((v) => control.operate(v, new THREE.Vector2(this.element.width(), this.element.height())))
-//         return control;
-//     }
-
-//     public bind_shift_wheel(control :MouseWheelControl) :MouseWheelControl {
-//         if (!this.shift_wheel) {
-//             this.shift_wheel= this.make_mod_wheel(new ModifierKeys(true, false, false, false));
-//         }
-//         this.shift_wheel.map((m) => m.y).onValue((delta) => { console.log('shift_wheel', JSON.stringify(delta)); control.operate(delta * Manipulator.wheel_sensitivity) })
-//         return control;
-//     }
-
-//     public bind_alt_wheel(control :MouseWheelControl) :MouseWheelControl {
-//         if (!this.alt_wheel) {
-//             this.alt_wheel= this.make_mod_wheel(new ModifierKeys(false, false, true, false));
-//         }
-//         this.alt_wheel.map((m) => m.y).onValue((delta) => control.operate(delta * Manipulator.wheel_sensitivity))
-//         return control;
-//     }
-
-//     private mouseMovementToVector3(delta :MousePosition) :THREE.Vector3 {
-//         return new THREE.Vector3(- delta.x * Manipulator.mouse_movement_sensitivity, delta.y * Manipulator.mouse_movement_sensitivity, 0);
-//     }
-
-//     private mousePositionToVector2(position :MousePosition) :THREE.Vector2 {
-//         return new THREE.Vector2(position.x, position.y);
-//     }
-
-//     private make_mod_drag(modifiers: ModifierKeys) :Bacon.EventStream<MousePosition> {
-//         var start = this.element.asEventStream("mousedown")
-//         var dragging = start
-//               .map(true)
-//               .merge(this.element.asEventStream("mouseup").map(false))
-//               .toProperty(true); // initial value must be true!
-//         var move = Manipulator.mouse_move_page
-//               .filter(this.mod_filter(modifiers))
-//               .map((v) => [v.clientX, v.clientY])
-//               .slidingWindow(2, 2)
-//               .filter(dragging)       // filter after slidingWindow! otherwise releasing, moving, pressing mouse generates event with big distance
-//               .map((v) => ({x: v[1][0] - v[0][0], y: v[1][1] - v[0][1]}))
-//         return start.flatMap(() => move)
-//     }
-
-//     private make_mod_wheel(modifiers: ModifierKeys) :Bacon.EventStream<MousePosition> {
-//         return this.element
-//               .asEventStream("mousewheel")
-//               .filter(this.mod_filter(modifiers))
-//               .doAction('.preventDefault')
-//               .map((e :JQueryMouseWheelEventObject) => ({x: e.deltaX, y: e.deltaY}))
-//                // Logitech mouse reports just deltaX when shift is pressed
-//               .map((e :any) => { if (modifiers.shift && e.y === 0) { e.y = - e.x; } return e; })
-//     }
-
-//     private make_mod_move(modifiers: ModifierKeys) :Bacon.EventStream<MousePosition> {
-//         var self = this;
-//         var offset = function() {
-//             var style = document.defaultView.getComputedStyle(self.element.parent().get(0), null);
-//             var parent_offset = self.element.parent().offset();
-//             return {
-//                 left: (parseInt(style["paddingLeft"], 10) || 0) + (parseInt(style["borderLeftWidth"], 10) || 0) + parent_offset.left, // + document.body.parentNode.offsetLeft,
-//                 top: (parseInt(style["paddingTop"], 10) || 0) + (parseInt(style["borderTopWidth"], 10) || 0) + parent_offset.top // + document.body.parentNode.offsetTop
-//             }
-//         };
-//         // console.log('offset', JSON.stringify(offset()));
-//         var not_dragging = this.element.asEventStream("mousedown")
-//               .map(false)
-//               .merge(this.element.asEventStream("mouseup").map(true))
-//               .toProperty(true);
-//         var move = this.element.asEventStream("mousemove")
-//               .filter(not_dragging)
-//               .filter(this.mod_filter(modifiers))
-//               .map((v) => {var off = offset(); /* console.log('page', v.pageX, v.pageY); */ return {x: v.pageX - off.left, y: v.pageY - off.top}});
-//         return move;
-//     }
-
-//     private mod_filter(modifiers: ModifierKeys) {
-//         return function (e :JQueryEventObject) :Boolean {
-//             return e.shiftKey == modifiers.shift && e.ctrlKey == modifiers.ctrl && e.altKey == modifiers.alt && e.metaKey == modifiers.meta
-//         }
-//     }
-// }
 
 // ----------------------------------------------------------------------

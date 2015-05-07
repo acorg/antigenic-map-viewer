@@ -6,18 +6,6 @@ import AmvManipulator = require("amv-manipulator");
 
 // ----------------------------------------------------------------------
 
-class Control
-{
-    constructor(public viewer :AmvLevel1.Viewer, event :string) {
-        viewer.on(event, (data :AmvManipulator.ManipulatorEvent) => this.operate(data));
-    }
-
-    public operate(data :AmvManipulator.ManipulatorEvent) :void {
-    }
-}
-
-// ----------------------------------------------------------------------
-
 // mrdoob-three.js-f73593b/examples/js/controls/OrbitControls.js
 /**
  * @author qiao / https://github.com/qiao
@@ -26,7 +14,7 @@ class Control
  * @author WestLangley / http://github.com/WestLangley
  * @author erich666 / http://erichaines.com
  */
-class WorldControl extends Control
+class WorldControl extends AmvManipulator.Control
 {
     public static camera_up = new THREE.Vector3(0, 1, 0)
 
@@ -99,7 +87,7 @@ export class ZoomControl extends WorldControl
 
 // ----------------------------------------------------------------------
 
-export class ScaleControl extends Control
+export class ScaleControl extends AmvManipulator.Control
 {
     private static scale = 0.95;
 
@@ -164,7 +152,7 @@ export class ResetControl extends WorldControl
 
 // Triggers "hover:amv" with the list of hovered object indice
 // Event is triggered only when the list of hovered objects changed, [] is passed when mouse is moved outside of any object.
-export class HoverControl extends Control
+export class HoverControl extends AmvManipulator.Control
 {
     private raycaster :THREE.Raycaster;
     private mouse :THREE.Vector2;

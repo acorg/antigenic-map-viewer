@@ -18,7 +18,8 @@ export class Viewer extends AmvLevel1.Viewer
     private grid :Grid;
 
     private rotate_control :AmvManipulator2d.RotateControl;
-    private flip_control :AmvManipulator2d.FlipControl;
+    private fliph_control :AmvManipulator2d.FlipControl;
+    private flipv_control :AmvManipulator2d.FlipControl;
     // private zoom_control :AmvManipulator2d.ZoomControl;
     // private scale_control :AmvManipulator2d.ScaleControl;
     // private pan_control :AmvManipulator2d.PanControl;
@@ -66,8 +67,8 @@ export class Viewer extends AmvLevel1.Viewer
                                                    ]);
 
             this.rotate_control = new AmvManipulator2d.RotateControl(this, "wheel:ctrl:amv");
-            this.flip_control = new AmvManipulator2d.FlipControl(this, true, "left:alt:amv");
-            this.flip_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
+            this.fliph_control = new AmvManipulator2d.FlipControl(this, true, "left:alt:amv");
+            this.flipv_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
             // this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv", this.widget);
             // this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv", this.widget);
             // this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
@@ -78,6 +79,26 @@ export class Viewer extends AmvLevel1.Viewer
 
     public orthographic_camera() :THREE.OrthographicCamera {
         return <THREE.OrthographicCamera>this.camera;
+    }
+
+    private static s_help_text = '<p class="title">Help</p>\
+                                <ul>\
+                                  <li>Zoom - <span class="mouse-action">?Shift-Wheel</span></li>\
+                                  <li>Point size - <span class="mouse-action">?Alt-Wheel</span></li>\
+                                  <li>Rotate - <span class="mouse-action">${rotate-trigger}</span></li>\
+                                  <li>Flip horizontally - <span class="mouse-action">${fliph-trigger}</span></li>\
+                                  <li>Flip vertically - <span class="mouse-action">${flipv-trigger}</span></li>\
+                                  <li>Pan - <span class="mouse-action">?Shift-MouseDrag</span></li>\
+                                  <li>Reset map - choose reset in the menu<br />(next to the Help button at the top right corner)</li>\
+                                </ul>\
+                                <p class="footer">Click to hide this popup.</p>';
+
+    public help_text() :string {
+        return Viewer.s_help_text
+              .replace("${rotate-trigger}", this.rotate_control.trigger_description())
+              .replace("${fliph-trigger}", this.fliph_control.trigger_description())
+              .replace("${flipv-trigger}", this.flipv_control.trigger_description())
+        ;
     }
 }
 
