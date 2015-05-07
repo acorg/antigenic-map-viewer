@@ -175,21 +175,19 @@ export class ObjectFactory
     }
 
     protected convert_color(source :any) :THREE.MeshBasicMaterialParameters {
-        var material_color :THREE.MeshBasicMaterialParameters = {};
+        var material_color :THREE.MeshBasicMaterialParameters;
         if ($.type(source) === "string") {
             if (source === "transparent") {
-                material_color["transparent"] = true;
-                material_color["opacity"] = 0.0;
+                material_color = {transparent: true, opacity: 0};
             }
             else {
-                material_color["color"] = (new THREE.Color(source)).getHex();
+                material_color = {transparent: false, color: (new THREE.Color(source)).getHex(), opacity: 1};
             }
         }
         else if ($.type(source) === "array") {
-            material_color["transparent"] = true;
-            material_color["opacity"] = source[1];
-            material_color["color"] = (new THREE.Color(source[0])).getHex();
+            material_color = {transparent: true, opacity: source[1], color: (new THREE.Color(source[0])).getHex()};
         }
+        // console.log('convert_color', JSON.stringify(material_color));
         return material_color;
     }
 }

@@ -110,7 +110,7 @@ export class Objects extends AmvLevel1.Objects
         var styles = user_objects.make_styles(new ObjectFactory(user_objects.number_of_objects()));
         var z_pos = 1;
         this.objects = user_objects.layout()
-              .map((elt, index) => { if (elt.length === 2) elt.push(z_pos); else elt[2] = z_pos; return elt; }) // drawing order
+              .map((elt, index) => { if (elt.length === 2) elt.push(z_pos); else elt[2] = z_pos; z_pos += 0.0001; return elt; }) // drawing order
               .map((elt, index) => styles[user_objects.style_no(index)].make(elt, {index: index}));
         this.widget.add_array(this.objects);
         this.calculate_bounding_sphere(user_objects.layout());
@@ -184,12 +184,12 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
     }
 
     private outline_material(outline_color :THREE.MeshBasicMaterialParameters, outline_width :number) :THREE.Material {
-        var key = `${outline_color}-${outline_width}`;
+        var key = `${outline_color.color}-${outline_width}`;
         var outline_material :THREE.LineBasicMaterial = <THREE.LineBasicMaterial>this.outline_materials[key];
         if (!outline_material) {
             outline_material = new THREE.LineBasicMaterial(outline_color);
             outline_material.linewidth = (outline_width === undefined || outline_width === null) ? 1.0 : outline_width;
-            outline_material.transparent = true;
+            // outline_material.transparent = true;
             this.outline_materials[key] = outline_material;
         }
         return outline_material;
