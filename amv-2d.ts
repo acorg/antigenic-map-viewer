@@ -15,7 +15,7 @@ export class Viewer extends AmvLevel1.Viewer
 {
     private grid :Grid;
 
-    // private rotate_control :AmvManipulator2d.RotateControl;
+    private rotate_control :AmvManipulator2d.RotateControl;
     // private flip_control :AmvManipulator2d.FlipControl;
     // private zoom_control :AmvManipulator2d.ZoomControl;
     // private scale_control :AmvManipulator2d.ScaleControl;
@@ -38,6 +38,11 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera_update();
     }
 
+    public camera_update() :void {
+        super.camera_update();
+        this.grid.update();
+    }
+
     public objects_updated() :void {
         super.objects_updated();
         this.grid.reset();
@@ -46,9 +51,9 @@ export class Viewer extends AmvLevel1.Viewer
     // Returns node triggering events
     public bind_manipulators(widget :AmvLevel1.MapWidgetLevel1) :void {
         $.when(AmvUtils.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
-            this.manipulator.make_event_generators(["move::amv", "drag::amv", "drag:shift:amv", "wheel:shift:amv", "wheel:alt:amv", "wheel:shift-alt:amv", "key::amv"]);
+            this.manipulator.make_event_generators(["move::amv", "drag::amv", "drag:shift:amv", "wheel:shift:amv", "wheel:ctrl:amv", "wheel:alt:amv", "wheel:shift-alt:amv", "key::amv"]);
 
-            // this.rotate_control = new AmvManipulator2d.OrbitControl(this, "drag::amv");
+            this.rotate_control = new AmvManipulator2d.RotateControl(this, "wheel:ctrl:amv");
             // this.flip_control = new AmvManipulator2d.OrbitControl(this, "drag::amv");
             // this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv", this.widget);
             // this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv", this.widget);
@@ -72,6 +77,7 @@ class Grid
     private lines :THREE.Line;
 
     private static components = [[0,1],[1,0]];
+    private static camera_up = new THREE.Vector3(0, 1, 0)
 
     constructor(public viewer :Viewer, private position_z :number) {
         this.grid = new THREE.Object3D();
@@ -99,6 +105,10 @@ class Grid
         this.grid.add(this.lines)
     }
 
+    public update() :void {
+        var quaternion = new THREE.Quaternion().setFromUnitVectors(this.viewer.camera.up, Grid.camera_up);
+        this.grid.rotation.setFromQuaternion(quaternion.inverse());
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -137,8 +147,6 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
 
     public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, shape :string, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
         var mesh = super.make_mesh(plot_style, shape, geometry, material);
-        //var outline_color = this.convert_color(plot_style.outline_color);
-        //var n_outline_width = (plot_style.outline_width === undefined || plot_style.outline_width === null) ? 1.0 : plot_style.outline_width;
         var outline_material = this.outline_material(this.convert_color(plot_style.outline_color), plot_style.outline_width);
         if (shape === "circle") {
             mesh.add(new THREE.Mesh(this.geometries[`${shape}-outline-${plot_style.outline_width}`], outline_material));
@@ -159,7 +167,6 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
 
     // adds to this.geometries
     protected make_box(outline_width :number) :void {
-        // this.geometries["box"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
         var offset = this.geometry_size / 2;
         var shape = new THREE.Shape();
         shape.moveTo(-offset, -offset);
@@ -172,7 +179,6 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
     }
 
     protected make_triangle(outline_width :number = 1.0) :void {
-        // this.geometries["triangle"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
         var offset = this.geometry_size / 2;
         var shape = new THREE.Shape();
         shape.moveTo(-offset, -offset);
