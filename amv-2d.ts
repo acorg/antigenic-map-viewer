@@ -13,10 +13,12 @@ import AmvManipulator2d = require("amv-manipulator-2d");
 
 export class Viewer extends AmvLevel1.Viewer
 {
+    public static camera_up = new THREE.Vector3(0, 1, 0);
+
     private grid :Grid;
 
     private rotate_control :AmvManipulator2d.RotateControl;
-    // private flip_control :AmvManipulator2d.FlipControl;
+    private flip_control :AmvManipulator2d.FlipControl;
     // private zoom_control :AmvManipulator2d.ZoomControl;
     // private scale_control :AmvManipulator2d.ScaleControl;
     // private pan_control :AmvManipulator2d.PanControl;
@@ -29,6 +31,14 @@ export class Viewer extends AmvLevel1.Viewer
         widget.add(this.camera);
         this.grid = new Grid(this, 0);
         this.reset()
+    }
+
+    // collects current state of the viewer: transformation matrix and viewport
+    public state() :void {
+        // get transformation matrix
+        var quaternion = new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up);
+        var flip = this.widget.objects.flip_state(); // [bool, bool]
+
     }
 
     public reset() :void {
@@ -51,10 +61,13 @@ export class Viewer extends AmvLevel1.Viewer
     // Returns node triggering events
     public bind_manipulators(widget :AmvLevel1.MapWidgetLevel1) :void {
         $.when(AmvUtils.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
-            this.manipulator.make_event_generators(["move::amv", "drag::amv", "drag:shift:amv", "wheel:shift:amv", "wheel:ctrl:amv", "wheel:alt:amv", "wheel:shift-alt:amv", "key::amv"]);
+            this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv",
+                                                    // "move::amv", "drag::amv", "drag:shift:amv", "wheel:shift:amv", "wheel:alt:amv", "wheel:shift-alt:amv", "key::amv"
+                                                   ]);
 
             this.rotate_control = new AmvManipulator2d.RotateControl(this, "wheel:ctrl:amv");
-            // this.flip_control = new AmvManipulator2d.OrbitControl(this, "drag::amv");
+            this.flip_control = new AmvManipulator2d.FlipControl(this, true, "left:alt:amv");
+            this.flip_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
             // this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv", this.widget);
             // this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv", this.widget);
             // this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
@@ -77,7 +90,6 @@ class Grid
     private lines :THREE.Line;
 
     private static components = [[0,1],[1,0]];
-    private static camera_up = new THREE.Vector3(0, 1, 0)
 
     constructor(public viewer :Viewer, private position_z :number) {
         this.grid = new THREE.Object3D();
@@ -106,7 +118,7 @@ class Grid
     }
 
     public update() :void {
-        var quaternion = new THREE.Quaternion().setFromUnitVectors(this.viewer.camera.up, Grid.camera_up);
+        var quaternion = new THREE.Quaternion().setFromUnitVectors(this.viewer.camera.up, Viewer.camera_up);
         this.grid.rotation.setFromQuaternion(quaternion.inverse());
     }
 }
@@ -115,6 +127,8 @@ class Grid
 
 export class Objects extends AmvLevel1.Objects
 {
+    private _flip :[Boolean, Boolean]; // [flipX, flipY
+
     constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects :AcmacsPlotData.PlotData) {
         super(widget);
         var styles = user_objects.make_styles(new ObjectFactory(user_objects.number_of_objects()));
@@ -124,6 +138,24 @@ export class Objects extends AmvLevel1.Objects
               .map((elt, index) => styles[user_objects.style_no(index)].make(elt, {index: index}));
         this.widget.add_array(this.objects);
         this.calculate_bounding_sphere(user_objects.layout());
+        this._flip = [false, false];
+    }
+
+    public flip(horizontally :Boolean) :void {
+        if (horizontally) {
+            const center_x = this.center().x;
+            this.objects.map(o => o.position.setX(center_x - o.position.x));
+            this._flip[0] = !this._flip[0];
+        }
+        else {
+            const center_y = this.center().y;
+            this.objects.map(o => o.position.setY(center_y - o.position.y));
+            this._flip[1] = !this._flip[1];
+        }
+    }
+
+    public flip_state() :[Boolean, Boolean] {
+        return this._flip;
     }
 }
 

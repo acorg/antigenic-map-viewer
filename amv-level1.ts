@@ -132,9 +132,18 @@ export class Objects
         return this._center;
     }
 
-    public scale(scale :number) {
+    public scale(scale :number) :void {
         this._scale *= scale;
         this.objects.map(o => o.scale.multiplyScalar(scale))
+    }
+
+    // 2d only
+    public flip(horizontally :Boolean) :void {
+    }
+
+    // 2d only
+    public flip_state() :[Boolean, Boolean] {
+        return [false, false];
     }
 
     protected calculate_bounding_sphere(layout :AntigenicMapViewer.PlotDataLayout) :void {

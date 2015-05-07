@@ -18,6 +18,39 @@ class Control
 
 // ----------------------------------------------------------------------
 
+export class RotateControl extends Control
+{
+    private static speed :number = 0.001; // Math.PI / 360;
+
+    public operate(data :AmvManipulator.WheelMovement) :void {
+        var angle :number = data.deltaY * RotateControl.speed;
+        var quaternion = new THREE.Quaternion();
+        quaternion.setFromAxisAngle(new THREE.Vector3(0, 0, 1), angle);
+        this.viewer.camera.up.applyQuaternion(quaternion);
+        this.viewer.camera_update();
+    }
+}
+
+// ----------------------------------------------------------------------
+
+export class FlipControl extends Control
+{
+    constructor(viewer :AmvLevel1.Viewer, private horizontally :Boolean, event :string) {
+        super(viewer, event);
+    }
+
+    public operate(data :AmvManipulator.Mousepress) :void {
+        this.viewer.widget.objects.flip(this.horizontally);
+        this.viewer.camera_update();
+    }
+}
+
+// ----------------------------------------------------------------------
+
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+
 // mrdoob-three.js-f73593b/examples/js/controls/OrbitControls.js
 /**
  * @author qiao / https://github.com/qiao
@@ -66,32 +99,6 @@ class WorldControl extends Control
 
     public reset() :void {
         this.viewer.reset();
-    }
-}
-
-// ----------------------------------------------------------------------
-
-export class RotateControl extends Control
-{
-    private static speed :number = 0.001; // Math.PI / 360;
-
-    public operate(data :AmvManipulator.WheelMovement) :void {
-        var angle :number = data.deltaY * RotateControl.speed;
-        var quaternion = new THREE.Quaternion();
-        quaternion.setFromAxisAngle(new THREE.Vector3(0, 0, 1), angle);
-        this.viewer.camera.up.applyQuaternion(quaternion);
-        this.viewer.camera_update();
-    }
-}
-
-// ----------------------------------------------------------------------
-
-export class FlipControl extends WorldControl
-{
-    private rotate_speed :number = 1.0;
-
-    public operate(data :AmvManipulator.MouseMovement) :void {
-        this.update(- 2 * Math.PI * data.deltaX / this.viewer.width() * this.rotate_speed, - 2 * Math.PI * data.deltaY / this.viewer.height() * this.rotate_speed, 1.0, null)
     }
 }
 

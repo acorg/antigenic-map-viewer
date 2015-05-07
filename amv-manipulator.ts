@@ -29,7 +29,7 @@ export interface Keypress
 
 export interface Mousepress
 {
-    which: number;
+    button: number;
 }
 
 export interface ManipulatorEvent extends MousePosition, MouseMovement, WheelMovement, Keypress, Mousepress
@@ -186,6 +186,19 @@ export class Manipulator implements Object
             }
         });
     }
+
+    // left click + modifier
+    private make_generator_left(modifier_desc :string) :void {
+        var modifier_keys = ModifierKeys.make_from_string(modifier_desc);
+        this.element.on("click", (e :JQueryMouseEventObject) => {
+            // console.log('click', e.button);
+            if (e.button === 0 && modifier_keys.filter(e)) {
+                e.preventDefault();
+                this.element.trigger("left:" + modifier_desc + ":amv", [{button: e.button}]);
+            }
+        });
+    }
+
 }
 
 // ----------------------------------------------------------------------
