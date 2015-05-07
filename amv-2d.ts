@@ -21,7 +21,7 @@ export class Viewer extends AmvLevel1.Viewer
     private fliph_control :AmvManipulator2d.FlipControl;
     private flipv_control :AmvManipulator2d.FlipControl;
     // private zoom_control :AmvManipulator2d.ZoomControl;
-    // private scale_control :AmvManipulator2d.ScaleControl;
+    private scale_control :AmvManipulator2d.ScaleControl;
     // private pan_control :AmvManipulator2d.PanControl;
     // private reset_control :AmvManipulator2d.ResetControl;
     // private hover_control :AmvManipulator2d.HoverControl;
@@ -62,7 +62,7 @@ export class Viewer extends AmvLevel1.Viewer
     // Returns node triggering events
     public bind_manipulators(widget :AmvLevel1.MapWidgetLevel1) :void {
         $.when(AmvUtils.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
-            this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv",
+            this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv", "wheel:alt:amv",
                                                     // "move::amv", "drag::amv", "drag:shift:amv", "wheel:shift:amv", "wheel:alt:amv", "wheel:shift-alt:amv", "key::amv"
                                                    ]);
 
@@ -70,7 +70,7 @@ export class Viewer extends AmvLevel1.Viewer
             this.fliph_control = new AmvManipulator2d.FlipControl(this, true, "left:alt:amv");
             this.flipv_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
             // this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv", this.widget);
-            // this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv", this.widget);
+            this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv", this.widget);
             // this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
             // this.reset_control = new AmvManipulator2d.ResetControl(this, "key::amv", 114); // 'r'
             // this.hover_control = new AmvManipulator2d.HoverControl(this, "move::amv", this.widget); // triggers "hover:amv" on this.element
@@ -84,7 +84,7 @@ export class Viewer extends AmvLevel1.Viewer
     private static s_help_text = '<p class="title">Help</p>\
                                 <ul>\
                                   <li>Zoom - <span class="mouse-action">?Shift-Wheel</span></li>\
-                                  <li>Point size - <span class="mouse-action">?Alt-Wheel</span></li>\
+                                  <li>Point size - <span class="mouse-action">${scale-trigger}</span></li>\
                                   <li>Rotate - <span class="mouse-action">${rotate-trigger}</span></li>\
                                   <li>Flip horizontally - <span class="mouse-action">${fliph-trigger}</span></li>\
                                   <li>Flip vertically - <span class="mouse-action">${flipv-trigger}</span></li>\
@@ -98,6 +98,7 @@ export class Viewer extends AmvLevel1.Viewer
               .replace("${rotate-trigger}", this.rotate_control.trigger_description())
               .replace("${fliph-trigger}", this.fliph_control.trigger_description())
               .replace("${flipv-trigger}", this.flipv_control.trigger_description())
+              .replace("${scale-trigger}", this.scale_control.trigger_description())
         ;
     }
 }

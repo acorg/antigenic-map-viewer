@@ -35,6 +35,22 @@ export class FlipControl extends AmvManipulator.Control
 
 // ----------------------------------------------------------------------
 
+export class ScaleControl extends AmvManipulator.Control
+{
+    private static scale = 0.95;
+
+    constructor(viewer :AmvLevel1.Viewer, event :string, private widget :AmvLevel1.MapWidgetLevel1) {
+        super(viewer, event);
+    }
+
+    public operate(data :AmvManipulator.WheelMovement) :void {
+        var scale :number  = (data.deltaY < 0) ? ScaleControl.scale : (data.deltaY > 0 ? 1.0 / ScaleControl.scale : 1.0);
+        this.widget.objects.scale(scale);
+    }
+}
+
+// ----------------------------------------------------------------------
+
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
@@ -103,22 +119,6 @@ export class FlipControl extends AmvManipulator.Control
 //     public operate(data :AmvManipulator.WheelMovement) :void {
 //         var scale :number = (data.deltaY > 0) ? ZoomControl.scale : (data.deltaY < 0 ? 1.0 / ZoomControl.scale : 1.0);
 //         this.update(0.0, 0.0, scale, null);
-//         this.widget.objects.scale(scale);
-//     }
-// }
-
-// // ----------------------------------------------------------------------
-
-// export class ScaleControl extends AmvManipulator.Control
-// {
-//     private static scale = 0.95;
-
-//     constructor(viewer :AmvLevel1.Viewer, event :string, private widget :AmvLevel1.MapWidgetLevel1) {
-//         super(viewer, event);
-//     }
-
-//     public operate(data :AmvManipulator.WheelMovement) :void {
-//         var scale :number  = (data.deltaY < 0) ? ScaleControl.scale : (data.deltaY > 0 ? 1.0 / ScaleControl.scale : 1.0);
 //         this.widget.objects.scale(scale);
 //     }
 // }
