@@ -118,6 +118,8 @@ export class Objects
     private _diameter :number;
     private _scale :number;     // keep current scale to be able to reset
 
+    private static scale_limits = [0.02, 10];
+
     constructor(protected widget :MapWidgetLevel1) {
         this._scale = 1.0;
     }
@@ -138,6 +140,15 @@ export class Objects
 
     public scale(scale :number) :void {
         this._scale *= scale;
+        if (this._scale < Objects.scale_limits[0]) {
+            scale = Objects.scale_limits[0] / this._scale;
+            this._scale = Objects.scale_limits[0];
+
+        }
+        else if (this._scale > Objects.scale_limits[1]) {
+            scale = Objects.scale_limits[1] / this._scale;
+            this._scale = Objects.scale_limits[1];
+        }
         this.objects.map(o => o.scale.multiplyScalar(scale))
     }
 
@@ -205,8 +216,13 @@ export class Viewer
         this.camera.lookAt(this.camera_looking_at);
     }
 
+    // 3d
     public camera_fov(fov?: number) :number {
         return 1.0;
+    }
+
+    // 2d
+    public viewport_zoom(factor :number) :void {
     }
 
     public width() :number {

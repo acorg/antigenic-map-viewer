@@ -11,24 +11,40 @@ import AmvManipulator2d = require("amv-manipulator-2d");
 
 // ----------------------------------------------------------------------
 
+interface Viewport
+{
+    cx :number;
+    cy :number;
+    size :number;
+}
+
+// ----------------------------------------------------------------------
+
 export class Viewer extends AmvLevel1.Viewer
 {
     public static camera_up = new THREE.Vector3(0, 1, 0);
+    private static s_initial_viewport :Viewport = {cx: 0, cy: 0, size: 5};
+    private static s_maximum_drawing_order :number = 1000;
 
     private grid :Grid;
+    private maximum_drawing_order :number;
+    private _viewport :Viewport;
 
     private rotate_control :AmvManipulator2d.RotateControl;
     private fliph_control :AmvManipulator2d.FlipControl;
     private flipv_control :AmvManipulator2d.FlipControl;
-    // private zoom_control :AmvManipulator2d.ZoomControl;
+    private zoom_control :AmvManipulator2d.ZoomControl;
     private scale_control :AmvManipulator2d.ScaleControl;
     // private pan_control :AmvManipulator2d.PanControl;
     // private reset_control :AmvManipulator2d.ResetControl;
     // private hover_control :AmvManipulator2d.HoverControl;
 
-    constructor(widget :AmvLevel1.MapWidgetLevel1, public initial_size :number = 5, private maximum_drawing_order :number = 1000) {
+    constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
-        this.camera = new THREE.OrthographicCamera(this.initial_size / - 2, this.initial_size / 2, this.initial_size / 2, this.initial_size / - 2, 0, this.maximum_drawing_order + 2);
+        this.maximum_drawing_order = Viewer.s_maximum_drawing_order;
+        this._viewport = $.extend({}, Viewer.s_initial_viewport);
+        var hsize = this._viewport.size / 2;
+        this.camera = new THREE.OrthographicCamera(this._viewport.cx - hsize, this._viewport.cx + hsize, this._viewport.cy + hsize, this._viewport.cy - hsize, 0, this.maximum_drawing_order + 2);
         widget.add(this.camera);
         this.grid = new Grid(this, 0);
         this.reset()
@@ -39,14 +55,31 @@ export class Viewer extends AmvLevel1.Viewer
         // get transformation matrix
         var quaternion = new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up);
         var flip = this.widget.objects.flip_state(); // [bool, bool]
-
+        var viewport = this._viewport;
     }
 
     public reset() :void {
         this.widget.reset_objects();
+        this.camera.up.copy(Viewer.camera_up);
         this.camera.position.set(0, 0, this.maximum_drawing_order + 1);
         this.camera_look_at(AmvLevel1.Viewer.const_vector3_zero);
         this.camera_update();
+    }
+
+    public viewport_zoom(factor :number) :void {
+        if ((factor < 1 && this._viewport.size > 1) || (factor > 1 && this._viewport.size < 100)) {
+            this._viewport.size *= factor;
+            var hsize = this._viewport.size / 2;
+            var camera = <THREE.OrthographicCamera>this.camera;
+            camera.left = this._viewport.cx - hsize;
+            camera.right = this._viewport.cx + hsize;
+            camera.top = this._viewport.cy + hsize;
+            camera.bottom = this._viewport.cy - hsize;
+            camera.updateProjectionMatrix();
+            this.grid.reset();
+            this.widget.objects.scale(factor);
+            // this.camera_update();
+        }
     }
 
     public camera_update() :void {
@@ -62,14 +95,14 @@ export class Viewer extends AmvLevel1.Viewer
     // Returns node triggering events
     public bind_manipulators(widget :AmvLevel1.MapWidgetLevel1) :void {
         $.when(AmvUtils.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
-            this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv", "wheel:alt:amv",
-                                                    // "move::amv", "drag::amv", "drag:shift:amv", "wheel:shift:amv", "wheel:alt:amv", "wheel:shift-alt:amv", "key::amv"
+            this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv", "wheel:alt:amv", "wheel:shift:amv",
+                                                    // "move::amv", "drag::amv", "drag:shift:amv", "wheel:shift-alt:amv", "key::amv"
                                                    ]);
 
             this.rotate_control = new AmvManipulator2d.RotateControl(this, "wheel:ctrl:amv");
             this.fliph_control = new AmvManipulator2d.FlipControl(this, true, "left:alt:amv");
             this.flipv_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
-            // this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv", this.widget);
+            this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv");
             this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv", this.widget);
             // this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
             // this.reset_control = new AmvManipulator2d.ResetControl(this, "key::amv", 114); // 'r'
@@ -83,7 +116,7 @@ export class Viewer extends AmvLevel1.Viewer
 
     private static s_help_text = '<p class="title">Help</p>\
                                 <ul>\
-                                  <li>Zoom - <span class="mouse-action">?Shift-Wheel</span></li>\
+                                  <li>Zoom - <span class="mouse-action">${zoom-trigger}</span></li>\
                                   <li>Point size - <span class="mouse-action">${scale-trigger}</span></li>\
                                   <li>Rotate - <span class="mouse-action">${rotate-trigger}</span></li>\
                                   <li>Flip horizontally - <span class="mouse-action">${fliph-trigger}</span></li>\
@@ -99,6 +132,7 @@ export class Viewer extends AmvLevel1.Viewer
               .replace("${fliph-trigger}", this.fliph_control.trigger_description())
               .replace("${flipv-trigger}", this.flipv_control.trigger_description())
               .replace("${scale-trigger}", this.scale_control.trigger_description())
+              .replace("${zoom-trigger}", this.zoom_control.trigger_description())
         ;
     }
 }
@@ -178,6 +212,14 @@ export class Objects extends AmvLevel1.Objects
 
     public flip_state() :[Boolean, Boolean] {
         return this._flip;
+    }
+
+    public reset() :void {
+        super.reset();
+        if (this._flip[0])
+            this.flip(true);
+        if (this._flip[1])
+            this.flip(false);
     }
 }
 
