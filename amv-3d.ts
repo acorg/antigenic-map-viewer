@@ -94,17 +94,23 @@ export class Viewer extends AmvLevel1.Viewer
 
     private static s_help_text = '<p class="title">Help</p>\
                                 <ul>\
-                                  <li>Zoom - <span class="mouse-action">Shift-Wheel</span></li>\
-                                  <li>Point size - <span class="mouse-action">Alt-Wheel</span></li>\
-                                  <li>Rotate - <span class="mouse-action">MouseDrag</span></li>\
-                                  <li>Pan - <span class="mouse-action">Shift-MouseDrag</span></li>\
-                                  <li>Field of view - <span class="mouse-action">Shift-Alt-Wheel</span></li>\
+                                  <li>Zoom - <span class="mouse-action">${zoom-trigger}</span></li>\
+                                  <li>Point size - <span class="mouse-action">${scale-trigger}</span></li>\
+                                  <li>Rotate - <span class="mouse-action">${rotate-trigger}</span></li>\
+                                  <li>Pan - <span class="mouse-action">${pan-trigger}</span></li>\
+                                  <li>Field of view - <span class="mouse-action">${fov-trigger}</span></li>\
                                   <li>Reset map - choose reset in the menu<br />(next to the Help button at the top right corner)</li>\
                                 </ul>\
                                 <p class="footer">Click to hide this popup.</p>';
 
     public help_text() :string {
-        return Viewer.s_help_text;
+        return Viewer.s_help_text
+              .replace("${rotate-trigger}", this.orbit_control.trigger_description())
+              .replace("${zoom-trigger}", this.zoom_control.trigger_description())
+              .replace("${scale-trigger}", this.scale_control.trigger_description())
+              .replace("${pan-trigger}", this.pan_control.trigger_description())
+              .replace("${fov-trigger}", this.fov_control.trigger_description())
+        ;
     }
 }
 
