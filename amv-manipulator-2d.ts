@@ -63,6 +63,17 @@ export class ZoomControl extends AmvManipulator.Control
 
 // ----------------------------------------------------------------------
 
+export class PanControl extends AmvManipulator.Control
+{
+    public operate(data :AmvManipulator.MouseMovement) :void {
+        var camera = <THREE.OrthographicCamera>this.viewer.camera;
+        var units_per_pixel = (camera.right - camera.left) / this.viewer.widget.size();
+        this.viewer.viewport_move({deltaX: - data.deltaX * units_per_pixel, deltaY: data.deltaY * units_per_pixel});
+    }
+}
+
+// ----------------------------------------------------------------------
+
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------

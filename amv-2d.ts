@@ -28,23 +28,21 @@ export class Viewer extends AmvLevel1.Viewer
 
     private grid :Grid;
     private maximum_drawing_order :number;
-    private _viewport :Viewport;
 
     private rotate_control :AmvManipulator2d.RotateControl;
     private fliph_control :AmvManipulator2d.FlipControl;
     private flipv_control :AmvManipulator2d.FlipControl;
     private zoom_control :AmvManipulator2d.ZoomControl;
     private scale_control :AmvManipulator2d.ScaleControl;
-    // private pan_control :AmvManipulator2d.PanControl;
+    private pan_control :AmvManipulator2d.PanControl;
     // private reset_control :AmvManipulator2d.ResetControl;
     // private hover_control :AmvManipulator2d.HoverControl;
 
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
         this.maximum_drawing_order = Viewer.s_maximum_drawing_order;
-        this._viewport = $.extend({}, Viewer.s_initial_viewport);
-        var hsize = this._viewport.size / 2;
-        this.camera = new THREE.OrthographicCamera(this._viewport.cx - hsize, this._viewport.cx + hsize, this._viewport.cy + hsize, this._viewport.cy - hsize, 0, this.maximum_drawing_order + 2);
+        var hsize = Viewer.s_initial_viewport.size / 2;
+        this.camera = new THREE.OrthographicCamera(Viewer.s_initial_viewport.cx - hsize, Viewer.s_initial_viewport.cx + hsize, Viewer.s_initial_viewport.cy + hsize, Viewer.s_initial_viewport.cy - hsize, 0, this.maximum_drawing_order + 2);
         widget.add(this.camera);
         this.grid = new Grid(this, 0);
         this.reset()
@@ -55,7 +53,7 @@ export class Viewer extends AmvLevel1.Viewer
         // get transformation matrix
         var quaternion = new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up);
         var flip = this.widget.objects.flip_state(); // [bool, bool]
-        var viewport = this._viewport;
+        var viewport = this.viewport();
     }
 
     public reset() :void {
@@ -66,20 +64,36 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera_update();
     }
 
+    public viewport() :Viewport {
+        var camera = <THREE.OrthographicCamera>this.camera;
+        return {cx: (camera.left + camera.right) / 2, cy: (camera.bottom + camera.top) / 2, size: camera.right - camera.left};
+    }
+
     public viewport_zoom(factor :number) :void {
-        if ((factor < 1 && this._viewport.size > 1) || (factor > 1 && this._viewport.size < 100)) {
-            this._viewport.size *= factor;
-            var hsize = this._viewport.size / 2;
+        var viewport = this.viewport();
+        if ((factor < 1 && viewport.size > 1) || (factor > 1 && viewport.size < 100)) {
+            viewport.size *= factor;
+            var hsize = viewport.size / 2;
             var camera = <THREE.OrthographicCamera>this.camera;
-            camera.left = this._viewport.cx - hsize;
-            camera.right = this._viewport.cx + hsize;
-            camera.top = this._viewport.cy + hsize;
-            camera.bottom = this._viewport.cy - hsize;
+            camera.left = viewport.cx - hsize;
+            camera.right = viewport.cx + hsize;
+            camera.top = viewport.cy + hsize;
+            camera.bottom = viewport.cy - hsize;
             camera.updateProjectionMatrix();
             this.grid.reset();
             this.widget.objects.scale(factor);
             // this.camera_update();
         }
+    }
+
+    public viewport_move(offset :AmvManipulator.MouseMovement) :void {
+        var camera = <THREE.OrthographicCamera>this.camera;
+        camera.left += offset.deltaX;
+        camera.right += offset.deltaX;
+        camera.bottom += offset.deltaY;
+        camera.top += offset.deltaY;
+        camera.updateProjectionMatrix();
+        this.grid.reset();
     }
 
     public camera_update() :void {
@@ -95,8 +109,8 @@ export class Viewer extends AmvLevel1.Viewer
     // Returns node triggering events
     public bind_manipulators(widget :AmvLevel1.MapWidgetLevel1) :void {
         $.when(AmvUtils.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
-            this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv", "wheel:alt:amv", "wheel:shift:amv",
-                                                    // "move::amv", "drag::amv", "drag:shift:amv", "wheel:shift-alt:amv", "key::amv"
+            this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv", "wheel:alt:amv", "wheel:shift:amv", "drag:shift:amv",
+                                                    // "move::amv", "drag::amv", "wheel:shift-alt:amv", "key::amv"
                                                    ]);
 
             this.rotate_control = new AmvManipulator2d.RotateControl(this, "wheel:ctrl:amv");
@@ -104,7 +118,7 @@ export class Viewer extends AmvLevel1.Viewer
             this.flipv_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
             this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv");
             this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv", this.widget);
-            // this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
+            this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
             // this.reset_control = new AmvManipulator2d.ResetControl(this, "key::amv", 114); // 'r'
             // this.hover_control = new AmvManipulator2d.HoverControl(this, "move::amv", this.widget); // triggers "hover:amv" on this.element
         });
@@ -121,7 +135,7 @@ export class Viewer extends AmvLevel1.Viewer
                                   <li>Rotate - <span class="mouse-action">${rotate-trigger}</span></li>\
                                   <li>Flip horizontally - <span class="mouse-action">${fliph-trigger}</span></li>\
                                   <li>Flip vertically - <span class="mouse-action">${flipv-trigger}</span></li>\
-                                  <li>Pan - <span class="mouse-action">?Shift-MouseDrag</span></li>\
+                                  <li>Pan - <span class="mouse-action">${pan-trigger}</span></li>\
                                   <li>Reset map - choose reset in the menu<br />(next to the Help button at the top right corner)</li>\
                                 </ul>\
                                 <p class="footer">Click to hide this popup.</p>';
@@ -133,6 +147,7 @@ export class Viewer extends AmvLevel1.Viewer
               .replace("${flipv-trigger}", this.flipv_control.trigger_description())
               .replace("${scale-trigger}", this.scale_control.trigger_description())
               .replace("${zoom-trigger}", this.zoom_control.trigger_description())
+              .replace("${pan-trigger}", this.pan_control.trigger_description())
         ;
     }
 }
@@ -141,14 +156,15 @@ export class Viewer extends AmvLevel1.Viewer
 
 class Grid
 {
-    private size :number;
     private grid :THREE.Object3D;
     private lines :THREE.Line;
+    private vertice :{x :number, y :number};
 
     private static components = [[0,1],[1,0]];
 
     constructor(public viewer :Viewer, private position_z :number) {
         this.grid = new THREE.Object3D();
+        this.vertice = null;
         this.viewer.widget.add(this.grid);
         this.grid.position.set(0, 0, this.position_z);
         this.grid.lookAt(this.viewer.camera.position);
@@ -160,17 +176,30 @@ class Grid
         }
         var camera = this.viewer.orthographic_camera()
         var lines_geometry = new THREE.Geometry();
+        var offset_base = this.offset_base();
         var offset :number;
-        for (offset = camera.left; offset < camera.right; ++offset) {
+        for (offset = camera.left + offset_base.left; offset < camera.right; ++offset) {
             lines_geometry.vertices.push(new THREE.Vector3(offset, camera.bottom, 0));
             lines_geometry.vertices.push(new THREE.Vector3(offset, camera.top, 0));
         }
-        for (offset = camera.bottom; offset < camera.top; ++offset) {
+        for (offset = camera.bottom + offset_base.bottom; offset < camera.top; ++offset) {
             lines_geometry.vertices.push(new THREE.Vector3(camera.left,  offset, 0));
             lines_geometry.vertices.push(new THREE.Vector3(camera.right, offset, 0));
         }
         this.lines = new THREE.Line(lines_geometry, new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.2, transparent: true}), THREE.LinePieces)
         this.grid.add(this.lines)
+    }
+
+    private offset_base() :{left :number, bottom :number} {
+        var offset_base = {left: 0, bottom: 0};
+        var camera = this.viewer.orthographic_camera();
+        if (!this.vertice) {
+            this.vertice = {x: camera.left, y: camera.bottom};
+        }
+        else {
+            offset_base = {left: (this.vertice.x - camera.left) % 1, bottom: (this.vertice.y - camera.bottom) % 1};
+        }
+        return offset_base;
     }
 
     public update() :void {

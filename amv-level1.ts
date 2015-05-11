@@ -118,7 +118,7 @@ export class Objects
     private _diameter :number;
     private _scale :number;     // keep current scale to be able to reset
 
-    private static scale_limits = [0.02, 10];
+    private static scale_limits = [0.01, 100];
 
     constructor(protected widget :MapWidgetLevel1) {
         this._scale = 1.0;
@@ -223,6 +223,10 @@ export class Viewer
 
     // 2d
     public viewport_zoom(factor :number) :void {
+    }
+
+    // 2d
+    public viewport_move(offset :AmvManipulator.MouseMovement) :void {
     }
 
     public width() :number {
