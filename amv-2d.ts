@@ -23,11 +23,12 @@ interface Viewport
 export class Viewer extends AmvLevel1.Viewer
 {
     public static camera_up = new THREE.Vector3(0, 1, 0);
-    private static s_initial_viewport :Viewport = {cx: 0, cy: 0, size: 5};
+    //private static s_initial_viewport :Viewport = {cx: 0, cy: 0, size: 5};
     private static s_maximum_drawing_order :number = 1000;
 
     private grid :Grid;
     private maximum_drawing_order :number;
+    private viewport_set :Boolean;
 
     private rotate_control :AmvManipulator2d.RotateControl;
     private fliph_control :AmvManipulator2d.FlipControl;
@@ -41,8 +42,10 @@ export class Viewer extends AmvLevel1.Viewer
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
         this.maximum_drawing_order = Viewer.s_maximum_drawing_order;
-        var hsize = Viewer.s_initial_viewport.size / 2;
-        this.camera = new THREE.OrthographicCamera(Viewer.s_initial_viewport.cx - hsize, Viewer.s_initial_viewport.cx + hsize, Viewer.s_initial_viewport.cy + hsize, Viewer.s_initial_viewport.cy - hsize, 0, this.maximum_drawing_order + 2);
+        // var hsize = Viewer.s_initial_viewport.size / 2;
+        // this.camera = new THREE.OrthographicCamera(Viewer.s_initial_viewport.cx - hsize, Viewer.s_initial_viewport.cx + hsize, Viewer.s_initial_viewport.cy + hsize, Viewer.s_initial_viewport.cy - hsize, 0, this.maximum_drawing_order + 2);
+        this.viewport_set = false;
+        this.camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0, this.maximum_drawing_order + 2);
         widget.add(this.camera);
         this.grid = new Grid(this, 0);
         this.reset()
@@ -80,7 +83,7 @@ export class Viewer extends AmvLevel1.Viewer
             camera.top = viewport.cy + hsize;
             camera.bottom = viewport.cy - hsize;
             camera.updateProjectionMatrix();
-            this.grid.reset();
+            this.grid.reset(false);
             this.widget.objects.scale(factor);
             // this.camera_update();
         }
@@ -93,7 +96,7 @@ export class Viewer extends AmvLevel1.Viewer
         camera.bottom += offset.deltaY;
         camera.top += offset.deltaY;
         camera.updateProjectionMatrix();
-        this.grid.reset();
+        this.grid.reset(false);
     }
 
     public camera_update() :void {
@@ -103,7 +106,21 @@ export class Viewer extends AmvLevel1.Viewer
 
     public objects_updated() :void {
         super.objects_updated();
-        this.grid.reset();
+        if (!this.viewport_set) {
+            var camera = <THREE.OrthographicCamera>this.camera;
+            var center = this.widget.objects.center();
+            var hsize = Math.ceil(this.widget.objects.diameter() + 0.5) / 2;
+            camera.left = center.x - hsize;
+            camera.right = center.x + hsize;
+            camera.top = center.y + hsize;
+            camera.bottom = center.y - hsize;
+            camera.updateProjectionMatrix();
+            this.grid.reset(true);
+            this.viewport_set = true;
+        }
+        else {
+            this.grid.reset(false);
+        }
     }
 
     // Returns node triggering events
@@ -126,6 +143,11 @@ export class Viewer extends AmvLevel1.Viewer
 
     public orthographic_camera() :THREE.OrthographicCamera {
         return <THREE.OrthographicCamera>this.camera;
+    }
+
+    public units_per_pixel() :number {
+        var camera = <THREE.OrthographicCamera>this.camera;
+        return (camera.right - camera.left) / this.widget.size();
     }
 
     private static s_help_text = '<p class="title">Help</p>\
@@ -158,25 +180,25 @@ class Grid
 {
     private grid :THREE.Object3D;
     private lines :THREE.Line;
-    private vertice :{x :number, y :number};
+    private base_vertice :{x :number, y :number};
 
     private static components = [[0,1],[1,0]];
 
     constructor(public viewer :Viewer, private position_z :number) {
         this.grid = new THREE.Object3D();
-        this.vertice = null;
+        this.base_vertice = null;
         this.viewer.widget.add(this.grid);
         this.grid.position.set(0, 0, this.position_z);
         this.grid.lookAt(this.viewer.camera.position);
     }
 
-    public reset() :void {
+    public reset(reset_base_vertice :Boolean) :void {
         if (this.lines) {
             this.grid.remove(this.lines)
         }
         var camera = this.viewer.orthographic_camera()
         var lines_geometry = new THREE.Geometry();
-        var offset_base = this.offset_base();
+        var offset_base = this.offset_base(reset_base_vertice);
         var offset :number;
         for (offset = camera.left + offset_base.left; offset < camera.right; ++offset) {
             lines_geometry.vertices.push(new THREE.Vector3(offset, camera.bottom, 0));
@@ -190,14 +212,14 @@ class Grid
         this.grid.add(this.lines)
     }
 
-    private offset_base() :{left :number, bottom :number} {
+    private offset_base(reset_base_vertice :Boolean) :{left :number, bottom :number} {
         var offset_base = {left: 0, bottom: 0};
         var camera = this.viewer.orthographic_camera();
-        if (!this.vertice) {
-            this.vertice = {x: camera.left, y: camera.bottom};
+        if (!this.base_vertice || reset_base_vertice) {
+            this.base_vertice = {x: camera.left, y: camera.bottom};
         }
         else {
-            offset_base = {left: (this.vertice.x - camera.left) % 1, bottom: (this.vertice.y - camera.bottom) % 1};
+            offset_base = {left: (this.base_vertice.x - camera.left) % 1, bottom: (this.base_vertice.y - camera.bottom) % 1};
         }
         return offset_base;
     }
@@ -250,13 +272,18 @@ export class Objects extends AmvLevel1.Objects
         if (this._flip[1])
             this.flip(false);
     }
+
+    protected scale_limits() :{min :number, max :number} {
+        var units_per_pixel = this.widget.viewer.units_per_pixel();
+        return {min: units_per_pixel * 5, max:  this.widget.size() * units_per_pixel / 3};
+    }
 }
 
 // ----------------------------------------------------------------------
 
 export class ObjectFactory extends AcmacsPlotData.ObjectFactory
 {
-    private geometry_size :number;
+    public static geometry_size :number = 0.2;
     private ball_segments :number; // depends on the number of objects
     private outline_width_scale :number;
     private outline_materials :any; // color: THREE.Material
@@ -264,7 +291,6 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
     constructor(number_of_objects :number) {
         super();
         this.material = THREE.MeshBasicMaterial;
-        this.geometry_size = 0.2;
         this.ball_segments = 32;
         this.outline_width_scale = 0.005;
         this.outline_materials = {};
@@ -284,15 +310,15 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
 
     // adds to this.geometries
     protected make_circle(outline_width :number) :void {
-        this.geometries["circle"] = new THREE.CircleGeometry(this.geometry_size / 2, this.ball_segments);
+        this.geometries["circle"] = new THREE.CircleGeometry(ObjectFactory.geometry_size / 2, this.ball_segments);
         var n_outline_width = (outline_width === undefined || outline_width === null) ? 1.0 : outline_width;
-        this.geometries[`circle-outline-${outline_width}`] = new THREE.RingGeometry(this.geometry_size / 2 - n_outline_width * this.outline_width_scale,
-                                                                                    this.geometry_size / 2, this.ball_segments);
+        this.geometries[`circle-outline-${outline_width}`] = new THREE.RingGeometry(ObjectFactory.geometry_size / 2 - n_outline_width * this.outline_width_scale,
+                                                                                    ObjectFactory.geometry_size / 2, this.ball_segments);
     }
 
     // adds to this.geometries
     protected make_box(outline_width :number) :void {
-        var offset = this.geometry_size / 2;
+        var offset = ObjectFactory.geometry_size / 2;
         var shape = new THREE.Shape();
         shape.moveTo(-offset, -offset);
         shape.lineTo(-offset,  offset);
@@ -304,7 +330,7 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
     }
 
     protected make_triangle(outline_width :number = 1.0) :void {
-        var offset = this.geometry_size / 2;
+        var offset = ObjectFactory.geometry_size / 2;
         var shape = new THREE.Shape();
         shape.moveTo(-offset, -offset);
         shape.lineTo( offset, -offset);

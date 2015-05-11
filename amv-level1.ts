@@ -83,6 +83,7 @@ export class MapWidgetLevel1
         }
     }
 
+    // in pixels
     public size(size? :number) :number {
         if (size !== undefined && size !== null) {
             this._size = size;
@@ -118,8 +119,6 @@ export class Objects
     private _diameter :number;
     private _scale :number;     // keep current scale to be able to reset
 
-    private static scale_limits = [0.01, 100];
-
     constructor(protected widget :MapWidgetLevel1) {
         this._scale = 1.0;
     }
@@ -138,18 +137,17 @@ export class Objects
         return this._center;
     }
 
-    public scale(scale :number) :void {
-        this._scale *= scale;
-        if (this._scale < Objects.scale_limits[0]) {
-            scale = Objects.scale_limits[0] / this._scale;
-            this._scale = Objects.scale_limits[0];
+    public scale(factor :number) :void {
+        var new_scale = this._scale * factor;
+        var scale_limits = this.scale_limits();
+        if (new_scale >= scale_limits.min && new_scale <= scale_limits.max) {
+            this._scale = new_scale;
+            this.objects.map(o => o.scale.multiplyScalar(factor));
+        }
+    }
 
-        }
-        else if (this._scale > Objects.scale_limits[1]) {
-            scale = Objects.scale_limits[1] / this._scale;
-            this._scale = Objects.scale_limits[1];
-        }
-        this.objects.map(o => o.scale.multiplyScalar(scale))
+    protected scale_limits() :{min :number, max :number} {
+        return {min: 0.01, max: 100};
     }
 
     // 2d only
@@ -227,6 +225,11 @@ export class Viewer
 
     // 2d
     public viewport_move(offset :AmvManipulator.MouseMovement) :void {
+    }
+
+    // 2d
+    public units_per_pixel() :number {
+        return 0;
     }
 
     public width() :number {

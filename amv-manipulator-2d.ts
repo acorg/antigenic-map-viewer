@@ -66,8 +66,7 @@ export class ZoomControl extends AmvManipulator.Control
 export class PanControl extends AmvManipulator.Control
 {
     public operate(data :AmvManipulator.MouseMovement) :void {
-        var camera = <THREE.OrthographicCamera>this.viewer.camera;
-        var units_per_pixel = (camera.right - camera.left) / this.viewer.widget.size();
+        var units_per_pixel = this.viewer.units_per_pixel();
         this.viewer.viewport_move({deltaX: - data.deltaX * units_per_pixel, deltaY: data.deltaY * units_per_pixel});
     }
 }
@@ -126,38 +125,6 @@ export class PanControl extends AmvManipulator.Control
 
 //     public reset() :void {
 //         this.viewer.reset();
-//     }
-// }
-
-// // ----------------------------------------------------------------------
-
-// export class PanControl extends WorldControl
-// {
-//     public operate(data :AmvManipulator.MouseMovement) :void {
-//         var position = this.viewer.camera.position
-//         var offset = position.clone().sub(this.viewer.camera_looking_at)
-//         var target_distance = offset.length()
-//         // half of the fov is center to top of screen
-//         target_distance *= Math.tan((this.viewer.camera_fov() / 2) * Math.PI / 180.0)
-//         var pan = new THREE.Vector3()
-//         // we actually don't use screenWidth, since perspective camera is fixed to screen height
-//         pan.add(this.pan_left(- 2 * data.deltaX * target_distance / this.viewer.height()))
-//         pan.add(this.pan_up(2 * data.deltaY * target_distance / this.viewer.height()))
-//         this.update(0.0, 0.0, 1.0, pan)
-//     }
-
-//     private pan_left(distance :number) {
-//         var te = this.viewer.camera.matrix.elements;
-//         var panOffset = new THREE.Vector3(te[ 0 ], te[ 1 ], te[ 2 ]) // get X column of matrix
-//         panOffset.multiplyScalar(distance)
-//         return panOffset
-//     }
-
-//     private pan_up(distance :number) {
-//         var te = this.viewer.camera.matrix.elements;
-//         var panOffset = new THREE.Vector3(te[ 4 ], te[ 5 ], te[ 6 ]) // get Y column of matrix
-//         panOffset.multiplyScalar(distance)
-//         return panOffset
 //     }
 // }
 
