@@ -11,15 +11,6 @@ import AmvManipulator2d = require("amv-manipulator-2d");
 
 // ----------------------------------------------------------------------
 
-interface Viewport
-{
-    cx :number;
-    cy :number;
-    size :number;
-}
-
-// ----------------------------------------------------------------------
-
 export class Viewer extends AmvLevel1.Viewer
 {
     public static camera_up = new THREE.Vector3(0, 1, 0);
@@ -27,7 +18,7 @@ export class Viewer extends AmvLevel1.Viewer
 
     private grid :Grid;
     private maximum_drawing_order :number;
-    private viewport_initial :Viewport; // for reset
+    private viewport_initial :AcmacsPlotData.Viewport; // for reset
 
     private rotate_control :AmvManipulator2d.RotateControl;
     private fliph_control :AmvManipulator2d.FlipControl;
@@ -65,7 +56,7 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera_update();
     }
 
-    public viewport(viewport?: Viewport) :Viewport {
+    public viewport(viewport?: AcmacsPlotData.Viewport) :AcmacsPlotData.Viewport {
         var camera = <THREE.OrthographicCamera>this.camera;
         if (!!viewport) {
             var hsize = viewport.size / 2;
@@ -106,8 +97,12 @@ export class Viewer extends AmvLevel1.Viewer
     public objects_updated() :void {
         super.objects_updated();
         if (!this.viewport_initial) {
-            var center = this.widget.objects.center();
-            this.viewport_initial = this.viewport({cx: center.x, cy: center.y, size: Math.ceil(this.widget.objects.diameter() + 0.5)});
+            var objects_viewport = this.widget.objects.viewport();
+            if (!objects_viewport) {
+                var center = this.widget.objects.center();
+                objects_viewport = {cx: center.x, cy: center.y, size: Math.ceil(this.widget.objects.diameter() + 0.5)};
+            }
+            this.viewport_initial = this.viewport(objects_viewport);
         }
         else {
             this.grid.reset(false);
@@ -227,14 +222,18 @@ class Grid
 export class Objects extends AmvLevel1.Objects
 {
     private _flip :[Boolean, Boolean]; // [flipX, flipY
+    private _z_pos :number;
+    private _viewport :AcmacsPlotData.Viewport;
 
     constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects :AcmacsPlotData.PlotData) {
         super(widget);
         var styles = user_objects.make_styles(new ObjectFactory(user_objects.number_of_objects()));
-        var z_pos = 1;
+        this._z_pos = 1;
         this.objects = user_objects.layout()
-              .map((elt, index) => { if (elt.length === 2) elt.push(z_pos); else elt[2] = z_pos; z_pos += 0.0001; return elt; }) // drawing order
+              .map((elt) => this.flip_layout(elt))
+              .map((elt, index) => this.add_drawing_order(elt, index))
               .map((elt, index) => styles[user_objects.style_no(index)].make(elt, {index: index}));
+        this._viewport = user_objects.viewport();
         this.widget.add_array(this.objects);
         this.calculate_bounding_sphere(user_objects.layout());
         this._flip = [false, false];
@@ -265,9 +264,26 @@ export class Objects extends AmvLevel1.Objects
             this.flip(false);
     }
 
+    public viewport() :AcmacsPlotData.Viewport {
+        return this._viewport;
+    }
+
     protected scale_limits() :{min :number, max :number} {
         var units_per_pixel = this.widget.viewer.units_per_pixel();
         return {min: units_per_pixel * 5, max:  this.widget.size() * units_per_pixel / 3};
+    }
+
+    private add_drawing_order(elt :number[], index :number) :number[] {
+        if (elt.length === 2)
+            elt.push(this._z_pos);
+        else
+            elt[2] = this._z_pos;
+        this._z_pos += 0.0001;
+        return elt;
+    }
+
+    private flip_layout(elt :number[]) :number[] {
+        return [elt[0], -elt[1], 0];
     }
 }
 

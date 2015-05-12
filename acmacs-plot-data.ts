@@ -11,6 +11,15 @@ export type PlotDataLayout = AntigenicMapViewer.PlotDataLayout;
 
 // ----------------------------------------------------------------------
 
+export interface Viewport
+{
+    cx :number;
+    cy :number;
+    size :number;
+}
+
+// ----------------------------------------------------------------------
+
 export class PlotData
 {
     private _label_types :string[];
@@ -98,6 +107,17 @@ export class PlotData
         catch (e) {
             return ['no title'];
         }
+    }
+
+    // 2d only
+    public viewport() :Viewport {
+        var viewport :Viewport = null;
+        if (this.plot_data.viewport_size && this.plot_data.viewport_origin) {
+            viewport = {cx: this.plot_data.viewport_origin[0] + this.plot_data.viewport_size[0] / 2,
+                        cy: - this.plot_data.viewport_origin[1] - this.plot_data.viewport_size[1] / 2, // Y flipped between acmacs representation and webgl representation
+                        size: this.plot_data.viewport_size[0]};
+        }
+        return viewport;
     }
 }
 

@@ -159,6 +159,11 @@ export class Objects
         return [false, false];
     }
 
+    // 2d only
+    public viewport() :AntigenicMapViewer.Viewport {
+        return null;
+    }
+
     protected calculate_bounding_sphere(layout :AntigenicMapViewer.PlotDataLayout) :void {
         var point_max = [-Infinity, -Infinity, -Infinity];
         var point_min = [Infinity, Infinity, Infinity];
