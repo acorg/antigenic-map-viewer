@@ -23,7 +23,6 @@ interface Viewport
 export class Viewer extends AmvLevel1.Viewer
 {
     public static camera_up = new THREE.Vector3(0, 1, 0);
-    //private static s_initial_viewport :Viewport = {cx: 0, cy: 0, size: 5};
     private static s_maximum_drawing_order :number = 1000;
 
     private grid :Grid;
@@ -37,13 +36,11 @@ export class Viewer extends AmvLevel1.Viewer
     private scale_control :AmvManipulator2d.ScaleControl;
     private pan_control :AmvManipulator2d.PanControl;
     private reset_control :AmvManipulator2d.ResetControl;
-    // private hover_control :AmvManipulator2d.HoverControl;
+    private hover_control :AmvManipulator2d.HoverControl;
 
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
         this.maximum_drawing_order = Viewer.s_maximum_drawing_order;
-        // var hsize = Viewer.s_initial_viewport.size / 2;
-        // this.camera = new THREE.OrthographicCamera(Viewer.s_initial_viewport.cx - hsize, Viewer.s_initial_viewport.cx + hsize, Viewer.s_initial_viewport.cy + hsize, Viewer.s_initial_viewport.cy - hsize, 0, this.maximum_drawing_order + 2);
         this.viewport_initial = null;
         this.camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0, this.maximum_drawing_order + 2);
         widget.add(this.camera);
@@ -122,7 +119,7 @@ export class Viewer extends AmvLevel1.Viewer
         $.when(AmvUtils.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
             this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv",
                                                     "wheel:alt:amv", "wheel:shift:amv", "drag:shift:amv", "key::amv",
-                                                    // "move::amv", "drag::amv", "wheel:shift-alt:amv"
+                                                    "move::amv", //"drag::amv", "wheel:shift-alt:amv"
                                                    ]);
 
             this.rotate_control = new AmvManipulator2d.RotateControl(this, "wheel:ctrl:amv");
@@ -132,7 +129,7 @@ export class Viewer extends AmvLevel1.Viewer
             this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv");
             this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
             this.reset_control = new AmvManipulator2d.ResetControl(this, "key::amv", 114); // 'r'
-            // this.hover_control = new AmvManipulator2d.HoverControl(this, "move::amv", this.widget); // triggers "hover:amv" on this.element
+            this.hover_control = new AmvManipulator2d.HoverControl(this, "move::amv"); // triggers "hover:amv" on this.element
         });
     }
 

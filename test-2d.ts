@@ -20,7 +20,8 @@ export class Application
             // make layout 2d
             test_data_2d.layout = test_data_2d.layout.map((c) => [c[0], c[1]]);
 
-            var test_data_2d_x = {"layout":[[-1, 0], [-0.5, 0], [1, 0], [0.6, 0.2], [0, 0.5], [0, -1]], "point_info":[{label: "C"}, {label: "B"}, {label: "CC"}, {label: "T"}],
+            var test_data_2d_x = {"layout":[[-1, 0], [-0.5, 0], [1, 0], [0.6, 0.2], [0, 0.5], [0, -1]],
+                                  "point_info":[{label: "A"}, {label: "B"}, {label: "C"}, {label: "D"}, {label: "E"}, {label: "F"}],
                                   styles: {points: [0, 1, 2, 3, 4, 5],
                                      styles: [{shape: "circle", size: 5.0, outline_color: "#000", fill_color: "#F00", aspect: 0.75, rotation: 0.5},
                                               {shape: "circle", size: 5.0, outline_color: "#000", fill_color: "#FA0", aspect: 0.75, rotation: 0.5},

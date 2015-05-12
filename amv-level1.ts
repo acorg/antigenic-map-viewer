@@ -243,9 +243,6 @@ export class Viewer
     public trigger_on_element(event :string, args :any[]) :void {
         this.element.trigger(event, args);
     }
-    // public hover_stream(deferred :JQueryDeferred<AmvManipulator.HoverStream>) :JQueryDeferred<AmvManipulator.HoverStream> {
-    //     return deferred;        // override
-    // }
 
     public help_text() :string {
         throw "override in derived";
