@@ -73,6 +73,21 @@ export class PanControl extends AmvManipulator.Control
 
 // ----------------------------------------------------------------------
 
+export class ResetControl extends AmvManipulator.Control
+{
+    constructor(viewer :AmvLevel1.Viewer, event :string, private reset_keycode :number) {
+        super(viewer, event);
+    }
+
+    public operate(data :AmvManipulator.Keypress) :void {
+        if (data.which = this.reset_keycode) {
+            this.viewer.reset();
+        }
+    }
+}
+
+// ----------------------------------------------------------------------
+
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
@@ -125,21 +140,6 @@ export class PanControl extends AmvManipulator.Control
 
 //     public reset() :void {
 //         this.viewer.reset();
-//     }
-// }
-
-// // ----------------------------------------------------------------------
-
-// export class ResetControl extends WorldControl
-// {
-//     constructor(viewer :AmvLevel1.Viewer, event :string, private reset_keycode :number) {
-//         super(viewer, event);
-//     }
-
-//     public operate(data :AmvManipulator.Keypress) :void {
-//         if (data.which = this.reset_keycode) {
-//             this.reset();
-//         }
 //     }
 // }
 
