@@ -6,12 +6,16 @@ declare module AntigenicMapViewer {
 
     interface PlotDataInterface
     {
+        version :number;
         diameter? :number[];
         layout :PlotDataLayout;
         number_of_antigens? :number;
         point_info :Object[];
         styles :PlotDataStyles;
         title? :PlotDataTitle;
+        viewport_size? :[number, number];
+        viewport_origin? :[number, number];
+        transformation? :[[number, number], [number, number]];
     }
 
     type PlotDataLayout = number[][];
