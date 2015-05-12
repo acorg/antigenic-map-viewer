@@ -193,7 +193,7 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
     constructor(number_of_objects :number) {
         super();
         this.material = THREE.MeshPhongMaterial;
-        this.geometry_size = 0.2;
+        this.geometry_size = 1.0;
         this.ball_segments = 32;
     }
 
