@@ -129,7 +129,7 @@ export class Viewer extends AmvLevel1.Viewer
             this.fliph_control = new AmvManipulator2d.FlipControl(this, true, "left:alt:amv");
             this.flipv_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
             this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv");
-            this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv", this.widget);
+            this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv");
             this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
             this.reset_control = new AmvManipulator2d.ResetControl(this, "key::amv", 114); // 'r'
             // this.hover_control = new AmvManipulator2d.HoverControl(this, "move::amv", this.widget); // triggers "hover:amv" on this.element

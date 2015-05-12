@@ -39,13 +39,9 @@ export class ScaleControl extends AmvManipulator.Control
 {
     private static scale = 0.95;
 
-    constructor(viewer :AmvLevel1.Viewer, event :string, private widget :AmvLevel1.MapWidgetLevel1) {
-        super(viewer, event);
-    }
-
     public operate(data :AmvManipulator.WheelMovement) :void {
         var scale :number  = (data.deltaY < 0) ? ScaleControl.scale : (data.deltaY > 0 ? 1.0 / ScaleControl.scale : 1.0);
-        this.widget.objects.scale(scale);
+        this.viewer.widget.objects.scale(scale);
     }
 }
 
@@ -87,6 +83,32 @@ export class ResetControl extends AmvManipulator.Control
 }
 
 // ----------------------------------------------------------------------
+
+// Triggers "hover:amv" with the list of hovered object indice
+// Event is triggered only when the list of hovered objects changed, [] is passed when mouse is moved outside of any object.
+export class HoverControl extends AmvManipulator.Control
+{
+    private raycaster :THREE.Raycaster;
+    private mouse :THREE.Vector2;
+    private last :number[];
+
+    constructor(viewer :AmvLevel1.Viewer, event :string) {
+        super(viewer, event);
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
+    }
+
+    public operate(data :AmvManipulator.MousePosition) :void {
+        this.mouse.set((data.x / this.viewer.width()) * 2 - 1, - (data.y / this.viewer.height()) * 2 + 1);
+        this.raycaster.setFromCamera(this.mouse, this.viewer.camera);
+        var intersects = this.raycaster.intersectObjects(this.viewer.widget.objects.objects);
+        var objects :number[] = intersects.map((elt) => elt.object.userData.index);
+        if ($(objects).not(<any>this.last).length !== 0 || $(this.last).not(<any>objects).length !== 0) {
+            this.viewer.trigger_on_element("hover:amv", [objects]);
+            this.last = objects;
+        }
+    }
+}
 
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
@@ -144,31 +166,5 @@ export class ResetControl extends AmvManipulator.Control
 // }
 
 // // ----------------------------------------------------------------------
-
-// // Triggers "hover:amv" with the list of hovered object indice
-// // Event is triggered only when the list of hovered objects changed, [] is passed when mouse is moved outside of any object.
-// export class HoverControl extends AmvManipulator.Control
-// {
-//     private raycaster :THREE.Raycaster;
-//     private mouse :THREE.Vector2;
-//     private last :number[];
-
-//     constructor(viewer :AmvLevel1.Viewer, event :string, private widget :AmvLevel1.MapWidgetLevel1) {
-//         super(viewer, event);
-//         this.raycaster = new THREE.Raycaster();
-//         this.mouse = new THREE.Vector2();
-//     }
-
-//     public operate(data :AmvManipulator.MousePosition) :void {
-//         this.mouse.set((data.x / this.viewer.width()) * 2 - 1, - (data.y / this.viewer.height()) * 2 + 1);
-//         this.raycaster.setFromCamera(this.mouse, this.viewer.camera);
-//         var intersects = this.raycaster.intersectObjects(this.widget.objects.objects);
-//         var objects :number[] = intersects.map((elt) => elt.object.userData.index);
-//         if ($(objects).not(<any>this.last).length !== 0 || $(this.last).not(<any>objects).length !== 0) {
-//             this.viewer.trigger_on_element("hover:amv", [objects]);
-//             this.last = objects;
-//         }
-//     }
-// }
 
 // ----------------------------------------------------------------------

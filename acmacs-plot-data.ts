@@ -208,6 +208,7 @@ export class ObjectStyle
 
     public make(position :number[], user_data :ObjectUserData) :THREE.Mesh {
         var obj :THREE.Mesh = null;
+        // console.log('make', this.shape, this.shown, JSON.stringify(this.plot_style));
         if (this.shown) {
             obj = this.factory.make_mesh(this.plot_style, this.shape, this.geometry, this.material);
             obj.position.set.apply(obj.position, position);

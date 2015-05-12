@@ -72,11 +72,11 @@ export class Viewer extends AmvLevel1.Viewer
             // this.element.on("key::amv", (e :Event, a :AmvManipulator.Keypress) => console.log('key::amv', JSON.stringify(a)));
 
             this.orbit_control = new AmvManipulator3d.OrbitControl(this, "drag::amv");
-            this.zoom_control = new AmvManipulator3d.ZoomControl(this, "wheel:shift:amv", this.widget);
-            this.scale_control = new AmvManipulator3d.ScaleControl(this, "wheel:alt:amv", this.widget);
+            this.zoom_control = new AmvManipulator3d.ZoomControl(this, "wheel:shift:amv");
+            this.scale_control = new AmvManipulator3d.ScaleControl(this, "wheel:alt:amv");
             this.pan_control = new AmvManipulator3d.PanControl(this, "drag:shift:amv");
             this.reset_control = new AmvManipulator3d.ResetControl(this, "key::amv", 114); // 'r'
-            this.hover_control = new AmvManipulator3d.HoverControl(this, "move::amv", this.widget); // triggers "hover:amv" on this.element
+            this.hover_control = new AmvManipulator3d.HoverControl(this, "move::amv"); // triggers "hover:amv" on this.element
             this.fov_control = new AmvManipulator3d.FovControl(this, "wheel:shift-alt:amv");
 
             // this.element.on("hover:amv", (e :Event, object_indice :number[]) => console.log('hover', JSON.stringify(object_indice)));
@@ -209,6 +209,16 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
 
     protected make_triangle(outline_width :number = 1.0) :void {
         this.geometries["triangle"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
+    }
+
+    protected convert_color(source :any) :THREE.MeshBasicMaterialParameters {
+        var material_color = super.convert_color(source);
+        // console.log('material_color', JSON.stringify(material_color));
+        if (material_color.transparent && material_color.opacity === 0) {
+            // show fully transparent objects (reference antigens and sera) in 3d as semi-transparent
+            material_color.opacity = 0.7;
+        }
+        return material_color;
     }
 }
 
