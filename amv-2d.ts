@@ -70,6 +70,13 @@ export class Viewer extends AmvLevel1.Viewer
         return {cx: (camera.left + camera.right) / 2, cy: (camera.bottom + camera.top) / 2, size: camera.right - camera.left};
     }
 
+    public viewport_rotate(angle :number) :void {
+        var quaternion = new THREE.Quaternion();
+        quaternion.setFromAxisAngle(new THREE.Vector3(0, 0, 1), angle);
+        this.camera.up.applyQuaternion(quaternion);
+        this.camera_update();
+    }
+
     public viewport_zoom(factor :number) :void {
         var viewport = this.viewport();
         if ((factor < 1 && viewport.size > 1) || (factor > 1 && viewport.size < 100)) {

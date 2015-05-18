@@ -225,6 +225,10 @@ export class Viewer
     }
 
     // 2d
+    public viewport_rotate(angle :number) :void {
+    }
+
+    // 2d
     public viewport_zoom(factor :number) :void {
     }
 

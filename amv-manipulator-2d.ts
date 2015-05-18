@@ -11,11 +11,7 @@ export class RotateControl extends AmvManipulator.Control
     private static speed :number = 0.001; // Math.PI / 360;
 
     public operate(data :AmvManipulator.WheelMovement) :void {
-        var angle :number = data.deltaY * RotateControl.speed;
-        var quaternion = new THREE.Quaternion();
-        quaternion.setFromAxisAngle(new THREE.Vector3(0, 0, 1), angle);
-        this.viewer.camera.up.applyQuaternion(quaternion);
-        this.viewer.camera_update();
+        this.viewer.viewport_rotate(data.deltaY * RotateControl.speed);
     }
 }
 

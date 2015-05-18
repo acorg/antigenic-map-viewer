@@ -51,6 +51,10 @@ export class PlotData
         return this.styles().map((style :AntigenicMapViewer.PlotDataStyle) => new ObjectStyle(style, factory));
     }
 
+    public transformation() :AntigenicMapViewer.PlotDataTransformation {
+        return this.plot_data.transformation;
+    }
+
     public label_types() :string[] {
         if (!this._label_types) {
             this._label_types = [];

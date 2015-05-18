@@ -15,10 +15,12 @@ declare module AntigenicMapViewer {
         title? :PlotDataTitle;
         viewport_size? :[number, number];
         viewport_origin? :[number, number];
-        transformation? :[[number, number], [number, number]];
+        transformation? :PlotDataTransformation; //  [[1.0, 0.0], [0.0, 1.0]]
     }
 
     type PlotDataLayout = number[][];
+
+    type PlotDataTransformation = [[number, number], [number, number]];
 
     interface PlotDataStyles
     {
