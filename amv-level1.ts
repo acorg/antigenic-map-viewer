@@ -150,14 +150,14 @@ export class Objects
         return {min: 0.01, max: 100};
     }
 
-    // 2d only
-    public flip(horizontally :Boolean) :void {
-    }
+    // // 2d only
+    // public flip(horizontally :Boolean) :void {
+    // }
 
-    // 2d only
-    public flip_state() :[Boolean, Boolean] {
-        return [false, false];
-    }
+    // // 2d only
+    // public flip_state() :[Boolean, Boolean] {
+    //     return [false, false];
+    // }
 
     // 2d only
     public viewport() :AntigenicMapViewer.Viewport {

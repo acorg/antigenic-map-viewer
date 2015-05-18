@@ -41,12 +41,8 @@ export class Viewer extends AmvLevel1.Viewer
 
     // collects current state of the viewer: transformation matrix and viewport
     public state() :void {
-        // get transformation matrix
-        var quaternion = new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up);
-        var rotation_matrix = new THREE.Matrix4().makeRotationFromQuaternion(quaternion);
-        var transformation = [[rotation_matrix.elements[0], rotation_matrix.elements[1]], [rotation_matrix.elements[4], rotation_matrix.elements[5]]];
+        var transformation = this.transformation();
         console.log('transformation', JSON.stringify(transformation));
-        var flip = this.widget.objects.flip_state(); // [bool, bool]
         var viewport = this.viewport();
     }
 
@@ -59,7 +55,7 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera_update();
     }
 
-    public viewport(viewport?: AcmacsPlotData.Viewport) :AcmacsPlotData.Viewport {
+    public viewport(viewport? :AcmacsPlotData.Viewport) :AcmacsPlotData.Viewport {
         var camera = <THREE.OrthographicCamera>this.camera;
         if (!!viewport) {
             var hsize = viewport.size / 2;
@@ -97,6 +93,30 @@ export class Viewer extends AmvLevel1.Viewer
         camera.top += offset.deltaY;
         camera.updateProjectionMatrix();
         this.grid.reset(false);
+    }
+
+    public transform(transformation :AcmacsPlotData.Transformation) :void {
+        var m = new THREE.Matrix4();
+        m.elements[0] = transformation[0][0];
+        m.elements[1] = transformation[0][1];
+        m.elements[4] = transformation[1][0];
+        m.elements[5] = transformation[1][1];
+        var tr = new THREE.Vector3(), qua = new THREE.Quaternion(), scale = new THREE.Vector3();
+        m.decompose(tr, qua, scale);
+        this.camera.up.applyQuaternion(qua);
+        if (scale.x < 0) {
+            // flip objects
+            (<Objects>this.widget.objects).flip();
+        }
+        this.camera_update();
+    }
+
+    public transformation() :AcmacsPlotData.Transformation {
+        var rotation_matrix = new THREE.Matrix4().compose(new THREE.Vector3(),
+                                                          new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up),
+                                                          new THREE.Vector3((<Objects>this.widget.objects).flip_state() ? -1 : 1, 1, 1));
+        var transformation :AcmacsPlotData.Transformation = [[rotation_matrix.elements[0], rotation_matrix.elements[1]], [rotation_matrix.elements[4], rotation_matrix.elements[5]]];
+        return transformation;
     }
 
     public camera_update() :void {
@@ -147,13 +167,10 @@ export class Viewer extends AmvLevel1.Viewer
             this.state();
             break;
         case 116:               // t
-            var m = new THREE.Matrix4();
-            //m.elements[0] = 0; m.elements[1] = 1; m.elements[4] = -1; m.elements[5] = 0;
-            m.elements[0] = -1; m.elements[1] = 0; m.elements[4] = 0; m.elements[5] = 1;
-            var quaternion = new THREE.Quaternion();
-            quaternion.setFromRotationMatrix(m);
-            this.camera.up.applyQuaternion(quaternion);
-            this.camera_update();
+            this.transform([[-1, 0], [0, 1]]);
+            break;
+        case 117:
+            this.transform([[1, 0], [0, -1]]);
             break;
         default:
             console.log('keypress', key);
@@ -254,7 +271,7 @@ class Grid
 
 export class Objects extends AmvLevel1.Objects
 {
-    private _flip :[Boolean, Boolean]; // [flipX, flipY
+    private _flip :Boolean;
     private _z_pos :number;
     private _viewport :AcmacsPlotData.Viewport;
 
@@ -269,32 +286,23 @@ export class Objects extends AmvLevel1.Objects
         this._viewport = user_objects.viewport();
         this.widget.add_array(this.objects);
         this.calculate_bounding_sphere(user_objects.layout());
-        this._flip = [false, false];
+        this._flip = false;
     }
 
-    public flip(horizontally :Boolean) :void {
-        if (horizontally) {
-            const center_x = this.center().x;
-            this.objects.map(o => o.position.setX(center_x - o.position.x));
-            this._flip[0] = !this._flip[0];
-        }
-        else {
-            const center_y = this.center().y;
-            this.objects.map(o => o.position.setY(center_y - o.position.y));
-            this._flip[1] = !this._flip[1];
-        }
+    public flip() :void {
+        const center_x = this.center().x;
+        this.objects.map(o => o.position.setX(center_x - o.position.x));
+        this._flip = !this._flip;
     }
 
-    public flip_state() :[Boolean, Boolean] {
+    public flip_state() :Boolean {
         return this._flip;
     }
 
     public reset() :void {
         super.reset();
-        if (this._flip[0])
-            this.flip(true);
-        if (this._flip[1])
-            this.flip(false);
+        if (this._flip)
+            this.flip();
     }
 
     public viewport() :AcmacsPlotData.Viewport {

@@ -34,8 +34,12 @@ export class FlipControl extends Control
     }
 
     public operate(data :AmvManipulator.Mousepress) :void {
-        this.viewer.widget.objects.flip(this.horizontally);
-        this.viewer.camera_update();
+        if (this.horizontally) {
+            this.viewer2d().transform([[-1, 0], [0, 1]]);
+        }
+        else {
+            this.viewer2d().transform([[1, 0], [0, -1]]);
+        }
     }
 }
 

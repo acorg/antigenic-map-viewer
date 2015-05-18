@@ -8,6 +8,7 @@
 // ----------------------------------------------------------------------
 
 export type PlotDataLayout = AntigenicMapViewer.PlotDataLayout;
+export type Transformation = AntigenicMapViewer.PlotDataTransformation;
 
 // ----------------------------------------------------------------------
 
