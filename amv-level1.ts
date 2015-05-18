@@ -224,23 +224,6 @@ export class Viewer
         return 1.0;
     }
 
-    // 2d
-    public viewport_rotate(angle :number) :void {
-    }
-
-    // 2d
-    public viewport_zoom(factor :number) :void {
-    }
-
-    // 2d
-    public viewport_move(offset :AmvManipulator.MouseMovement) :void {
-    }
-
-    // 2d
-    public units_per_pixel() :number {
-        return 0;
-    }
-
     public width() :number {
         return this.element.width();
     }

@@ -3,21 +3,31 @@
 
 import AmvLevel1 = require("amv-level1");
 import AmvManipulator = require("amv-manipulator");
+import Amv2d = require("amv-2d");
 
 // ----------------------------------------------------------------------
 
-export class RotateControl extends AmvManipulator.Control
+class Control extends AmvManipulator.Control
 {
-    private static speed :number = 0.001; // Math.PI / 360;
-
-    public operate(data :AmvManipulator.WheelMovement) :void {
-        this.viewer.viewport_rotate(data.deltaY * RotateControl.speed);
+    public viewer2d() :Amv2d.Viewer {
+        return <Amv2d.Viewer>this.viewer;
     }
 }
 
 // ----------------------------------------------------------------------
 
-export class FlipControl extends AmvManipulator.Control
+export class RotateControl extends Control
+{
+    private static speed :number = 0.001; // Math.PI / 360;
+
+    public operate(data :AmvManipulator.WheelMovement) :void {
+        this.viewer2d().viewport_rotate(data.deltaY * RotateControl.speed);
+    }
+}
+
+// ----------------------------------------------------------------------
+
+export class FlipControl extends Control
 {
     constructor(viewer :AmvLevel1.Viewer, private horizontally :Boolean, event :string) {
         super(viewer, event);
@@ -31,7 +41,7 @@ export class FlipControl extends AmvManipulator.Control
 
 // ----------------------------------------------------------------------
 
-export class ScaleControl extends AmvManipulator.Control
+export class ScaleControl extends Control
 {
     private static scale = 0.95;
 
@@ -43,38 +53,32 @@ export class ScaleControl extends AmvManipulator.Control
 
 // ----------------------------------------------------------------------
 
-export class ZoomControl extends AmvManipulator.Control
+export class ZoomControl extends Control
 {
     private static scale = 0.95;
 
     public operate(data :AmvManipulator.WheelMovement) :void {
         var scale :number = (data.deltaY > 0) ? ZoomControl.scale : (data.deltaY < 0 ? 1.0 / ZoomControl.scale : 1.0);
-        this.viewer.viewport_zoom(scale);
+        this.viewer2d().viewport_zoom(scale);
     }
 }
 
 // ----------------------------------------------------------------------
 
-export class PanControl extends AmvManipulator.Control
+export class PanControl extends Control
 {
     public operate(data :AmvManipulator.MouseMovement) :void {
-        var units_per_pixel = this.viewer.units_per_pixel();
-        this.viewer.viewport_move({deltaX: - data.deltaX * units_per_pixel, deltaY: data.deltaY * units_per_pixel});
+        var units_per_pixel = this.viewer2d().units_per_pixel();
+        this.viewer2d().viewport_move({deltaX: - data.deltaX * units_per_pixel, deltaY: data.deltaY * units_per_pixel});
     }
 }
 
 // ----------------------------------------------------------------------
 
-export class ResetControl extends AmvManipulator.Control
+export class KeyControl extends Control
 {
-    constructor(viewer :AmvLevel1.Viewer, event :string, private reset_keycode :number) {
-        super(viewer, event);
-    }
-
     public operate(data :AmvManipulator.Keypress) :void {
-        if (data.which = this.reset_keycode) {
-            this.viewer.reset();
-        }
+        this.viewer2d().keypress(data.which);
     }
 }
 
@@ -82,7 +86,7 @@ export class ResetControl extends AmvManipulator.Control
 
 // Triggers "hover:amv" with the list of hovered object indice
 // Event is triggered only when the list of hovered objects changed, [] is passed when mouse is moved outside of any object.
-export class HoverControl extends AmvManipulator.Control
+export class HoverControl extends Control
 {
     private raycaster :THREE.Raycaster;
     private mouse :THREE.Vector2;

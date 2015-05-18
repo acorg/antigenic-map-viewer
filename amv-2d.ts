@@ -26,7 +26,7 @@ export class Viewer extends AmvLevel1.Viewer
     private zoom_control :AmvManipulator2d.ZoomControl;
     private scale_control :AmvManipulator2d.ScaleControl;
     private pan_control :AmvManipulator2d.PanControl;
-    private reset_control :AmvManipulator2d.ResetControl;
+    private key_control :AmvManipulator2d.KeyControl;
     private hover_control :AmvManipulator2d.HoverControl;
 
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
@@ -43,6 +43,9 @@ export class Viewer extends AmvLevel1.Viewer
     public state() :void {
         // get transformation matrix
         var quaternion = new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up);
+        var rotation_matrix = new THREE.Matrix4().makeRotationFromQuaternion(quaternion);
+        var transformation = [[rotation_matrix.elements[0], rotation_matrix.elements[1]], [rotation_matrix.elements[4], rotation_matrix.elements[5]]];
+        console.log('transformation', JSON.stringify(transformation));
         var flip = this.widget.objects.flip_state(); // [bool, bool]
         var viewport = this.viewport();
     }
@@ -130,9 +133,32 @@ export class Viewer extends AmvLevel1.Viewer
             this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv");
             this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv");
             this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
-            this.reset_control = new AmvManipulator2d.ResetControl(this, "key::amv", 114); // 'r'
+            this.key_control = new AmvManipulator2d.KeyControl(this, "key::amv");
             this.hover_control = new AmvManipulator2d.HoverControl(this, "move::amv"); // triggers "hover:amv" on this.element
         });
+    }
+
+    public keypress(key :number) {
+        switch (key) {
+        case 114:               // r
+            this.reset();
+            break;
+        case 115:               // s
+            this.state();
+            break;
+        case 116:               // t
+            var m = new THREE.Matrix4();
+            //m.elements[0] = 0; m.elements[1] = 1; m.elements[4] = -1; m.elements[5] = 0;
+            m.elements[0] = -1; m.elements[1] = 0; m.elements[4] = 0; m.elements[5] = 1;
+            var quaternion = new THREE.Quaternion();
+            quaternion.setFromRotationMatrix(m);
+            this.camera.up.applyQuaternion(quaternion);
+            this.camera_update();
+            break;
+        default:
+            console.log('keypress', key);
+            break;
+        }
     }
 
     public orthographic_camera() :THREE.OrthographicCamera {
@@ -276,7 +302,7 @@ export class Objects extends AmvLevel1.Objects
     }
 
     protected scale_limits() :{min :number, max :number} {
-        var units_per_pixel = this.widget.viewer.units_per_pixel();
+        var units_per_pixel = (<Viewer>this.widget.viewer).units_per_pixel();
         return {min: units_per_pixel * 5, max:  this.widget.size() * units_per_pixel / 3};
     }
 
