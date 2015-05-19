@@ -142,7 +142,7 @@ export class Viewer extends AmvLevel1.Viewer
     public objects_updated() :void {
         super.objects_updated();
         if (!this.viewport_initial) {
-            var objects_viewport = this.widget.objects.viewport();
+            var objects_viewport = (<Objects>this.widget.objects).viewport();
             if (!objects_viewport) {
                 var center = this.widget.objects.center();
                 objects_viewport = {cx: center.x, cy: center.y, size: Math.ceil(this.widget.objects.diameter() + 0.5)};
