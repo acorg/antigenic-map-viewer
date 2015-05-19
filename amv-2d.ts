@@ -44,6 +44,7 @@ export class Viewer extends AmvLevel1.Viewer
         var transformation = this.transformation();
         console.log('transformation', JSON.stringify(transformation));
         var viewport = this.viewport();
+        console.log('viewport', JSON.stringify(viewport));
     }
 
     public reset() :void {
@@ -96,12 +97,14 @@ export class Viewer extends AmvLevel1.Viewer
     }
 
     public transform(transformation :AcmacsPlotData.Transformation) :void {
-        var m = new THREE.Matrix4();
-        m.elements[0] = transformation[0][0];
-        m.elements[1] = transformation[0][1];
-        m.elements[4] = transformation[1][0];
-        m.elements[5] = transformation[1][1];
-        this._set_m4(this._get_m4().multiply(m));
+        if (!!transformation) {
+            var m = new THREE.Matrix4();
+            m.elements[0] = transformation[0][0];
+            m.elements[1] = transformation[0][1];
+            m.elements[4] = transformation[1][0];
+            m.elements[5] = transformation[1][1];
+            this._set_m4(this._get_m4().multiply(m));
+        }
     }
 
     public transformation() :AcmacsPlotData.Transformation {

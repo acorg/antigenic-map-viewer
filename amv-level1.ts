@@ -10,7 +10,7 @@
 "use strict";
 
 import AmvUtils = require("amv-utils");
-import AntigenicMapViewer = require("acmacs-plot-data");
+import AcmacsPlotData = require("acmacs-plot-data");
 import Amv3d = require("amv-3d");
 import AmvManipulator = require("amv-manipulator");
 
@@ -43,11 +43,12 @@ export class MapWidgetLevel1
         }
     }
 
-    public user_objects(user_objects :AntigenicMapViewer.PlotData) {
+    public user_objects(user_objects :AcmacsPlotData.PlotData) {
         $.when(AmvUtils.require_deferred(['amv-' + user_objects.number_of_dimensions() + 'd'])).done((Amv :typeof Amv3d) => {
             this.viewer = new Amv.Viewer(this);
             this.viewer_created.resolve();
             this.objects = new Amv.Objects(this, user_objects);
+            this.viewer.transform(user_objects.transformation());
             this.viewer.objects_updated();
             this.viewer.camera_update();
         });
@@ -150,21 +151,7 @@ export class Objects
         return {min: 0.01, max: 100};
     }
 
-    // // 2d only
-    // public flip(horizontally :Boolean) :void {
-    // }
-
-    // // 2d only
-    // public flip_state() :[Boolean, Boolean] {
-    //     return [false, false];
-    // }
-
-    // 2d only
-    public viewport() :AntigenicMapViewer.Viewport {
-        return null;
-    }
-
-    protected calculate_bounding_sphere(layout :AntigenicMapViewer.PlotDataLayout) :void {
+    protected calculate_bounding_sphere(layout :AcmacsPlotData.PlotDataLayout) :void {
         var point_max = [-Infinity, -Infinity, -Infinity];
         var point_min = [Infinity, Infinity, Infinity];
         layout.map((elt) => elt.map((v, dim) => { point_max[dim] = Math.max(point_max[dim], v); point_min[dim] = Math.min(point_min[dim], v); }));
@@ -219,9 +206,8 @@ export class Viewer
         this.camera.lookAt(this.camera_looking_at);
     }
 
-    // 3d
-    public camera_fov(fov?: number) :number {
-        return 1.0;
+    // 2d
+    public transform(transformation :AcmacsPlotData.Transformation) :void {
     }
 
     public width() :number {

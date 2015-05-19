@@ -3,6 +3,7 @@
 
 import AmvLevel1 = require("amv-level1");
 import AmvManipulator = require("amv-manipulator");
+import Amv3d = require("amv-3d");
 
 // ----------------------------------------------------------------------
 
@@ -102,7 +103,7 @@ export class PanControl extends WorldControl
         var offset = position.clone().sub(this.viewer.camera_looking_at)
         var target_distance = offset.length()
         // half of the fov is center to top of screen
-        target_distance *= Math.tan((this.viewer.camera_fov() / 2) * Math.PI / 180.0)
+        target_distance *= Math.tan(((<Amv3d.Viewer>this.viewer).camera_fov() / 2) * Math.PI / 180.0)
         var pan = new THREE.Vector3()
         // we actually don't use screenWidth, since perspective camera is fixed to screen height
         pan.add(this.pan_left(- 2 * data.deltaX * target_distance / this.viewer.height()))
@@ -180,7 +181,8 @@ export class FovControl extends WorldControl
 
     public operate(data :AmvManipulator.WheelMovement) :void {
         var scale :number = (data.deltaY > 0) ? FovControl.scale : (data.deltaY < 0 ? 1.0 / FovControl.scale : 1.0);
-        this.viewer.camera_fov(this.viewer.camera_fov() * scale);
+        var viewer3d = <Amv3d.Viewer>this.viewer;
+        viewer3d.camera_fov(viewer3d.camera_fov() * scale);
         this.update(0.0, 0.0, 1.0 / scale, null);
     }
 }
