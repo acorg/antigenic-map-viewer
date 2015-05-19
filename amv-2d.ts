@@ -101,8 +101,7 @@ export class Viewer extends AmvLevel1.Viewer
         m.elements[1] = transformation[0][1];
         m.elements[4] = transformation[1][0];
         m.elements[5] = transformation[1][1];
-        //this._set_m4(this._get_m4().multiply(m));
-        this._set_m4(m);
+        this._set_m4(this._get_m4().multiply(m));
     }
 
     public transformation() :AcmacsPlotData.Transformation {
@@ -122,10 +121,8 @@ export class Viewer extends AmvLevel1.Viewer
     private _set_m4(m4 :THREE.Matrix4) {
         var t = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();
         m4.decompose(t, q, s);
-        this.camera.up.applyQuaternion(q);
-        if (s.x < 0) {
-            (<Objects>this.widget.objects).flip(); // flip objects
-        }
+        this.camera.up.copy(Viewer.camera_up).applyQuaternion(q);
+        (<Objects>this.widget.objects).flip_set(s.x < 0);
         this.camera_update();
     }
 
@@ -184,8 +181,8 @@ export class Viewer extends AmvLevel1.Viewer
         case 116:               // t
             this.transform([[-1, 0], [0, 1]]);
             break;
-        case 117:
-            this.transform([[1, 0], [0, -1]]);
+        case 113:               // p
+            this.viewport_rotate(Math.PI / 2);
             break;
         default:
             console.log('keypress', key);
@@ -310,14 +307,19 @@ export class Objects extends AmvLevel1.Objects
         this._flip = !this._flip;
     }
 
+    public flip_set(flip :Boolean) :void {
+        if (flip !== this._flip) {
+            this.flip();
+        }
+    }
+
     public flip_state() :Boolean {
         return this._flip;
     }
 
     public reset() :void {
         super.reset();
-        if (this._flip)
-            this.flip();
+        this.flip_set(false);
     }
 
     public viewport() :AcmacsPlotData.Viewport {
