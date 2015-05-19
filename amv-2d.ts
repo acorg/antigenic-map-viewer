@@ -56,16 +56,16 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera_update();
     }
 
-    public viewport(viewport? :AcmacsPlotData.Viewport) :AcmacsPlotData.Viewport {
+    public viewport(viewport? :AcmacsPlotData.Viewport, grid_full_reset :Boolean = false) :AcmacsPlotData.Viewport {
         var camera = <THREE.OrthographicCamera>this.camera;
         if (!!viewport) {
-            var hsize = viewport.size / 2;
+            var hsize = (viewport.size ? viewport.size : (camera.right - camera.left)) / 2;
             camera.left = viewport.cx - hsize;
             camera.right = viewport.cx + hsize;
             camera.top = viewport.cy + hsize;
             camera.bottom = viewport.cy - hsize;
             camera.updateProjectionMatrix();
-            this.grid.reset(false);
+            this.grid.reset(grid_full_reset);
         }
         return {cx: (camera.left + camera.right) / 2, cy: (camera.bottom + camera.top) / 2, size: camera.right - camera.left};
     }
@@ -75,6 +75,8 @@ export class Viewer extends AmvLevel1.Viewer
         quaternion.setFromAxisAngle(new THREE.Vector3(0, 0, 1), angle);
         this.camera.up.applyQuaternion(quaternion);
         this.camera_update();
+        var tr = this._translation_for_m4().applyQuaternion(quaternion.inverse());
+        this.viewport({cx: tr.x, cy: tr.y}, true);
     }
 
     public viewport_zoom(factor :number) :void {
@@ -86,14 +88,14 @@ export class Viewer extends AmvLevel1.Viewer
         }
     }
 
-    public viewport_move(offset :AmvManipulator.MouseMovement) :void {
+    public viewport_move(offset :AmvManipulator.MouseMovement|THREE.Vector3, grid_full_reset :Boolean = false) :void {
         var camera = <THREE.OrthographicCamera>this.camera;
-        camera.left += offset.deltaX;
-        camera.right += offset.deltaX;
-        camera.bottom += offset.deltaY;
-        camera.top += offset.deltaY;
+        camera.left += offset.x;
+        camera.right += offset.x;
+        camera.bottom += offset.y;
+        camera.top += offset.y;
         camera.updateProjectionMatrix();
-        this.grid.reset(false);
+        this.grid.reset(grid_full_reset);
     }
 
     public transform(transformation :AcmacsPlotData.Transformation) :void {
@@ -108,15 +110,18 @@ export class Viewer extends AmvLevel1.Viewer
     }
 
     public transformation() :AcmacsPlotData.Transformation {
-        var m4 = new THREE.Matrix4().compose(new THREE.Vector3(),
-                                             new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up),
-                                             new THREE.Vector3((<Objects>this.widget.objects).flip_state() ? -1 : 1, 1, 1));
+        var m4 = this._get_m4();
         var transformation :AcmacsPlotData.Transformation = [[m4.elements[0], m4.elements[1]], [m4.elements[4], m4.elements[5]]];
         return transformation;
     }
 
+    private _translation_for_m4() :THREE.Vector3 {
+        var camera = <THREE.OrthographicCamera>this.camera;
+        return new THREE.Vector3((camera.left + camera.right) / 2, (camera.bottom + camera.top) / 2, 0);
+    }
+
     private _get_m4() :THREE.Matrix4 {
-        return new THREE.Matrix4().compose(new THREE.Vector3(),
+        return new THREE.Matrix4().compose(this._translation_for_m4(),
                                            new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up),
                                            new THREE.Vector3((<Objects>this.widget.objects).flip_state() ? -1 : 1, 1, 1));
     }
@@ -124,14 +129,10 @@ export class Viewer extends AmvLevel1.Viewer
     private _set_m4(m4 :THREE.Matrix4) {
         var t = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();
         m4.decompose(t, q, s);
+        //console.log('set tra', JSON.stringify(t));
         this.camera.up.copy(Viewer.camera_up).applyQuaternion(q);
         (<Objects>this.widget.objects).flip_set(s.x < 0);
         this.camera_update();
-    }
-
-    private _reset_m4() :void {
-        this.widget.reset_objects();
-        this.camera.up.copy(Viewer.camera_up);
     }
 
     public camera_update() :void {

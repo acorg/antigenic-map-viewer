@@ -65,7 +65,7 @@ export class OrbitControl extends WorldControl
     private rotate_speed :number = 1.0;
 
     public operate(data :AmvManipulator.MouseMovement) :void {
-        this.update(- 2 * Math.PI * data.deltaX / this.viewer.width() * this.rotate_speed, - 2 * Math.PI * data.deltaY / this.viewer.height() * this.rotate_speed, 1.0, null)
+        this.update(- 2 * Math.PI * data.x / this.viewer.width() * this.rotate_speed, - 2 * Math.PI * data.y / this.viewer.height() * this.rotate_speed, 1.0, null)
     }
 }
 
@@ -106,8 +106,8 @@ export class PanControl extends WorldControl
         target_distance *= Math.tan(((<Amv3d.Viewer>this.viewer).camera_fov() / 2) * Math.PI / 180.0)
         var pan = new THREE.Vector3()
         // we actually don't use screenWidth, since perspective camera is fixed to screen height
-        pan.add(this.pan_left(- 2 * data.deltaX * target_distance / this.viewer.height()))
-        pan.add(this.pan_up(2 * data.deltaY * target_distance / this.viewer.height()))
+        pan.add(this.pan_left(- 2 * data.x * target_distance / this.viewer.height()))
+        pan.add(this.pan_up(2 * data.y * target_distance / this.viewer.height()))
         this.update(0.0, 0.0, 1.0, pan)
     }
 

@@ -12,8 +12,8 @@ export interface MousePosition
 
 export interface MouseMovement
 {
-    deltaX :number;
-    deltaY :number;
+    x :number;                  // relative
+    y :number;                  // relative
 }
 
 export interface WheelMovement
@@ -130,7 +130,7 @@ export class Manipulator implements Object
         this.element.on("move-abs:amv", (_ :Event, c :MousePosition, dragging :Boolean, e :JQueryEventObject) => {
             if (dragging && modifier_keys.filter(e)) {
                 if (previous !== null) {
-                    this.element.trigger("drag:" + modifier_desc + ":amv", [{deltaX: c.x - previous.x, deltaY: c.y - previous.y}]);
+                    this.element.trigger("drag:" + modifier_desc + ":amv", [{x: c.x - previous.x, y: c.y - previous.y}]);
                 }
                 previous = c;
             }

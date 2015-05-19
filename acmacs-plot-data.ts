@@ -16,7 +16,7 @@ export interface Viewport
 {
     cx :number;
     cy :number;
-    size :number;
+    size? :number;
 }
 
 // ----------------------------------------------------------------------

@@ -73,7 +73,7 @@ export class PanControl extends Control
 {
     public operate(data :AmvManipulator.MouseMovement) :void {
         var units_per_pixel = this.viewer2d().units_per_pixel();
-        this.viewer2d().viewport_move({deltaX: - data.deltaX * units_per_pixel, deltaY: data.deltaY * units_per_pixel});
+        this.viewer2d().viewport_move({x: - data.x * units_per_pixel, y: data.y * units_per_pixel});
     }
 }
 
