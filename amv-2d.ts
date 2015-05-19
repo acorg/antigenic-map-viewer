@@ -101,22 +101,37 @@ export class Viewer extends AmvLevel1.Viewer
         m.elements[1] = transformation[0][1];
         m.elements[4] = transformation[1][0];
         m.elements[5] = transformation[1][1];
-        var tr = new THREE.Vector3(), qua = new THREE.Quaternion(), scale = new THREE.Vector3();
-        m.decompose(tr, qua, scale);
-        this.camera.up.applyQuaternion(qua);
-        if (scale.x < 0) {
-            // flip objects
-            (<Objects>this.widget.objects).flip();
+        //this._set_m4(this._get_m4().multiply(m));
+        this._set_m4(m);
+    }
+
+    public transformation() :AcmacsPlotData.Transformation {
+        var m4 = new THREE.Matrix4().compose(new THREE.Vector3(),
+                                             new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up),
+                                             new THREE.Vector3((<Objects>this.widget.objects).flip_state() ? -1 : 1, 1, 1));
+        var transformation :AcmacsPlotData.Transformation = [[m4.elements[0], m4.elements[1]], [m4.elements[4], m4.elements[5]]];
+        return transformation;
+    }
+
+    private _get_m4() :THREE.Matrix4 {
+        return new THREE.Matrix4().compose(new THREE.Vector3(),
+                                           new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up),
+                                           new THREE.Vector3((<Objects>this.widget.objects).flip_state() ? -1 : 1, 1, 1));
+    }
+
+    private _set_m4(m4 :THREE.Matrix4) {
+        var t = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();
+        m4.decompose(t, q, s);
+        this.camera.up.applyQuaternion(q);
+        if (s.x < 0) {
+            (<Objects>this.widget.objects).flip(); // flip objects
         }
         this.camera_update();
     }
 
-    public transformation() :AcmacsPlotData.Transformation {
-        var rotation_matrix = new THREE.Matrix4().compose(new THREE.Vector3(),
-                                                          new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up),
-                                                          new THREE.Vector3((<Objects>this.widget.objects).flip_state() ? -1 : 1, 1, 1));
-        var transformation :AcmacsPlotData.Transformation = [[rotation_matrix.elements[0], rotation_matrix.elements[1]], [rotation_matrix.elements[4], rotation_matrix.elements[5]]];
-        return transformation;
+    private _reset_m4() :void {
+        this.widget.reset_objects();
+        this.camera.up.copy(Viewer.camera_up);
     }
 
     public camera_update() :void {
