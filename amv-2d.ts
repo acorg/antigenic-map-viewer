@@ -355,7 +355,7 @@ export class Objects extends AmvLevel1.Objects
 
 export class ObjectFactory extends AcmacsPlotData.ObjectFactory
 {
-    public static geometry_size :number = 0.2;
+    public static geometry_size :number = 0.18;
     private ball_segments :number; // depends on the number of objects
     private outline_width_scale :number;
     private outline_materials :any; // color: THREE.Material
