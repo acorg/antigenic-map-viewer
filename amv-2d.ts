@@ -106,6 +106,9 @@ export class Viewer extends AmvLevel1.Viewer
             m.elements[4] = transformation[1][0];
             m.elements[5] = transformation[1][1];
             this._set_m4(this._get_m4().multiply(m));
+            // transform viewport center (we do transformation relative to the viewport center)
+            var v = this.viewport();
+            this.viewport({cx: v.cx * transformation[0][0] + v.cy * transformation[1][0], cy: v.cx * transformation[0][1] + v.cy * transformation[1][1]}, true);
         }
     }
 
@@ -129,7 +132,6 @@ export class Viewer extends AmvLevel1.Viewer
     private _set_m4(m4 :THREE.Matrix4) {
         var t = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();
         m4.decompose(t, q, s);
-        //console.log('set tra', JSON.stringify(t));
         this.camera.up.copy(Viewer.camera_up).applyQuaternion(q);
         (<Objects>this.widget.objects).flip_set(s.x < 0);
         this.camera_update();
