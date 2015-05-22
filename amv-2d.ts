@@ -77,6 +77,9 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera_update();
         var tr = this._translation_for_m4().applyQuaternion(quaternion.inverse());
         this.viewport({cx: tr.x, cy: tr.y}, true);
+
+        // var qq = new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up);
+        // console.log('angle', JSON.stringify(qq));
     }
 
     public viewport_zoom(factor :number) :void {

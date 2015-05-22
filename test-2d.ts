@@ -34,10 +34,12 @@ export class Application
                                               {shape: "triangle", size: 2.0, outline_color: "#000", fill_color: "#0F0"},
                                              ]},
                             // title: {"0": {text: ["2D map"]}}};
-                            title: {"0": {text: <string[]>[]}}};
+                                  title: {"0": {text: <string[]>[]}},
+                                  transformation: <[[number, number], [number, number]]>[[0.3, 0.5], [0.5, 0.3]]
+                                 };
 
 
-            var widget1 = amv.make_widget($('body'), null, test_data_2d);
+            var widget1 = amv.make_widget($('body'), null, test_data_2d_x);
             // var widget2 = amv.make_widget($('body'), null, test_data_2d);
         });
     }
