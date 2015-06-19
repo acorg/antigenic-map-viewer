@@ -37,8 +37,11 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
         $.when(AmvUtils.require_deferred(['amv-level1'])).done(() => {
             var map_container = this.wrapper.find('.amv-level2-map-wrapper');
             map_container.css({width: size, height: size});
-            map_container.resizable({aspectRatio: 1.0, minWidth: 100});
-            map_container.on("resize", (e :Event, ui :JQueryUI.ResizableUIParams) => this.resized(ui.size.width));
+            if (map_container.resizable) {
+                // resizable is not loaded in the printable context for unclear reason (and it is not needed there anyway)
+                map_container.resizable({aspectRatio: 1.0, minWidth: 100});
+                map_container.on("resize", (e :Event, ui :JQueryUI.ResizableUIParams) => this.resized(ui.size.width));
+            }
             this.map = new AmvLevel1.MapWidgetLevel1(map_container, size);
             this.map_created.resolve();
             this.map.bind_manipulators();
