@@ -91,6 +91,16 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
         });
     }
 
+    protected popup_menu_items() :AcmacsToolkit.PopupMenuDescItem[] {
+        var label_menu = this._plot_data.label_types().map((lt :string) => ({
+            label: lt, icon: lt === this.user_object_label_type ? "ui-icon-check" : null, event: "label-type:amv", eventNode: this.map, eventData: {label_type: lt}}));
+        var menu = [{label: "Reset", event: "reset:amv", eventNode: this.map},
+                    {},
+                    {label: "Label type", title: true}
+                   ];
+        return menu.concat(label_menu);
+    }
+
     private show_hovered(indice :number[]) :void {
         if (indice.length) {
             this.popup_hovered.show(MapWidgetLevel2.popup_hovered_message_prefix
@@ -109,14 +119,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
     }
 
     private popup_menu(e :JQueryEventObject) :void {
-        var label_menu = this._plot_data.label_types().map((lt :string) => ({
-            label: lt, icon: lt === this.user_object_label_type ? "ui-icon-check" : null, event: "label-type:amv", eventNode: this.map, eventData: {label_type: lt}}));
-        var menu = new AcmacsToolkit.PopupMenu({
-            items: [{label: "Reset", event: "reset:amv", eventNode: this.map},
-                    {},
-                    {label: "Label type", title: true}
-                   ].concat(label_menu)
-        });
+        var menu = new AcmacsToolkit.PopupMenu({items: this.popup_menu_items()});
         menu.show($(e.currentTarget));
     }
 
