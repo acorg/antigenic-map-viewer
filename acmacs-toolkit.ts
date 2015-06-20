@@ -3,6 +3,11 @@
 
 // ----------------------------------------------------------------------
 
+export interface TriggeringEvent {
+    trigger(event :string, data :any) :void;
+    on(event :string, callback: (data :any) => void) :JQuery;
+}
+
 export interface PopupMenuDesc
 {
     items :PopupMenuDescItem[];
@@ -14,7 +19,7 @@ export interface PopupMenuDescItem
     icon? :string;
     title? :Boolean;             // cannot be selected
     event? :string;               // event to trigger
-    eventNode? :JQuery;           // node to trigger event on
+    eventNode? :JQuery | TriggeringEvent;           // node to trigger event on
     eventData? :any;
 }
 

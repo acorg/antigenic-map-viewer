@@ -53,15 +53,32 @@ declare module AntigenicMapViewer {
 
 // ----------------------------------------------------------------------
 
-    interface MapWidgetLevel2
+    interface TriggeringEvent {
+        trigger(event :string, data :any) :void;
+        on(event :string, callback: (data :any) => void) :JQuery;
+    }
+
+// ----------------------------------------------------------------------
+
+    interface PopupMenuDescItem
+    {
+        label? :string;             // no label --> divider
+        icon? :string;
+        title? :Boolean;             // cannot be selected
+        event? :string;               // event to trigger
+        eventNode? :JQuery | TriggeringEvent;           // node to trigger event on (default is popup menu parent)
+        eventData? :any;
+    }
+
+    interface MapWidgetLevel2 extends TriggeringEvent
     {
         destroy() :void;
         plot_data(plot_data :PlotDataInterface) :void;
+        add_popup_menu_items(items :PopupMenuDescItem[]) :void;
     }
 
-
     interface MapWidgetLevel2Maker {
-        make_widget(container :any /*JQuery*/, size :number, plot_data :PlotDataInterface) :MapWidgetLevel2;
+        make_widget(container :any /*JQuery*/, size :number, plot_data :PlotDataInterface, extra_popup_menu_items? :PopupMenuDescItem[]) :MapWidgetLevel2;
     }
 
 // ----------------------------------------------------------------------

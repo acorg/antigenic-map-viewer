@@ -11,7 +11,7 @@ import AcmacsToolkit = require("acmacs-toolkit");
 
 // ----------------------------------------------------------------------
 
-export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
+export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, AntigenicMapViewer.TriggeringEvent
 {
     private wrapper :JQuery;
     private map :AmvLevel1.MapWidgetLevel1;
@@ -20,6 +20,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
     private user_object_label_type :string;
     private popup_hovered :AcmacsToolkit.PopupMessage;
     private help_popup :AcmacsToolkit.PopupMessage;
+    private popup_menu_items_extra :AcmacsToolkit.PopupMenuDescItem[];
 
     private static popup_hovered_message_prefix = "<ul><li>";
     private static popup_hovered_message_suffix = "</li></ul>";
@@ -91,14 +92,16 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
         });
     }
 
-    protected popup_menu_items() :AcmacsToolkit.PopupMenuDescItem[] {
-        var label_menu = this._plot_data.label_types().map((lt :string) => ({
-            label: lt, icon: lt === this.user_object_label_type ? "ui-icon-check" : null, event: "label-type:amv", eventNode: this.map, eventData: {label_type: lt}}));
-        var menu = [{label: "Reset", event: "reset:amv", eventNode: this.map},
-                    {},
-                    {label: "Label type", title: true}
-                   ];
-        return menu.concat(label_menu);
+    public add_popup_menu_items(items :AcmacsToolkit.PopupMenuDescItem[]) :void {
+        this.popup_menu_items_extra = (this.popup_menu_items_extra || []).concat((items || []).map(function (elt) { if (!elt.eventNode) {elt = $.extend({eventNode: this}, elt); } return elt; }, this));
+    }
+
+    public on(event :string, callback: (data :any) => void) :JQuery {
+        return this.wrapper.on(event, (e :Event, data :any) => callback(data));
+    }
+
+    public trigger(event :string, data :any) :void {
+        this.wrapper.trigger(event, data);
     }
 
     private show_hovered(indice :number[]) :void {
@@ -123,6 +126,13 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
         menu.show($(e.currentTarget));
     }
 
+    private popup_menu_items() :AcmacsToolkit.PopupMenuDescItem[] {
+        var label_menu = this._plot_data.label_types().map((lt :string) => ({
+            label: lt, icon: lt === this.user_object_label_type ? "ui-icon-check" : null, event: "label-type:amv", eventNode: this.map, eventData: {label_type: lt}}));
+        var m :AcmacsToolkit.PopupMenuDescItem[] = [{label: "Reset", event: "reset:amv", eventNode: this.map}];
+        return m.concat(this.popup_menu_items_extra || [], [{}, {label: "Label type", title: true}], label_menu);
+    }
+
     private help(e :JQueryEventObject) :void {
         this.help_popup.show(this.map.help_text())
     }
@@ -130,13 +140,13 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2
 
 // ----------------------------------------------------------------------
 
-export function make_widget(container :JQuery, size :number, plot_data :AntigenicMapViewer.PlotDataInterface) :MapWidgetLevel2
+export function make_widget(container :JQuery, size :number, plot_data :AntigenicMapViewer.PlotDataInterface, extra_popup_menu_items? :AcmacsToolkit.PopupMenuDescItem[]) :MapWidgetLevel2
     {
-        if (size === null || size === undefined) {
-            size = 500;
-        }
-        var widget = new MapWidgetLevel2(container, size);
+        var widget = new MapWidgetLevel2(container, size || 500);
         widget.plot_data(plot_data);
+        if (extra_popup_menu_items) {
+            widget.add_popup_menu_items(extra_popup_menu_items);
+        }
         return widget;
     }
 

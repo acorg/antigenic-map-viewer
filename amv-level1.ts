@@ -16,7 +16,7 @@ import AmvManipulator = require("amv-manipulator");
 
 // ----------------------------------------------------------------------
 
-export class MapWidgetLevel1
+export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 {
     private scene :THREE.Scene;
     private renderer :THREE.WebGLRenderer;
@@ -66,10 +66,11 @@ export class MapWidgetLevel1
         $.when(this.viewer_created).done(() => { this.viewer.bind_manipulators(this) });
     }
 
-    public on(event :string, callback: (data :any) => void) :void {
+    public on(event :string, callback: (data :any) => void) :JQuery {
         $.when(this.viewer_created).done(() => {
             this.event_handlers.push(this.viewer.on(event, callback));
         });
+        return $();
     }
 
     public trigger(event :string, data :any) :void {
@@ -162,7 +163,7 @@ export class Objects
 
 // ----------------------------------------------------------------------
 
-export class Viewer
+export class Viewer implements AntigenicMapViewer.TriggeringEvent
 {
     public static const_vector3_zero = new THREE.Vector3();
 
