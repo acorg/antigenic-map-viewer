@@ -75,6 +75,7 @@ declare module AntigenicMapViewer {
         destroy() :void;
         plot_data(plot_data :PlotDataInterface) :void;
         add_popup_menu_items(items :PopupMenuDescItem[]) :void;
+        state_for_drawing() :MapStateForDrawing;
     }
 
     interface MapWidgetLevel2Maker {
@@ -83,4 +84,31 @@ declare module AntigenicMapViewer {
 
 // ----------------------------------------------------------------------
 
-}                               // module AntigenicMapViewer
+    type Position3d = number[]; //[number, number, number];
+
+    interface Object3d
+    {
+        position :Position3d;
+        scale :number;
+        user_data? :any;
+        aspect? :number;
+        rotation? :number;
+        shape :string;
+        outline_width :number;
+        fill_color :number;
+        outline_color? :number;
+    }
+
+    // Complete set of data allowing to re-create level-1 widget in
+    // the same state (position of camera, object scale, etc.)
+    interface MapStateForDrawing
+    {
+        camera_position :Position3d;
+        camera_looking_at :Position3d;
+        camera_fov :number;
+        objects :Object3d[];
+    }
+
+// ----------------------------------------------------------------------
+
+} // module AntigenicMapViewer

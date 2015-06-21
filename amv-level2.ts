@@ -136,6 +136,10 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     private help(e :JQueryEventObject) :void {
         this.help_popup.show(this.map.help_text())
     }
+
+    public state_for_drawing() :AntigenicMapViewer.MapStateForDrawing {
+        return this.map.state_for_drawing();
+    }
 }
 
 // ----------------------------------------------------------------------

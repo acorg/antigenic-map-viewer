@@ -109,6 +109,15 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     public help_text() :string {
         return this.viewer.help_text();
     }
+
+    public state_for_drawing() :AntigenicMapViewer.MapStateForDrawing {
+        return {
+            camera_position: this.viewer.camera.position.toArray(),
+            camera_looking_at: this.viewer.camera_looking_at.toArray(),
+            camera_fov: this.viewer.camera_fov(),
+            objects: this.objects.state_for_drawing()
+        }
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -159,6 +168,34 @@ export class Objects
         this._center = new THREE.Vector3((point_max[0] + point_min[0]) / 2.0, (point_max[1] + point_min[1]) / 2.0, (point_max[2] + point_min[2]) / 2.0);
         this._diameter = Math.max(point_max[0] - point_min[0], point_max[1] - point_min[1], point_max[2] - point_min[2]) * Math.sqrt(3.0);
     }
+
+    public state_for_drawing() :AntigenicMapViewer.Object3d[] {
+        var object_state_for_drawing = function(obj :THREE.Object3D) :AntigenicMapViewer.Object3d {
+            var r :AntigenicMapViewer.Object3d = {
+                position: obj.position.toArray(),
+                scale: obj.scale.y,
+                shape: "circle", // ?
+                outline_width: 1.0, // ?
+                fill_color: 0xFDB0BF, // ?
+                outline_color: 0xFDB0BF // ?
+            };
+            if (obj.userData !== undefined && obj.userData !== null) {
+                r.user_data = obj.userData;
+            }
+            if (obj.scale.x !== obj.scale.y) {
+                r.aspect = obj.scale.x / obj.scale.y;
+            }
+            if (obj.rotation.z !== 0) {
+                r.rotation = obj.rotation.z;
+            }
+            // shape :string;
+            // outline_width :number;
+            // fill_color :number;
+            // outline_color? :number;
+            return r;
+        }
+        return this.objects.map(object_state_for_drawing);
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -205,6 +242,11 @@ export class Viewer implements AntigenicMapViewer.TriggeringEvent
     public camera_look_at(lookAt :THREE.Vector3) :void {
         this.camera_looking_at = lookAt.clone();
         this.camera.lookAt(this.camera_looking_at);
+    }
+
+    // overridden in 3d
+    public camera_fov(fov?: number) :number {
+        return 0;
     }
 
     // 2d
