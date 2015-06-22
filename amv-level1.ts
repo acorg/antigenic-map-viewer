@@ -171,13 +171,18 @@ export class Objects
 
     public state_for_drawing() :AntigenicMapViewer.Object3d[] {
         var object_state_for_drawing = function(obj :THREE.Object3D) :AntigenicMapViewer.Object3d {
+            var mesh = <THREE.Mesh>obj;
+            var material = mesh.material && (<THREE.MeshPhongMaterial>mesh.material);
+            var fill_color = "transparent";
+            if (material && ! (material.transparent && material.opacity === 0)) {
+                fill_color = '#' + material.color.getHexString();
+            }
+            //console.log('mesh', mesh);
             var r :AntigenicMapViewer.Object3d = {
                 position: obj.position.toArray(),
                 scale: obj.scale.y,
-                shape: "circle", // ?
-                outline_width: 1.0, // ?
-                fill_color: 0xFDB0BF, // ?
-                outline_color: 0xFDB0BF // ?
+                shape: ((mesh.geometry && mesh.geometry.type) || "circle").toLowerCase().replace('geometry', ''),
+                fill_color: fill_color
             };
             if (obj.userData !== undefined && obj.userData !== null) {
                 r.user_data = obj.userData;
@@ -188,13 +193,11 @@ export class Objects
             if (obj.rotation.z !== 0) {
                 r.rotation = obj.rotation.z;
             }
-            // shape :string;
             // outline_width :number;
-            // fill_color :number;
             // outline_color? :number;
             return r;
         }
-        return this.objects.map(object_state_for_drawing);
+        return this.objects.map(object_state_for_drawing, this);
     }
 }
 

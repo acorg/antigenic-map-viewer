@@ -374,7 +374,7 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
     public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, shape :string, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
         var mesh = super.make_mesh(plot_style, shape, geometry, material);
         var outline_material = this.outline_material(this.convert_color(plot_style.outline_color), plot_style.outline_width);
-        if (shape === "circle") {
+        if (shape === "circle" || shape === "sphere") {
             mesh.add(new THREE.Mesh(this.geometries[`${shape}-outline-${plot_style.outline_width}`], outline_material));
         }
         else {
@@ -385,10 +385,11 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
 
     // adds to this.geometries
     protected make_circle(outline_width :number) :void {
-        this.geometries["circle"] = new THREE.CircleGeometry(ObjectFactory.geometry_size / 2, this.ball_segments);
+        this.geometries["circle"] = this.geometries["sphere"] = new THREE.CircleGeometry(ObjectFactory.geometry_size / 2, this.ball_segments);
         var n_outline_width = (outline_width === undefined || outline_width === null) ? 1.0 : outline_width;
-        this.geometries[`circle-outline-${outline_width}`] = new THREE.RingGeometry(ObjectFactory.geometry_size / 2 - n_outline_width * this.outline_width_scale,
-                                                                                    ObjectFactory.geometry_size / 2, this.ball_segments);
+        this.geometries[`circle-outline-${outline_width}`] = this.geometries[`sphere-outline-${outline_width}`] =
+              new THREE.RingGeometry(ObjectFactory.geometry_size / 2 - n_outline_width * this.outline_width_scale,
+                                     ObjectFactory.geometry_size / 2, this.ball_segments);
     }
 
     // adds to this.geometries
@@ -400,8 +401,8 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
         shape.lineTo( offset,  offset);
         shape.lineTo( offset, -offset);
         shape.lineTo(-offset, -offset);
-        this.geometries["box"] = new THREE.ShapeGeometry(shape);
-        this.geometries["box-outline"] = (<any>shape).createPointsGeometry();
+        this.geometries["box"] = this.geometries["cube"] = new THREE.ShapeGeometry(shape);
+        this.geometries["box-outline"] = this.geometries["cube-outline"] = (<any>shape).createPointsGeometry();
     }
 
     protected make_triangle(outline_width :number = 1.0) :void {

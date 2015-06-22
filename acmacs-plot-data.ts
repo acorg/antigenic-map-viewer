@@ -153,14 +153,16 @@ export class ObjectFactory
 
     public make_geometry_material(plot_style :AntigenicMapViewer.PlotDataStyle) :[string, THREE.Geometry, THREE.Material] {
         var material = new this.material(this.convert_color(plot_style.fill_color));
-        var shape :string = (plot_style.shape === undefined || plot_style.shape === null) ? "circle" : (plot_style.shape === "cube" ? "box" : plot_style.shape);
+        var shape :string = (plot_style.shape === undefined || plot_style.shape === null) ? "circle" : plot_style.shape;
         var geometry = this.geometries[shape];
         if (!geometry) {
             switch (shape) {
             case "box":
+            case "cube":
                 this.make_box(plot_style.outline_width);
                 break;
             case "circle":
+            case "sphere":
                 this.make_circle(plot_style.outline_width);
                 break;
             case "triangle":

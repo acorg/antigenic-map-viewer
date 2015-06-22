@@ -94,9 +94,9 @@ declare module AntigenicMapViewer {
         aspect? :number;
         rotation? :number;
         shape :string;
-        outline_width :number;
-        fill_color :number;
-        outline_color? :number;
+        outline_width? :number;
+        fill_color :string;
+        outline_color? :string;
     }
 
     // Complete set of data allowing to re-create level-1 widget in
