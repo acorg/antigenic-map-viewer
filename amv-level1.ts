@@ -172,16 +172,26 @@ export class Objects
     public state_for_drawing() :AntigenicMapViewer.Object3d[] {
         var object_state_for_drawing = function(obj :THREE.Object3D) :AntigenicMapViewer.Object3d {
             var mesh = <THREE.Mesh>obj;
+            var shape = ((mesh.geometry && mesh.geometry.type) || "circle").toLowerCase().replace('geometry', '');
+            if (shape === "shape") {
+                // 2d box or triangle
+                if (mesh.geometry.vertices) {
+                    if (mesh.geometry.vertices.length === 3)
+                        shape = "triangle";
+                    else
+                        shape = "box";
+                }
+            }
             var material = mesh.material && (<THREE.MeshPhongMaterial>mesh.material);
             var fill_color = "transparent";
             if (material && ! (material.transparent && material.opacity === 0)) {
                 fill_color = '#' + material.color.getHexString();
             }
-            //console.log('mesh', mesh);
+            // console.log('mesh', mesh);
             var r :AntigenicMapViewer.Object3d = {
                 position: obj.position.toArray(),
                 scale: obj.scale.y,
-                shape: ((mesh.geometry && mesh.geometry.type) || "circle").toLowerCase().replace('geometry', ''),
+                shape: shape,
                 fill_color: fill_color
             };
             if (obj.userData !== undefined && obj.userData !== null) {
@@ -193,8 +203,14 @@ export class Objects
             if (obj.rotation.z !== 0) {
                 r.rotation = obj.rotation.z;
             }
-            // outline_width :number;
-            // outline_color? :number;
+            if (mesh.children && mesh.children.length === 1) {
+                var outline_mesh = <THREE.Mesh>mesh.children[0];
+                var outline_material = <THREE.LineBasicMaterial>outline_mesh.material;
+                if (outline_material && ! (outline_material.transparent && outline_material.opacity === 0)) {
+                    r.outline_color = '#' + outline_material.color.getHexString();
+                    r.outline_width = outline_material.linewidth;
+                }
+            }
             return r;
         }
         return this.objects.map(object_state_for_drawing, this);
