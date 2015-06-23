@@ -116,7 +116,9 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
             camera_looking_at: this.viewer.camera_looking_at.toArray(),
             camera_fov: this.viewer.camera_fov(),
             number_of_dimensions: this.objects.number_of_dimensions(),
-            objects: this.objects.state_for_drawing()
+            objects: this.objects.state_for_drawing(),
+            diameter: this.objects.diameter(),
+            center: this.objects.center().toArray()
         }
     }
 
@@ -125,13 +127,14 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
             this.viewer = new Amv.Viewer(this);
             this.viewer_created.resolve();
             this.objects = new Amv.Objects(this);
-            this.objects.restore_state(state.objects);
+            this.objects.restore_state(state.objects, state.diameter, state.center);
             this.viewer.camera.position.fromArray(state.camera_position);
             if (state.camera_fov) {
                 this.viewer.camera_fov(state.camera_fov);
             }
             this.viewer.camera_look_at((new THREE.Vector3()).fromArray(state.camera_looking_at));
             this.viewer.objects_updated();
+            this.viewer.camera_update();
         });
     }
 }
@@ -236,10 +239,12 @@ export class Objects
         return 0;               // override in derived
     }
 
-    public restore_state(state :AntigenicMapViewer.Object3d[]) :void {
+    public restore_state(state :AntigenicMapViewer.Object3d[], diameter :number, center :number[]) :void {
         this.objects = state.map(this.make_object_from_state, this);
-        console.log('objects', this.objects);
+        //console.log('objects', this.objects);
         this.widget.add_array(this.objects);
+        this._diameter = diameter;
+        this._center = (new THREE.Vector3()).fromArray(center);
     }
 
     protected make_object_from_state(state :AntigenicMapViewer.Object3d) :THREE.Object3D {

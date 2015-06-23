@@ -190,11 +190,11 @@ export class Objects extends AmvLevel1.Objects
         return 3;
     }
 
-    public restore_state(state :AntigenicMapViewer.Object3d[]) :void {
+    public restore_state(state :AntigenicMapViewer.Object3d[], diameter :number, center :number[]) :void {
         if (!this.object_factory) {
             this.object_factory = new ObjectFactory(state.length);
         }
-        super.restore_state(state);
+        super.restore_state(state, diameter, center);
     }
 
     protected make_mesh(state :AntigenicMapViewer.Object3d) :THREE.Object3D {

@@ -108,6 +108,8 @@ declare module AntigenicMapViewer {
         camera_fov :number;
         number_of_dimensions :number;
         objects :Object3d[];
+        diameter :number;
+        center :Position3d;
     }
 
 // ----------------------------------------------------------------------
