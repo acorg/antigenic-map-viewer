@@ -149,6 +149,8 @@ export class Objects
     private _diameter :number;
     private _scale :number;     // keep current scale to be able to reset
 
+    protected object_factory :AcmacsPlotData.ObjectFactory; // for restoring state
+
     constructor(protected widget :MapWidgetLevel1) {
         this._scale = 1.0;
     }
@@ -240,6 +242,7 @@ export class Objects
     }
 
     public restore_state(state :AntigenicMapViewer.Object3d[], diameter :number, center :number[]) :void {
+        this.make_object_factory(state.length);
         this.objects = state.map(this.make_object_from_state, this);
         //console.log('objects', this.objects);
         this.widget.add_array(this.objects);
@@ -248,15 +251,14 @@ export class Objects
     }
 
     protected make_object_from_state(state :AntigenicMapViewer.Object3d) :THREE.Object3D {
-        var obj = this.make_mesh(state);
+        var obj = this.object_factory.make_mesh_restoring_state(state);
         obj.position.fromArray(state.position);
         obj.scale.multiplyScalar(state.scale);
         obj.userData = state.user_data;
         return obj;
     }
 
-    protected make_mesh(state :AntigenicMapViewer.Object3d) :THREE.Object3D {
-        return new THREE.Object3D(); // override in derived
+    protected make_object_factory(number_of_objects :number) :void { // override in derived
     }
 }
 

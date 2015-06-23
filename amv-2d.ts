@@ -358,6 +358,12 @@ export class Objects extends AmvLevel1.Objects
     private flip_layout(elt :number[]) :number[] {
         return [elt[0], -elt[1], 0];
     }
+
+    protected make_object_factory(number_of_objects :number) :void {
+        if (!this.object_factory) {
+            this.object_factory = new ObjectFactory(number_of_objects);
+        }
+    }
 }
 
 // ----------------------------------------------------------------------

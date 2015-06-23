@@ -174,8 +174,6 @@ class Grid
 
 export class Objects extends AmvLevel1.Objects
 {
-    private object_factory :ObjectFactory;
-
     constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects? :AcmacsPlotData.PlotData) {
          super(widget);
          if (user_objects) {
@@ -190,15 +188,10 @@ export class Objects extends AmvLevel1.Objects
         return 3;
     }
 
-    public restore_state(state :AntigenicMapViewer.Object3d[], diameter :number, center :number[]) :void {
+    protected make_object_factory(number_of_objects :number) :void {
         if (!this.object_factory) {
-            this.object_factory = new ObjectFactory(state.length);
+            this.object_factory = new ObjectFactory(number_of_objects);
         }
-        super.restore_state(state, diameter, center);
-    }
-
-    protected make_mesh(state :AntigenicMapViewer.Object3d) :THREE.Object3D {
-        return this.object_factory.make_mesh_restoring_state(state);
     }
 }
 
