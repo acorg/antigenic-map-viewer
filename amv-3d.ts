@@ -174,12 +174,31 @@ class Grid
 
 export class Objects extends AmvLevel1.Objects
 {
-     constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects :AcmacsPlotData.PlotData) {
-        super(widget);
-        var styles = user_objects.make_styles(new ObjectFactory(user_objects.number_of_objects()));
-        this.objects = user_objects.layout().map((elt, index) => styles[user_objects.style_no(index)].make(elt, {index: index}));
-        this.widget.add_array(this.objects);
-        this.calculate_bounding_sphere(user_objects.layout());
+    private object_factory :ObjectFactory;
+
+    constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects? :AcmacsPlotData.PlotData) {
+         super(widget);
+         if (user_objects) {
+             var styles = user_objects.make_styles(new ObjectFactory(user_objects.number_of_objects()));
+             this.objects = user_objects.layout().map((elt, index) => styles[user_objects.style_no(index)].make(elt, {index: index}));
+             this.widget.add_array(this.objects);
+             this.calculate_bounding_sphere(user_objects.layout());
+         }
+    }
+
+    public number_of_dimensions() :number {
+        return 3;
+    }
+
+    public restore_state(state :AntigenicMapViewer.Object3d[]) :void {
+        if (!this.object_factory) {
+            this.object_factory = new ObjectFactory(state.length);
+        }
+        super.restore_state(state);
+    }
+
+    protected make_mesh(state :AntigenicMapViewer.Object3d) :THREE.Object3D {
+        return this.object_factory.make_mesh_restoring_state(state);
     }
 }
 

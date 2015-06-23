@@ -115,8 +115,24 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
             camera_position: this.viewer.camera.position.toArray(),
             camera_looking_at: this.viewer.camera_looking_at.toArray(),
             camera_fov: this.viewer.camera_fov(),
+            number_of_dimensions: this.objects.number_of_dimensions(),
             objects: this.objects.state_for_drawing()
         }
+    }
+
+    public restore_state(state :AntigenicMapViewer.MapStateForDrawing) :void {
+        $.when(AmvUtils.require_deferred(['amv-' + state.number_of_dimensions + 'd'])).done((Amv :typeof Amv3d) => {
+            this.viewer = new Amv.Viewer(this);
+            this.viewer_created.resolve();
+            this.objects = new Amv.Objects(this);
+            this.objects.restore_state(state.objects);
+            this.viewer.camera.position.fromArray(state.camera_position);
+            if (state.camera_fov) {
+                this.viewer.camera_fov(state.camera_fov);
+            }
+            this.viewer.camera_look_at((new THREE.Vector3()).fromArray(state.camera_looking_at));
+            this.viewer.objects_updated();
+        });
     }
 }
 
@@ -214,6 +230,28 @@ export class Objects
             return r;
         }
         return this.objects.map(object_state_for_drawing, this);
+    }
+
+    public number_of_dimensions() :number {
+        return 0;               // override in derived
+    }
+
+    public restore_state(state :AntigenicMapViewer.Object3d[]) :void {
+        this.objects = state.map(this.make_object_from_state, this);
+        console.log('objects', this.objects);
+        this.widget.add_array(this.objects);
+    }
+
+    protected make_object_from_state(state :AntigenicMapViewer.Object3d) :THREE.Object3D {
+        var obj = this.make_mesh(state);
+        obj.position.fromArray(state.position);
+        obj.scale.multiplyScalar(state.scale);
+        obj.userData = state.user_data;
+        return obj;
+    }
+
+    protected make_mesh(state :AntigenicMapViewer.Object3d) :THREE.Object3D {
+        return new THREE.Object3D(); // override in derived
     }
 }
 

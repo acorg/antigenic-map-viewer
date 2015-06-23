@@ -79,7 +79,7 @@ declare module AntigenicMapViewer {
     }
 
     interface MapWidgetLevel2Maker {
-        make_widget(container :any /*JQuery*/, size :number, plot_data :PlotDataInterface, extra_popup_menu_items? :PopupMenuDescItem[]) :MapWidgetLevel2;
+        make_widget(container :any /*JQuery*/, size :number, plot_data :PlotDataInterface|MapStateForDrawing, extra_popup_menu_items? :PopupMenuDescItem[]) :MapWidgetLevel2;
     }
 
 // ----------------------------------------------------------------------
@@ -106,6 +106,7 @@ declare module AntigenicMapViewer {
         camera_position :Position3d;
         camera_looking_at :Position3d;
         camera_fov :number;
+        number_of_dimensions :number;
         objects :Object3d[];
     }
 

@@ -296,18 +296,24 @@ export class Objects extends AmvLevel1.Objects
     private _z_pos :number;
     private _viewport :AcmacsPlotData.Viewport;
 
-    constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects :AcmacsPlotData.PlotData) {
+    constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects? :AcmacsPlotData.PlotData) {
         super(widget);
-        var styles = user_objects.make_styles(new ObjectFactory(user_objects.number_of_objects()));
-        this._z_pos = 1;
-        this.objects = user_objects.layout()
-              .map((elt) => this.flip_layout(elt))
-              .map((elt, index) => this.add_drawing_order(elt, index))
-              .map((elt, index) => styles[user_objects.style_no(index)].make(elt, {index: index}));
-        this._viewport = user_objects.viewport();
-        this.widget.add_array(this.objects);
-        this.calculate_bounding_sphere(user_objects.layout());
         this._flip = false;
+        if (user_objects) {
+            var styles = user_objects.make_styles(new ObjectFactory(user_objects.number_of_objects()));
+            this._z_pos = 1;
+            this.objects = user_objects.layout()
+                  .map((elt) => this.flip_layout(elt))
+                  .map((elt, index) => this.add_drawing_order(elt, index))
+                  .map((elt, index) => styles[user_objects.style_no(index)].make(elt, {index: index}));
+            this._viewport = user_objects.viewport();
+            this.widget.add_array(this.objects);
+            this.calculate_bounding_sphere(user_objects.layout());
+        }
+    }
+
+    public number_of_dimensions() :number {
+        return 2;
     }
 
     public flip() :void {

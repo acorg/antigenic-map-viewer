@@ -53,7 +53,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
             this.help_popup = (new AcmacsToolkit.PopupMessage(this.wrapper, 'amv2-help-popup')).hide_on_click();
 
             // change label type via popup menu
-            this.map.on("label-type:amv", (data :any) :void => { this.user_object_label_type = data.label_type || this._plot_data.default_label_type(); });
+            this.map.on("label-type:amv", (data :any) :void => { this.user_object_label_type = data.label_type || (this._plot_data && this._plot_data.default_label_type()); });
         });
 
         // buttons
@@ -83,13 +83,20 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
         }
     }
 
-    public plot_data(plot_data :AntigenicMapViewer.PlotDataInterface) :void {
-        this._plot_data = new AcmacsPlotData.PlotData(plot_data);
-        this.title(this._plot_data.title());
-        this.user_object_label_type = this._plot_data.default_label_type();
-        $.when(this.map_created).done(() => {
-            this.map.user_objects(this._plot_data);
-        });
+    public plot_data(plot_data :AntigenicMapViewer.PlotDataInterface|AntigenicMapViewer.MapStateForDrawing) :void {
+        if ((<any>plot_data).layout) {
+            this._plot_data = new AcmacsPlotData.PlotData(<AntigenicMapViewer.PlotDataInterface>plot_data);
+            this.title(this._plot_data.title());
+            this.user_object_label_type = this._plot_data.default_label_type();
+            $.when(this.map_created).done(() => {
+                this.map.user_objects(this._plot_data);
+            });
+        }
+        else if ((<any>plot_data).camera_looking_at) {
+            $.when(this.map_created).done(() => {
+                this.map.restore_state(<AntigenicMapViewer.MapStateForDrawing>plot_data);
+            });
+        }
     }
 
     public add_popup_menu_items(items :AcmacsToolkit.PopupMenuDescItem[]) :void {
@@ -105,7 +112,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     }
 
     private show_hovered(indice :number[]) :void {
-        if (indice.length) {
+        if (indice.length && this._plot_data) {
             this.popup_hovered.show(MapWidgetLevel2.popup_hovered_message_prefix
                                     + indice.map((index :number) => this._plot_data.label_of(index, this.user_object_label_type)).join(MapWidgetLevel2.popup_hovered_message_infix)
                                     + MapWidgetLevel2.popup_hovered_message_suffix,
@@ -127,8 +134,8 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     }
 
     private popup_menu_items() :AcmacsToolkit.PopupMenuDescItem[] {
-        var label_menu = this._plot_data.label_types().map((lt :string) => ({
-            label: lt, icon: lt === this.user_object_label_type ? "ui-icon-check" : null, event: "label-type:amv", eventNode: this.map, eventData: {label_type: lt}}));
+        var label_menu = (this._plot_data && this._plot_data.label_types().map((lt :string) => ({
+            label: lt, icon: lt === this.user_object_label_type ? "ui-icon-check" : null, event: "label-type:amv", eventNode: this.map, eventData: {label_type: lt}}))) || [];
         var m :AcmacsToolkit.PopupMenuDescItem[] = [{label: "Reset", event: "reset:amv", eventNode: this.map}];
         return m.concat(this.popup_menu_items_extra || [], [{}, {label: "Label type", title: true}], label_menu);
     }
@@ -144,7 +151,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
 
 // ----------------------------------------------------------------------
 
-export function make_widget(container :JQuery, size :number, plot_data :AntigenicMapViewer.PlotDataInterface, extra_popup_menu_items? :AcmacsToolkit.PopupMenuDescItem[]) :MapWidgetLevel2
+export function make_widget(container :JQuery, size :number, plot_data :AntigenicMapViewer.PlotDataInterface|AntigenicMapViewer.MapStateForDrawing, extra_popup_menu_items? :AcmacsToolkit.PopupMenuDescItem[]) :MapWidgetLevel2
     {
         var widget = new MapWidgetLevel2(container, size || 500);
         widget.plot_data(plot_data);

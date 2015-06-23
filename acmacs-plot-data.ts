@@ -154,34 +154,41 @@ export class ObjectFactory
     public make_geometry_material(plot_style :AntigenicMapViewer.PlotDataStyle) :[string, THREE.Geometry, THREE.Material] {
         var material = new this.material(this.convert_color(plot_style.fill_color));
         var shape :string = (plot_style.shape === undefined || plot_style.shape === null) ? "circle" : plot_style.shape;
+        var geometry = this.make_geometry(shape, plot_style.outline_width);
+        return [shape, geometry, material];
+    }
+
+    private make_geometry(shape :string, outline_width :number) :THREE.Geometry {
         var geometry = this.geometries[shape];
         if (!geometry) {
             switch (shape) {
             case "box":
             case "cube":
-                this.make_box(plot_style.outline_width);
+                this.make_box(outline_width);
                 break;
             case "circle":
             case "sphere":
-                this.make_circle(plot_style.outline_width);
+                this.make_circle(outline_width);
                 break;
             case "triangle":
-                this.make_triangle(plot_style.outline_width);
+                this.make_triangle(outline_width);
                 break;
             }
             geometry = this.geometries[shape];
         }
-        return [shape, geometry, material];
+        return geometry;
     }
 
     public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, shape :string, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
-        var aspect :number = (plot_style.aspect === undefined || plot_style.aspect === null) ? 1.0 : plot_style.aspect;
-        var rotation :number = (plot_style.rotation === undefined || plot_style.rotation === null) ? 0.0 : plot_style.rotation;
+        return this.make_mesh_2(plot_style.aspect, plot_style.rotation, geometry, material);
+    }
+
+    private make_mesh_2(aspect :number, rotation :number, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
         var mesh = new THREE.Mesh(geometry, material);
-        if (aspect !== 1) {
+        if (aspect !== 1 && aspect !== undefined && aspect !== null) {
             mesh.scale.set(aspect, 1, aspect);
         }
-        if (rotation !== 0) {
+        if (rotation !== 0 && rotation !== undefined && rotation !== null) {
             mesh.rotation.set(0, 0, rotation);
         }
         return mesh;
@@ -216,6 +223,12 @@ export class ObjectFactory
         }
         // console.log('convert_color', JSON.stringify(material_color));
         return material_color;
+    }
+
+    public make_mesh_restoring_state(plot_style :AntigenicMapViewer.Object3d) :THREE.Mesh {
+        return this.make_mesh_2(plot_style.aspect, plot_style.rotation,
+                                this.make_geometry(plot_style.shape, plot_style.outline_width),
+                                new this.material(this.convert_color(plot_style.fill_color)));
     }
 }
 
