@@ -226,9 +226,10 @@ export class ObjectFactory
     }
 
     public make_mesh_restoring_state(plot_style :AntigenicMapViewer.Object3d) :THREE.Mesh {
+        var color :any = plot_style.fill_opacity !== null && plot_style.fill_opacity !== undefined ? [plot_style.fill_color, plot_style.fill_opacity] : plot_style.fill_color;
         return this.make_mesh_2(plot_style.aspect, plot_style.rotation,
                                 this.make_geometry(plot_style.shape, plot_style.outline_width),
-                                new this.material(this.convert_color(plot_style.fill_color)));
+                                new this.material(this.convert_color(color)));
     }
 }
 

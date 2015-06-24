@@ -204,9 +204,12 @@ export class Objects
                 }
             }
             var material = mesh.material && (<THREE.MeshPhongMaterial>mesh.material);
-            var fill_color = "transparent";
+            var fill_color = "transparent", fill_opacity = 1;
             if (material && ! (material.transparent && material.opacity === 0)) {
                 fill_color = '#' + material.color.getHexString();
+                if (material.transparent) {
+                    fill_opacity = material.opacity;
+                }
             }
             // console.log('mesh', mesh);
             var r :AntigenicMapViewer.Object3d = {
@@ -215,6 +218,9 @@ export class Objects
                 shape: shape,
                 fill_color: fill_color
             };
+            if (fill_opacity !== 1) {
+                r.fill_opacity = fill_opacity;
+            }
             if (obj.userData !== undefined && obj.userData !== null) {
                 r.user_data = obj.userData;
             }

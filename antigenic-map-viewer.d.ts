@@ -96,6 +96,7 @@ declare module AntigenicMapViewer {
         shape :string;
         outline_width? :number;
         fill_color :string;
+        fill_opacity? :number;
         outline_color? :string;
     }
 
