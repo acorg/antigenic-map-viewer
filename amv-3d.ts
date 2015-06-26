@@ -127,6 +127,7 @@ class Grid
     constructor(public viewer :Viewer) {
         this.grid = new THREE.Object3D();
         this.viewer.widget.add(this.grid);
+        this.size = 0;          // slimerjs gives warning on undefined this.size in position()
     }
 
     public position() :void {

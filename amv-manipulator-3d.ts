@@ -135,7 +135,7 @@ export class ResetControl extends WorldControl
     }
 
     public operate(data :AmvManipulator.Keypress) :void {
-        if (data.which = this.reset_keycode) {
+        if (data.which === this.reset_keycode) {
             this.reset();
         }
     }
