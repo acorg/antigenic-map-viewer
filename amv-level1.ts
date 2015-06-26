@@ -55,9 +55,13 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     }
 
     public render() :void {
+        var rendering_count = 0;
         var really_render = () => {
             requestAnimationFrame(() => really_render());
             this.renderer.render(this.scene, this.viewer.camera);
+            if (++rendering_count === 2) {
+                console.log('map widget rendered'); // DO NOT REMOVE!!: message for slimerjs to generate PNG
+            }
         };
         $.when(this.viewer_created).done(really_render);
     }
