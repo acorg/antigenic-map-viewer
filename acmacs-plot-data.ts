@@ -105,6 +105,24 @@ export class PlotData
         return label;
     }
 
+    public user_data(index :number) :ObjectUserData {
+        var point_info :any = this.plot_data.point_info[index];
+        var r :ObjectUserData = {
+            index: index,
+            name: point_info.label_full_name_only || point_info.label_full
+        };
+        if (point_info.passage) {
+            r.passage = point_info.passage;
+        }
+        if (point_info.serum_id) {
+            r.serum_id = point_info.serum_id;
+        }
+        if (point_info.extra) {
+            r.extra = point_info.extra;
+        }
+        return r;
+    }
+
     public title() :string[] {
         try {
             return this.plot_data.title["0"].text;
@@ -131,6 +149,10 @@ export class PlotData
 export interface ObjectUserData
 {
     index :number;
+    name :string;
+    passage? :string;
+    serum_id? :string;
+    extra? :string;
 }
 
 // ----------------------------------------------------------------------

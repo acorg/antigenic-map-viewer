@@ -305,7 +305,7 @@ export class Objects extends AmvLevel1.Objects
             this.objects = user_objects.layout()
                   .map((elt) => this.flip_layout(elt))
                   .map((elt, index) => this.add_drawing_order(elt, index))
-                  .map((elt, index) => styles[user_objects.style_no(index)].make(elt, {index: index}));
+                  .map((elt, index) => styles[user_objects.style_no(index)].make(elt, user_objects.user_data(index)));
             this._viewport = user_objects.viewport();
             this.widget.add_array(this.objects);
             this.calculate_bounding_sphere(user_objects.layout());

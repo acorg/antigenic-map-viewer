@@ -179,7 +179,7 @@ export class Objects extends AmvLevel1.Objects
          super(widget);
          if (user_objects) {
              var styles = user_objects.make_styles(new ObjectFactory(user_objects.number_of_objects()));
-             this.objects = user_objects.layout().map((elt, index) => styles[user_objects.style_no(index)].make(elt, {index: index}));
+             this.objects = user_objects.layout().map((elt, index) => styles[user_objects.style_no(index)].make(elt, user_objects.user_data(index)));
              this.widget.add_array(this.objects);
              this.calculate_bounding_sphere(user_objects.layout());
          }
