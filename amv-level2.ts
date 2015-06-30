@@ -157,7 +157,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
             // console.log('map wrapper', map_offset.left, map_offset.top);
             size = field_size;
         }
-        console.log('auto_size size', size);
+        // console.log('auto_size size', size);
         return size;
     }
 }
