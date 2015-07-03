@@ -84,8 +84,14 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     }
 
     public reset_objects() :void {
-        if (!!this.objects) {
+        if (this.objects) {
             this.objects.reset();
+        }
+    }
+
+    public reorient_objects() :void {
+        if (this.objects) {
+            this.objects.reorient();
         }
     }
 
@@ -163,6 +169,10 @@ export class Objects
         if (this._scale !== 1.0) {
             this.scale(1.0 / this._scale);
         }
+    }
+
+    // 2d
+    public reorient() :void {
     }
 
     public diameter() :number {

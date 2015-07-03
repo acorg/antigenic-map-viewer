@@ -65,6 +65,7 @@ export class Viewer extends AmvLevel1.Viewer
             camera.top = viewport.cy + hsize;
             camera.bottom = viewport.cy - hsize;
             camera.updateProjectionMatrix();
+            this.widget.reorient_objects();
             this.grid.reset(grid_full_reset);
         }
         return {cx: (camera.left + camera.right) / 2, cy: (camera.bottom + camera.top) / 2, size: camera.right - camera.left};
@@ -336,6 +337,11 @@ export class Objects extends AmvLevel1.Objects
     public reset() :void {
         super.reset();
         this.flip_set(false);
+    }
+
+    public reorient() :void {
+        var quaternion = new THREE.Quaternion().setFromUnitVectors(Viewer.camera_up, this.widget.viewer.camera.up);
+        this.objects.map(o => o.rotation.setFromQuaternion(quaternion));
     }
 
     public viewport() :AcmacsPlotData.Viewport {
