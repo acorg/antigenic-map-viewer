@@ -42,9 +42,9 @@ export class Viewer extends AmvLevel1.Viewer
     // collects current state of the viewer: transformation matrix and viewport
     public state() :void {
         var transformation = this.transformation();
-        console.log('transformation', JSON.stringify(transformation));
+        console.log('state: transformation', JSON.stringify(transformation));
         var viewport = this.viewport();
-        console.log('viewport', JSON.stringify(viewport));
+        console.log('state: viewport', JSON.stringify(viewport));
     }
 
     public reset() :void {
@@ -58,7 +58,7 @@ export class Viewer extends AmvLevel1.Viewer
 
     public viewport(viewport? :AcmacsPlotData.Viewport, grid_full_reset :Boolean = false) :AcmacsPlotData.Viewport {
         var camera = <THREE.OrthographicCamera>this.camera;
-        if (!!viewport) {
+        if (viewport) {
             var hsize = (viewport.size ? viewport.size : (camera.right - camera.left)) / 2;
             camera.left = viewport.cx - hsize;
             camera.right = viewport.cx + hsize;
@@ -73,13 +73,14 @@ export class Viewer extends AmvLevel1.Viewer
     public viewport_rotate(angle :number) :void {
         var quaternion = new THREE.Quaternion();
         quaternion.setFromAxisAngle(new THREE.Vector3(0, 0, 1), angle);
-        this.camera.up.applyQuaternion(quaternion);
+        this.viewport_rotate_with_quaternion(quaternion);
+    }
+
+    public viewport_rotate_with_quaternion(quaternion :THREE.Quaternion) :void {
+        this.camera.up.applyQuaternion(quaternion).normalize();
         this.camera_update();
         var tr = this._translation_for_m4().applyQuaternion(quaternion.inverse());
         this.viewport({cx: tr.x, cy: tr.y}, true);
-
-        // var qq = new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up);
-        // console.log('angle', JSON.stringify(qq));
     }
 
     public viewport_zoom(factor :number) :void {
@@ -102,7 +103,7 @@ export class Viewer extends AmvLevel1.Viewer
     }
 
     public transform(transformation :AcmacsPlotData.Transformation) :void {
-        if (!!transformation) {
+        if (transformation) {
             var m = new THREE.Matrix4();
             m.elements[0] = transformation[0][0];
             m.elements[1] = transformation[0][1];
@@ -135,7 +136,7 @@ export class Viewer extends AmvLevel1.Viewer
     private _set_m4(m4 :THREE.Matrix4) {
         var t = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();
         m4.decompose(t, q, s);
-        this.camera.up.copy(Viewer.camera_up).applyQuaternion(q);
+        this.camera.up.copy(Viewer.camera_up).applyQuaternion(q).normalize();
         (<Objects>this.widget.objects).flip_set(s.x < 0);
         this.camera_update();
     }
@@ -283,8 +284,8 @@ class Grid
     }
 
     public update() :void {
-        var quaternion = new THREE.Quaternion().setFromUnitVectors(this.viewer.camera.up, Viewer.camera_up);
-        this.grid.rotation.setFromQuaternion(quaternion.inverse());
+        var quaternion = new THREE.Quaternion().setFromUnitVectors(Viewer.camera_up, this.viewer.camera.up);
+        this.grid.rotation.setFromQuaternion(quaternion);
     }
 }
 
