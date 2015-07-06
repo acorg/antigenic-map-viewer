@@ -11,13 +11,18 @@ import AmvManipulator2d = require("amv-manipulator-2d");
 
 // ----------------------------------------------------------------------
 
+class DrawingOrderNS
+{
+    public static maximum :number = 1000;
+    public static base    :number = 1;
+    public static step    :number = DrawingOrderNS.maximum / 100000;
+}
+
 export class Viewer extends AmvLevel1.Viewer
 {
     public static camera_up = new THREE.Vector3(0, 1, 0);
-    private static s_maximum_drawing_order :number = 1000;
 
     private grid :Grid;
-    private maximum_drawing_order :number;
     private viewport_initial :AcmacsPlotData.Viewport; // for reset
 
     private rotate_control :AmvManipulator2d.RotateControl;
@@ -31,9 +36,8 @@ export class Viewer extends AmvLevel1.Viewer
 
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
-        this.maximum_drawing_order = Viewer.s_maximum_drawing_order;
         this.viewport_initial = null;
-        this.camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0, this.maximum_drawing_order + 2);
+        this.camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0, DrawingOrderNS.maximum + 2);
         widget.add(this.camera);
         this.grid = new Grid(this, 0);
         this.reset()
@@ -50,7 +54,7 @@ export class Viewer extends AmvLevel1.Viewer
     public reset() :void {
         this.widget.reset_objects();
         this.camera.up.copy(Viewer.camera_up);
-        this.camera.position.set(0, 0, this.maximum_drawing_order + 1);
+        this.camera.position.set(0, 0, DrawingOrderNS.maximum + 1);
         this.camera_look_at(AmvLevel1.Viewer.const_vector3_zero);
         this.viewport(this.viewport_initial);
         this.camera_update();
@@ -295,7 +299,6 @@ class Grid
 export class Objects extends AmvLevel1.Objects
 {
     private _flip :Boolean;
-    private _z_pos :number;
     private _viewport :AcmacsPlotData.Viewport;
 
     constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects? :AcmacsPlotData.PlotData) {
@@ -303,10 +306,9 @@ export class Objects extends AmvLevel1.Objects
         this._flip = false;
         if (user_objects) {
             var styles = user_objects.make_styles(new ObjectFactory(user_objects.number_of_objects()));
-            this._z_pos = 1;
             this.objects = user_objects.layout()
                   .map((elt) => this.flip_layout(elt))
-                  .map((elt, index) => this.add_drawing_order(elt, index))
+                  .map((elt, index) => this.add_drawing_order(user_objects.drawing_order_level(index), elt, index))
                   .map((elt, index) => styles[user_objects.style_no(index)].make(elt, user_objects.user_data(index)));
             this._viewport = user_objects.viewport();
             this.widget.add_array(this.objects);
@@ -353,12 +355,9 @@ export class Objects extends AmvLevel1.Objects
         return {min: units_per_pixel * 5, max:  this.widget.size() * units_per_pixel / 3};
     }
 
-    private add_drawing_order(elt :number[], index :number) :number[] {
-        if (elt.length === 2)
-            elt.push(this._z_pos);
-        else
-            elt[2] = this._z_pos;
-        this._z_pos += 0.0001;
+    private add_drawing_order(level :number, elt :number[], index :number) :number[] {
+        elt[2] = DrawingOrderNS.base + level * DrawingOrderNS.step;
+        console.log('add_drawing_order', index, level, JSON.stringify(elt));
         return elt;
     }
 

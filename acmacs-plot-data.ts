@@ -24,8 +24,12 @@ export interface Viewport
 export class PlotData
 {
     private _label_types :string[];
+    private _drawing_order :number[]; // drawing order for an object by its index
 
     constructor(private plot_data :AntigenicMapViewer.PlotDataInterface) {
+        if (this.number_of_dimensions() === 2) {
+            this.make_drawing_order();
+        }
     }
 
     public number_of_dimensions() :number {
@@ -42,6 +46,10 @@ export class PlotData
 
     public style_no(index :number) :number {
         return this.plot_data.styles.points[index];
+    }
+
+    public drawing_order_level(index :number) :number {
+        return (this._drawing_order && (this._drawing_order[index] || 0)) || 0;
     }
 
     public layout() :AntigenicMapViewer.PlotDataLayout {
@@ -141,6 +149,18 @@ export class PlotData
                         size: this.plot_data.viewport_size[0]};
         }
         return viewport;
+    }
+
+    // 2d only
+    private make_drawing_order() :void {
+        if (this.plot_data.styles.drawing_order && this.plot_data.styles.drawing_order.length > 1) {
+            this._drawing_order = [];
+            this.plot_data.styles.drawing_order.forEach(function(value :number[], level :number) {
+                value.forEach(function(index :number) {
+                    this._drawing_order[index] = level;
+                }, this);
+            }, this);
+        }
     }
 }
 
