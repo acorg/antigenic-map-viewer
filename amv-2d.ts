@@ -309,7 +309,9 @@ export class Objects extends AmvLevel1.Objects
             this.objects = user_objects.layout()
                   .map((elt) => this.flip_layout(elt))
                   .map((elt, index) => this.add_drawing_order(user_objects.drawing_order_level(index), elt, index))
-                  .map((elt, index) => styles[user_objects.style_no(index)].make(elt, user_objects.user_data(index)));
+                  .map((elt, index) => styles[user_objects.style_no(index)].make(elt, user_objects.user_data(index)))
+                  // .map((obj, index) => this.add_label("AWA", obj, index)
+                      );
             this._viewport = user_objects.viewport();
             this.widget.add_array(this.objects);
             this.calculate_bounding_sphere(user_objects.layout());
@@ -357,8 +359,33 @@ export class Objects extends AmvLevel1.Objects
 
     private add_drawing_order(level :number, elt :number[], index :number) :number[] {
         elt[2] = DrawingOrderNS.base + level * DrawingOrderNS.step;
-        console.log('add_drawing_order', index, level, JSON.stringify(elt));
+        // console.log('add_drawing_order', index, level, JSON.stringify(elt));
         return elt;
+    }
+
+    private add_label(label :string, obj :THREE.Object3D, index :number) :THREE.Object3D {
+        try {
+            //console.log('obj scale', index, JSON.stringify(obj.scale));
+            var obj_geometry = (<THREE.Mesh>obj).geometry;
+            obj_geometry.computeBoundingSphere();
+            var obj_radius = obj_geometry.boundingSphere.radius;
+
+            var text = new THREE.TextGeometry(label, {size: 0.05});
+            var textMesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: 0}));
+            textMesh.scale.set(obj.scale.y / (obj.scale.x * obj.scale.x), 1 / obj.scale.y, 1 / obj.scale.z);
+
+            text.computeBoundingBox();
+            var text_height = text.boundingBox.max.y - text.boundingBox.min.y;
+            var text_width = text.boundingBox.max.x - text.boundingBox.min.x;
+
+            textMesh.position.set(- text_width / 2, - obj_radius - text_height, DrawingOrderNS.step / 2);
+            obj.add(textMesh);
+            // Example text options : {'font' : 'helvetiker','weight' : 'normal', 'style' : 'normal','size' : 100,'curveSegments' : 300};        return obj;
+        }
+        catch (err) {
+            console.error(err);
+        }
+        return obj;
     }
 
     private flip_layout(elt :number[]) :number[] {
