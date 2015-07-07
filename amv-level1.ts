@@ -47,7 +47,8 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         $.when(AmvUtils.require_deferred(['amv-' + user_objects.number_of_dimensions() + 'd'])).done((Amv :typeof Amv3d) => {
             this.viewer = new Amv.Viewer(this);
             this.viewer_created.resolve();
-            this.objects = new Amv.Objects(this, user_objects);
+            this.objects = new Amv.Objects(this);
+            this.objects.add_objects(user_objects);
             this.viewer.transform(user_objects.transformation());
             this.viewer.objects_updated();
             this.viewer.camera_update();
@@ -104,12 +105,13 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         return this._size;
     }
 
-    public add(o :THREE.Object3D) :void {
-        this.scene.add(o)
-    }
-
-    public add_array(objects :THREE.Object3D[]) :void {
-        objects.map((o) => this.scene.add(o));
+    public add(o :Object|THREE.Object3D) :void {
+        if ((<Object>o).mesh) {
+            this.scene.add((<Object>o).mesh);
+        }
+        else {
+            this.scene.add(<THREE.Object3D>o);
+        }
     }
 
     public domElement() :Element {
@@ -151,18 +153,134 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
 // ----------------------------------------------------------------------
 
+export class Object
+{
+    public mesh :THREE.Mesh;
+
+    constructor() {
+    }
+
+    public outline() :THREE.Mesh {
+        var r :THREE.Mesh = null;
+        if (this.mesh.children && this.mesh.children.length === 1) {
+            r = <THREE.Mesh>this.mesh.children[0];
+        }
+        return r;
+    }
+
+    public rescale(factor :number) :void {
+        this.mesh.scale.multiplyScalar(factor);
+    }
+
+    public position() :THREE.Vector3 {
+        return this.mesh.position;
+    }
+
+    public scale() :THREE.Vector3 {
+        return this.mesh.scale;
+    }
+
+    public rotation() :THREE.Euler {
+        return this.mesh.rotation;
+    }
+
+    public user_data(user_data? :any) :any {
+        if (user_data !== undefined) {
+            this.mesh.userData = user_data;
+        }
+        return this.mesh.userData;
+    }
+
+    public state_for_drawing() :AntigenicMapViewer.Object3d {
+        var mesh = this.mesh;
+        var shape = ((mesh.geometry && mesh.geometry.type) || "circle").toLowerCase().replace('geometry', '');
+        if (shape === "shape") {
+            // 2d box or triangle
+            if (mesh.geometry.vertices) {
+                if (mesh.geometry.vertices.length === 3)
+                    shape = "triangle";
+                else
+                    shape = "box";
+            }
+        }
+        var material = mesh.material && (<THREE.MeshPhongMaterial>mesh.material);
+        var fill_color = "transparent", fill_opacity = 1;
+        if (material && ! (material.transparent && material.opacity === 0)) {
+            fill_color = '#' + material.color.getHexString();
+            if (material.transparent) {
+                fill_opacity = material.opacity;
+            }
+        }
+        // console.log('mesh', mesh);
+        var r :AntigenicMapViewer.Object3d = {
+            position: mesh.position.toArray(),
+            scale: mesh.scale.y,
+            shape: shape,
+            fill_color: fill_color
+        };
+        if (fill_opacity !== 1) {
+            r.fill_opacity = fill_opacity;
+        }
+        if (mesh.userData !== undefined && mesh.userData !== null) {
+            r.user_data = mesh.userData;
+        }
+        if (mesh.scale.x !== mesh.scale.y) {
+            r.aspect = mesh.scale.x / mesh.scale.y;
+        }
+        if (mesh.rotation.z !== 0) {
+            r.rotation = mesh.rotation.z;
+        }
+        var outline = this.outline();
+        if (outline) {
+            var outline_material = <THREE.LineBasicMaterial>outline.material;
+            if (outline_material && ! (outline_material.transparent && outline_material.opacity === 0)) {
+                r.outline_color = '#' + outline_material.color.getHexString();
+                r.outline_width = outline_material.linewidth;
+            }
+        }
+        return r;
+    }
+
+    public from_plot_data(coordinates :number[], style :AcmacsPlotData.ObjectStyle, drawing_order :number, user_data :any) :void {
+    }
+
+    public from_state(state :AntigenicMapViewer.Object3d, object_factory :AcmacsPlotData.ObjectFactory) :void {
+        this.mesh = object_factory.make_mesh_restoring_state(state);
+        this.position().fromArray(state.position);
+        this.scale().multiplyScalar(state.scale);
+        this.user_data(state.user_data);
+    }
+}
+
+// ----------------------------------------------------------------------
+
 export class Objects
 {
-    public objects :THREE.Object3D[];
+    public objects :Object[];
 
     private _center :THREE.Vector3;
     private _diameter :number;
     private _scale :number;     // keep current scale to be able to reset
 
-    protected object_factory :AcmacsPlotData.ObjectFactory; // for restoring state
+    protected _object_factory :AcmacsPlotData.ObjectFactory;
 
     constructor(protected widget :MapWidgetLevel1) {
+        this.objects = [];
         this._scale = 1.0;
+    }
+
+    public add_objects(user_objects :AcmacsPlotData.PlotData) :void {
+        var styles = user_objects.make_styles(this.object_factory(user_objects.number_of_objects()));
+        for (var i = 0; i < user_objects.number_of_objects(); ++i) {
+            var obj = this.make_object();
+            obj.from_plot_data(user_objects.layout(i), styles[user_objects.style_no(i)], user_objects.drawing_order_level(i), user_objects.user_data(i));
+            this.objects.push(obj);
+            this.widget.add(obj);
+        }
+    }
+
+    public meshes() :THREE.Object3D[] {
+        return this.objects.map((obj) => obj.mesh);
     }
 
     public reset() :void {
@@ -176,10 +294,16 @@ export class Objects
     }
 
     public diameter() :number {
+        if (this._diameter === undefined || this._diameter === null) {
+            this.calculate_bounding_sphere();
+        }
         return this._diameter;
     }
 
     public center() :THREE.Vector3 {
+        if (this._center === undefined || this._center === null) {
+            this.calculate_bounding_sphere();
+        }
         return this._center;
     }
 
@@ -188,7 +312,7 @@ export class Objects
         var scale_limits = this.scale_limits();
         if (new_scale >= scale_limits.min && new_scale <= scale_limits.max) {
             this._scale = new_scale;
-            this.objects.map(o => o.scale.multiplyScalar(factor));
+            this.objects.map(o => o.rescale(factor));
         }
     }
 
@@ -196,65 +320,24 @@ export class Objects
         return {min: 0.01, max: 100};
     }
 
-    protected calculate_bounding_sphere(layout :AcmacsPlotData.PlotDataLayout) :void {
-        var point_max = [-Infinity, -Infinity, -Infinity];
-        var point_min = [Infinity, Infinity, Infinity];
-        layout.map((elt) => elt.map((v, dim) => { point_max[dim] = Math.max(point_max[dim], v); point_min[dim] = Math.min(point_min[dim], v); }));
-        this._center = new THREE.Vector3((point_max[0] + point_min[0]) / 2.0, (point_max[1] + point_min[1]) / 2.0, (point_max[2] + point_min[2]) / 2.0);
-        this._diameter = Math.max(point_max[0] - point_min[0], point_max[1] - point_min[1], point_max[2] - point_min[2]) * Math.sqrt(3.0);
+    private calculate_bounding_sphere() :void {
+        // var geometry = new THREE.Geometry();
+        // geometry.vertices = this.objects.map((obj) => obj.position());
+        // geometry.computeBoundingSphere();
+        // this._diameter = geometry.boundingSphere.radius * 2;
+        // this._center = (<any>geometry.boundingSphere).center;
+        // console.log('calculate_bounding_sphere1', JSON.stringify(this._center), this._diameter);
+
+        var point_max = new THREE.Vector3(-Infinity, -Infinity, -Infinity);
+        var point_min = new THREE.Vector3(Infinity, Infinity, Infinity);
+        this.objects.forEach((obj) => { var pos = obj.position(); point_max.max(pos); point_min.min(pos); });
+        this._center = (new THREE.Vector3()).addVectors(point_min, point_max).divideScalar(2);
+        this._diameter = (new THREE.Vector3()).subVectors(point_min, point_max).length();
+        // console.log('calculate_bounding_sphere2', JSON.stringify(this._center), this._diameter);
     }
 
     public state_for_drawing() :AntigenicMapViewer.Object3d[] {
-        var object_state_for_drawing = function(obj :THREE.Object3D) :AntigenicMapViewer.Object3d {
-            var mesh = <THREE.Mesh>obj;
-            var shape = ((mesh.geometry && mesh.geometry.type) || "circle").toLowerCase().replace('geometry', '');
-            if (shape === "shape") {
-                // 2d box or triangle
-                if (mesh.geometry.vertices) {
-                    if (mesh.geometry.vertices.length === 3)
-                        shape = "triangle";
-                    else
-                        shape = "box";
-                }
-            }
-            var material = mesh.material && (<THREE.MeshPhongMaterial>mesh.material);
-            var fill_color = "transparent", fill_opacity = 1;
-            if (material && ! (material.transparent && material.opacity === 0)) {
-                fill_color = '#' + material.color.getHexString();
-                if (material.transparent) {
-                    fill_opacity = material.opacity;
-                }
-            }
-            // console.log('mesh', mesh);
-            var r :AntigenicMapViewer.Object3d = {
-                position: obj.position.toArray(),
-                scale: obj.scale.y,
-                shape: shape,
-                fill_color: fill_color
-            };
-            if (fill_opacity !== 1) {
-                r.fill_opacity = fill_opacity;
-            }
-            if (obj.userData !== undefined && obj.userData !== null) {
-                r.user_data = obj.userData;
-            }
-            if (obj.scale.x !== obj.scale.y) {
-                r.aspect = obj.scale.x / obj.scale.y;
-            }
-            if (obj.rotation.z !== 0) {
-                r.rotation = obj.rotation.z;
-            }
-            if (mesh.children && mesh.children.length === 1) {
-                var outline_mesh = <THREE.Mesh>mesh.children[0];
-                var outline_material = <THREE.LineBasicMaterial>outline_mesh.material;
-                if (outline_material && ! (outline_material.transparent && outline_material.opacity === 0)) {
-                    r.outline_color = '#' + outline_material.color.getHexString();
-                    r.outline_width = outline_material.linewidth;
-                }
-            }
-            return r;
-        }
-        return this.objects.map(object_state_for_drawing, this);
+        return this.objects.map((obj) => obj.state_for_drawing());
     }
 
     public number_of_dimensions() :number {
@@ -262,23 +345,19 @@ export class Objects
     }
 
     public restore_state(state :AntigenicMapViewer.Object3d[], diameter :number, center :number[]) :void {
-        this.make_object_factory(state.length);
-        this.objects = state.map(this.make_object_from_state, this);
+        this.objects = state.map((elt) => { var obj = this.make_object(); obj.from_state(elt, this.object_factory()); return obj; });
         //console.log('objects', this.objects);
-        this.widget.add_array(this.objects);
+        this.objects.forEach((obj) => this.widget.add(obj));
         this._diameter = diameter;
         this._center = (new THREE.Vector3()).fromArray(center);
     }
 
-    protected make_object_from_state(state :AntigenicMapViewer.Object3d) :THREE.Object3D {
-        var obj = this.object_factory.make_mesh_restoring_state(state);
-        obj.position.fromArray(state.position);
-        obj.scale.multiplyScalar(state.scale);
-        obj.userData = state.user_data;
-        return obj;
+    protected make_object() :Object {
+        return null;
     }
 
-    protected make_object_factory(number_of_objects :number) :void { // override in derived
+    protected object_factory(number_of_objects? :number) :AcmacsPlotData.ObjectFactory { // override in derived
+        return this._object_factory;
     }
 }
 

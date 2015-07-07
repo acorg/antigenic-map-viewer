@@ -173,26 +173,34 @@ class Grid
 
 // ----------------------------------------------------------------------
 
+export class Object extends AmvLevel1.Object
+{
+    public from_plot_data(coordinates :number[], style :AcmacsPlotData.ObjectStyle, drawing_order :number, user_data :any) :void {
+        this.mesh = style.make(coordinates, user_data);
+    }
+}
+
+// ----------------------------------------------------------------------
+
 export class Objects extends AmvLevel1.Objects
 {
-    constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects? :AcmacsPlotData.PlotData) {
+    constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
-        if (user_objects) {
-            var styles = user_objects.make_styles(new ObjectFactory(user_objects.number_of_objects()));
-            this.objects = user_objects.layout().map((elt, index) => styles[user_objects.style_no(index)].make(elt, user_objects.user_data(index)));
-            this.widget.add_array(this.objects);
-            this.calculate_bounding_sphere(user_objects.layout());
-        }
     }
 
     public number_of_dimensions() :number {
         return 3;
     }
 
-    protected make_object_factory(number_of_objects :number) :void {
-        if (!this.object_factory) {
-            this.object_factory = new ObjectFactory(number_of_objects);
+    protected object_factory(number_of_objects? :number) :AcmacsPlotData.ObjectFactory {
+        if (!this._object_factory) {
+            this._object_factory = new ObjectFactory(number_of_objects);
         }
+        return super.object_factory(number_of_objects);
+    }
+
+    protected make_object() :Object {
+        return new Object();
     }
 }
 

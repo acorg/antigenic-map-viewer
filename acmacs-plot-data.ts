@@ -52,8 +52,8 @@ export class PlotData
         return (this._drawing_order && (this._drawing_order[index] || 0)) || 0;
     }
 
-    public layout() :AntigenicMapViewer.PlotDataLayout {
-        return this.plot_data.layout;
+    public layout(index :number) :number[] {
+        return this.plot_data.layout[index];
     }
 
     public make_styles(factory :ObjectFactory) :ObjectStyle[] {

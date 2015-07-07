@@ -296,26 +296,29 @@ class Grid
 
 // ----------------------------------------------------------------------
 
+export class Object extends AmvLevel1.Object
+{
+    public from_plot_data(coordinates :number[], style :AcmacsPlotData.ObjectStyle, drawing_order :number, user_data :any) :void {
+        // flip layout
+        this.mesh = style.make([coordinates[0], -coordinates[1], DrawingOrderNS.base + drawing_order * DrawingOrderNS.step], user_data);
+    }
+}
+
+// ----------------------------------------------------------------------
+
 export class Objects extends AmvLevel1.Objects
 {
     private _flip :Boolean;
     private _viewport :AcmacsPlotData.Viewport;
 
-    constructor(widget :AmvLevel1.MapWidgetLevel1, user_objects? :AcmacsPlotData.PlotData) {
+    constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
         this._flip = false;
-        if (user_objects) {
-            var styles = user_objects.make_styles(new ObjectFactory(user_objects.number_of_objects()));
-            this.objects = user_objects.layout()
-                  .map((elt) => this.flip_layout(elt))
-                  .map((elt, index) => this.add_drawing_order(user_objects.drawing_order_level(index), elt, index))
-                  .map((elt, index) => styles[user_objects.style_no(index)].make(elt, user_objects.user_data(index)))
-                  // .map((obj, index) => this.add_label("AWA", obj, index)
-                      );
-            this._viewport = user_objects.viewport();
-            this.widget.add_array(this.objects);
-            this.calculate_bounding_sphere(user_objects.layout());
-        }
+    }
+
+    public add_objects(user_objects :AcmacsPlotData.PlotData) :void {
+        super.add_objects(user_objects);
+        this._viewport = user_objects.viewport();
     }
 
     public number_of_dimensions() :number {
@@ -324,7 +327,7 @@ export class Objects extends AmvLevel1.Objects
 
     public flip() :void {
         const center_x = this.center().x;
-        this.objects.map(o => o.position.setX(center_x - o.position.x));
+        this.objects.map(o => o.position().setX(center_x - o.position().x));
         this._flip = !this._flip;
     }
 
@@ -345,7 +348,7 @@ export class Objects extends AmvLevel1.Objects
 
     public reorient() :void {
         var quaternion = new THREE.Quaternion().setFromUnitVectors(Viewer.camera_up, this.widget.viewer.camera.up);
-        this.objects.map(o => o.rotation.setFromQuaternion(quaternion));
+        this.objects.map(o => o.rotation().setFromQuaternion(quaternion));
     }
 
     public viewport() :AcmacsPlotData.Viewport {
@@ -357,45 +360,40 @@ export class Objects extends AmvLevel1.Objects
         return {min: units_per_pixel * 5, max:  this.widget.size() * units_per_pixel / 3};
     }
 
-    private add_drawing_order(level :number, elt :number[], index :number) :number[] {
-        elt[2] = DrawingOrderNS.base + level * DrawingOrderNS.step;
-        // console.log('add_drawing_order', index, level, JSON.stringify(elt));
-        return elt;
+    // private add_label(label :string, obj :THREE.Object3D, index :number) :THREE.Object3D {
+    //     try {
+    //         //console.log('obj scale', index, JSON.stringify(obj.scale));
+    //         var obj_geometry = (<THREE.Mesh>obj).geometry;
+    //         obj_geometry.computeBoundingSphere();
+    //         var obj_radius = obj_geometry.boundingSphere.radius;
+
+    //         var text = new THREE.TextGeometry(label, {size: 0.05});
+    //         var textMesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: 0}));
+    //         textMesh.scale.set(obj.scale.y / (obj.scale.x * obj.scale.x), 1 / obj.scale.y, 1 / obj.scale.z);
+
+    //         text.computeBoundingBox();
+    //         var text_height = text.boundingBox.max.y - text.boundingBox.min.y;
+    //         var text_width = text.boundingBox.max.x - text.boundingBox.min.x;
+
+    //         textMesh.position.set(- text_width / 2, - obj_radius - text_height, DrawingOrderNS.step / 2);
+    //         obj.add(textMesh);
+    //         // Example text options : {'font' : 'helvetiker','weight' : 'normal', 'style' : 'normal','size' : 100,'curveSegments' : 300};        return obj;
+    //     }
+    //     catch (err) {
+    //         console.error(err);
+    //     }
+    //     return obj;
+    // }
+
+    protected object_factory(number_of_objects? :number) :AcmacsPlotData.ObjectFactory {
+        if (!this._object_factory) {
+            this._object_factory = new ObjectFactory(number_of_objects);
+        }
+        return super.object_factory(number_of_objects);
     }
 
-    private add_label(label :string, obj :THREE.Object3D, index :number) :THREE.Object3D {
-        try {
-            //console.log('obj scale', index, JSON.stringify(obj.scale));
-            var obj_geometry = (<THREE.Mesh>obj).geometry;
-            obj_geometry.computeBoundingSphere();
-            var obj_radius = obj_geometry.boundingSphere.radius;
-
-            var text = new THREE.TextGeometry(label, {size: 0.05});
-            var textMesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: 0}));
-            textMesh.scale.set(obj.scale.y / (obj.scale.x * obj.scale.x), 1 / obj.scale.y, 1 / obj.scale.z);
-
-            text.computeBoundingBox();
-            var text_height = text.boundingBox.max.y - text.boundingBox.min.y;
-            var text_width = text.boundingBox.max.x - text.boundingBox.min.x;
-
-            textMesh.position.set(- text_width / 2, - obj_radius - text_height, DrawingOrderNS.step / 2);
-            obj.add(textMesh);
-            // Example text options : {'font' : 'helvetiker','weight' : 'normal', 'style' : 'normal','size' : 100,'curveSegments' : 300};        return obj;
-        }
-        catch (err) {
-            console.error(err);
-        }
-        return obj;
-    }
-
-    private flip_layout(elt :number[]) :number[] {
-        return [elt[0], -elt[1], 0];
-    }
-
-    protected make_object_factory(number_of_objects :number) :void {
-        if (!this.object_factory) {
-            this.object_factory = new ObjectFactory(number_of_objects);
-        }
+    protected make_object() :Object {
+        return new Object();
     }
 }
 
