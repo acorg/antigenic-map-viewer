@@ -192,21 +192,17 @@ export class Objects extends AmvLevel1.Objects
         return 3;
     }
 
-    protected object_factory(number_of_objects? :number) :AcmacsPlotData.ObjectFactory {
+    public object_factory(number_of_objects? :number) :AmvLevel1.ObjectFactory {
         if (!this._object_factory) {
             this._object_factory = new ObjectFactory(number_of_objects);
         }
         return super.object_factory(number_of_objects);
     }
-
-    protected make_object() :Object {
-        return new Object();
-    }
 }
 
 // ----------------------------------------------------------------------
 
-export class ObjectFactory extends AcmacsPlotData.ObjectFactory
+export class ObjectFactory extends AmvLevel1.ObjectFactory
 {
     private geometry_size :number;
     private ball_segments :number; // depends on the number of objects
@@ -216,6 +212,10 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
         this.material = THREE.MeshPhongMaterial;
         this.geometry_size = 1.0;
         this.ball_segments = 32;
+    }
+
+    public make_object() :Object {
+        return new Object();
     }
 
     // adds to this.geometries

@@ -18,11 +18,14 @@ import AmvManipulator = require("amv-manipulator");
 
 export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 {
+    public initialization_completed :JQueryPromise<any>;
+
+    public viewer :Viewer;
+    public objects :Objects;
+
     private scene :THREE.Scene;
     private renderer :THREE.WebGLRenderer;
     private _size :number; // canvas size
-    public viewer :Viewer;
-    public objects :Objects;
     private event_handlers :JQuery[];
 
     private viewer_created :JQueryDeferred<{}>;
@@ -43,16 +46,17 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         }
     }
 
-    public user_objects(user_objects :AcmacsPlotData.PlotData) {
-        $.when(AmvUtils.require_deferred(['amv-' + user_objects.number_of_dimensions() + 'd'])).done((Amv :typeof Amv3d) => {
+    public initialize_for_dimensions(number_of_dimensions :number) :void {
+        this.initialization_completed = AmvUtils.require_deferred(['amv-' + number_of_dimensions + 'd']);
+        $.when(this.initialization_completed).done((Amv :typeof Amv3d) => {
             this.viewer = new Amv.Viewer(this);
             this.viewer_created.resolve();
             this.objects = new Amv.Objects(this);
-            this.objects.add_objects(user_objects);
-            this.viewer.transform(user_objects.transformation());
-            this.viewer.objects_updated();
-            this.viewer.camera_update();
         });
+    }
+
+    public object_factory(number_of_objects? :number) :ObjectFactory {
+        return this.objects && this.objects.object_factory(number_of_objects);
     }
 
     public render() :void {
@@ -153,6 +157,74 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
 // ----------------------------------------------------------------------
 
+export class Viewer implements AntigenicMapViewer.TriggeringEvent
+{
+    public static const_vector3_zero = new THREE.Vector3();
+
+    public camera :THREE.Camera;
+    public camera_looking_at :THREE.Vector3;
+    public manipulator :AmvManipulator.Manipulator;
+
+    protected element :JQuery;
+
+    constructor(public widget :MapWidgetLevel1) {
+        this.element = $(widget.domElement());
+        $.when(AmvUtils.require_deferred(['amv-manipulator'])).done(() => {
+            this.manipulator = new AmvManipulator.Manipulator(this.element);
+        });
+        this.on("reset:amv", () => this.reset());
+    }
+
+    public reset() :void {
+    }
+
+    public bind_manipulators(widget :MapWidgetLevel1) :void {
+    }
+
+    public on(event :string, callback: (data :any) => void) :JQuery {
+        return this.element.on(event, (e :Event, data :any) => callback(data));
+    }
+
+    public trigger(event :string, data :any) :void {
+        this.element.trigger(event, data);
+    }
+
+    public objects_updated() :void {
+    }
+
+    public camera_update() :void {
+        this.camera.lookAt(this.camera_looking_at);
+    }
+
+    public camera_look_at(lookAt :THREE.Vector3) :void {
+        this.camera_looking_at = lookAt.clone();
+        this.camera.lookAt(this.camera_looking_at);
+    }
+
+    // overridden in 3d
+    public camera_fov(fov?: number) :number {
+        return 0;
+    }
+
+    public width() :number {
+        return this.element.width();
+    }
+
+    public height() :number {
+        return this.element.height();
+    }
+
+    public trigger_on_element(event :string, args :any[]) :void {
+        this.element.trigger(event, args);
+    }
+
+    public help_text() :string {
+        throw "override in derived";
+    }
+}
+
+// ----------------------------------------------------------------------
+
 export class Object
 {
     public mesh :THREE.Mesh;
@@ -244,7 +316,7 @@ export class Object
     public from_plot_data(coordinates :number[], style :AcmacsPlotData.ObjectStyle, drawing_order :number, user_data :any) :void {
     }
 
-    public from_state(state :AntigenicMapViewer.Object3d, object_factory :AcmacsPlotData.ObjectFactory) :void {
+    public from_state(state :AntigenicMapViewer.Object3d, object_factory :ObjectFactory) :void {
         this.mesh = object_factory.make_mesh_restoring_state(state);
         this.position().fromArray(state.position);
         this.scale().multiplyScalar(state.scale);
@@ -262,21 +334,11 @@ export class Objects
     private _diameter :number;
     private _scale :number;     // keep current scale to be able to reset
 
-    protected _object_factory :AcmacsPlotData.ObjectFactory;
+    protected _object_factory :ObjectFactory;
 
     constructor(protected widget :MapWidgetLevel1) {
         this.objects = [];
         this._scale = 1.0;
-    }
-
-    public add_objects(user_objects :AcmacsPlotData.PlotData) :void {
-        var styles = user_objects.make_styles(this.object_factory(user_objects.number_of_objects()));
-        for (var i = 0; i < user_objects.number_of_objects(); ++i) {
-            var obj = this.make_object();
-            obj.from_plot_data(user_objects.layout(i), styles[user_objects.style_no(i)], user_objects.drawing_order_level(i), user_objects.user_data(i));
-            this.objects.push(obj);
-            this.widget.add(obj);
-        }
     }
 
     public meshes() :THREE.Object3D[] {
@@ -345,91 +407,119 @@ export class Objects
     }
 
     public restore_state(state :AntigenicMapViewer.Object3d[], diameter :number, center :number[]) :void {
-        this.objects = state.map((elt) => { var obj = this.make_object(); obj.from_state(elt, this.object_factory()); return obj; });
+        this.objects = state.map((elt) => { var obj = this.object_factory().make_object(); obj.from_state(elt, this.object_factory()); return obj; });
         //console.log('objects', this.objects);
         this.objects.forEach((obj) => this.widget.add(obj));
         this._diameter = diameter;
         this._center = (new THREE.Vector3()).fromArray(center);
     }
 
-    protected make_object() :Object {
-        return null;
-    }
-
-    protected object_factory(number_of_objects? :number) :AcmacsPlotData.ObjectFactory { // override in derived
+    public object_factory(number_of_objects? :number) :ObjectFactory { // override in derived
         return this._object_factory;
     }
 }
 
 // ----------------------------------------------------------------------
 
-export class Viewer implements AntigenicMapViewer.TriggeringEvent
+export interface MaterialClass
 {
-    public static const_vector3_zero = new THREE.Vector3();
+    new (parameters: THREE.MeshBasicMaterialParameters): THREE.Material;
+}
 
-    public camera :THREE.Camera;
-    public camera_looking_at :THREE.Vector3;
-    public manipulator :AmvManipulator.Manipulator;
+// ----------------------------------------------------------------------
 
-    protected element :JQuery;
+export class ObjectFactory
+{
+    protected material :MaterialClass;
+    protected geometries :any;  // "shape-aspect-rotation[-outline_width]": THREE.Geometry, e.g  "circle-1.0-0.0", "box-1.0-0.0", "circle-outline-1.0-0.0-1.0", "box-outline-1.0-0.0-1.0"
 
-    constructor(public widget :MapWidgetLevel1) {
-        this.element = $(widget.domElement());
-        $.when(AmvUtils.require_deferred(['amv-manipulator'])).done(() => {
-            this.manipulator = new AmvManipulator.Manipulator(this.element);
-        });
-        this.on("reset:amv", () => this.reset());
+    constructor() {
+        this.geometries = {};
     }
 
-    public reset() :void {
+    public make_object() :Object { // override in derived
+        return null;
     }
 
-    public bind_manipulators(widget :MapWidgetLevel1) :void {
+    public make_geometry_material(plot_style :AntigenicMapViewer.PlotDataStyle) :[string, THREE.Geometry, THREE.Material] {
+        var material = new this.material(this.convert_color(plot_style.fill_color));
+        var shape :string = (plot_style.shape === undefined || plot_style.shape === null) ? "circle" : plot_style.shape;
+        var geometry = this.make_geometry(shape, plot_style.outline_width);
+        return [shape, geometry, material];
     }
 
-    public on(event :string, callback: (data :any) => void) :JQuery {
-        return this.element.on(event, (e :Event, data :any) => callback(data));
+    private make_geometry(shape :string, outline_width :number) :THREE.Geometry {
+        var geometry = this.geometries[shape];
+        if (!geometry) {
+            switch (shape) {
+            case "box":
+            case "cube":
+                this.make_box(outline_width);
+                break;
+            case "circle":
+            case "sphere":
+                this.make_circle(outline_width);
+                break;
+            case "triangle":
+                this.make_triangle(outline_width);
+                break;
+            }
+            geometry = this.geometries[shape];
+        }
+        return geometry;
     }
 
-    public trigger(event :string, data :any) :void {
-        this.element.trigger(event, data);
+    public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, shape :string, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
+        return this.make_mesh_2(plot_style.aspect, plot_style.rotation, geometry, material);
     }
 
-    public objects_updated() :void {
+    private make_mesh_2(aspect :number, rotation :number, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
+        var mesh = new THREE.Mesh(geometry, material);
+        if (aspect !== 1 && aspect !== undefined && aspect !== null) {
+            mesh.scale.set(aspect, 1, aspect);
+        }
+        if (rotation !== 0 && rotation !== undefined && rotation !== null) {
+            mesh.rotation.set(0, 0, rotation);
+        }
+        return mesh;
     }
 
-    public camera_update() :void {
-        this.camera.lookAt(this.camera_looking_at);
+    // adds to this.geometries
+    protected make_circle(outline_width :number = 1.0) :void {
+        throw "Override in derived";
     }
 
-    public camera_look_at(lookAt :THREE.Vector3) :void {
-        this.camera_looking_at = lookAt.clone();
-        this.camera.lookAt(this.camera_looking_at);
+    // adds to this.geometries
+    protected make_box(outline_width :number = 1.0) :void {
+        throw "Override in derived";
     }
 
-    // overridden in 3d
-    public camera_fov(fov?: number) :number {
-        return 0;
+    protected make_triangle(outline_width :number = 1.0) :void {
+        throw "Override in derived";
     }
 
-    // 2d
-    public transform(transformation :AcmacsPlotData.Transformation) :void {
+    protected convert_color(source :any) :THREE.MeshBasicMaterialParameters {
+        var material_color :THREE.MeshBasicMaterialParameters;
+        if ($.type(source) === "string") {
+            if (source === "transparent") {
+                material_color = {transparent: true, opacity: 0};
+            }
+            else {
+                material_color = {transparent: false, color: (new THREE.Color(source)).getHex(), opacity: 1};
+            }
+        }
+        else if ($.type(source) === "array") {
+            material_color = {transparent: true, opacity: source[1], color: (new THREE.Color(source[0])).getHex()};
+        }
+        // console.log('convert_color', JSON.stringify(material_color));
+        return material_color;
     }
 
-    public width() :number {
-        return this.element.width();
-    }
-
-    public height() :number {
-        return this.element.height();
-    }
-
-    public trigger_on_element(event :string, args :any[]) :void {
-        this.element.trigger(event, args);
-    }
-
-    public help_text() :string {
-        throw "override in derived";
+    public make_mesh_restoring_state(plot_style :AntigenicMapViewer.Object3d) :THREE.Mesh {
+        var color :any = plot_style.fill_opacity !== null && plot_style.fill_opacity !== undefined ? [plot_style.fill_color, plot_style.fill_opacity] : plot_style.fill_color;
+        return this.make_mesh_2(plot_style.aspect, plot_style.rotation,
+                                this.make_geometry(plot_style.shape, plot_style.outline_width),
+                                new this.material(this.convert_color(color)));
     }
 }
 

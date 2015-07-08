@@ -11,6 +11,10 @@ import AmvManipulator2d = require("amv-manipulator-2d");
 
 // ----------------------------------------------------------------------
 
+export type Transformation = AntigenicMapViewer.PlotDataTransformation;
+
+// ----------------------------------------------------------------------
+
 class DrawingOrderNS
 {
     public static maximum :number = 1000;
@@ -18,12 +22,23 @@ class DrawingOrderNS
     public static step    :number = DrawingOrderNS.maximum / 100000;
 }
 
+// ----------------------------------------------------------------------
+
+export interface Viewport
+{
+    cx :number;
+    cy :number;
+    size? :number;
+}
+
+// ----------------------------------------------------------------------
+
 export class Viewer extends AmvLevel1.Viewer
 {
     public static camera_up = new THREE.Vector3(0, 1, 0);
 
     private grid :Grid;
-    private viewport_initial :AcmacsPlotData.Viewport; // for reset
+    private viewport_initial :Viewport; // for reset
 
     private rotate_control :AmvManipulator2d.RotateControl;
     private fliph_control :AmvManipulator2d.FlipControl;
@@ -60,7 +75,7 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera_update();
     }
 
-    public viewport(viewport? :AcmacsPlotData.Viewport, grid_full_reset :Boolean = false) :AcmacsPlotData.Viewport {
+    public viewport(viewport? :Viewport, grid_full_reset :Boolean = false) :Viewport {
         var camera = <THREE.OrthographicCamera>this.camera;
         if (viewport) {
             var hsize = (viewport.size ? viewport.size : (camera.right - camera.left)) / 2;
@@ -107,7 +122,7 @@ export class Viewer extends AmvLevel1.Viewer
         this.grid.reset(grid_full_reset);
     }
 
-    public transform(transformation :AcmacsPlotData.Transformation) :void {
+    public transform(transformation :Transformation) :void {
         if (transformation) {
             var m = new THREE.Matrix4();
             m.elements[0] = transformation[0][0];
@@ -121,9 +136,9 @@ export class Viewer extends AmvLevel1.Viewer
         }
     }
 
-    public transformation() :AcmacsPlotData.Transformation {
+    public transformation() :Transformation {
         var m4 = this._get_m4();
-        var transformation :AcmacsPlotData.Transformation = [[m4.elements[0], m4.elements[1]], [m4.elements[4], m4.elements[5]]];
+        var transformation :Transformation = [[m4.elements[0], m4.elements[1]], [m4.elements[4], m4.elements[5]]];
         return transformation;
     }
 
@@ -309,16 +324,11 @@ export class Object extends AmvLevel1.Object
 export class Objects extends AmvLevel1.Objects
 {
     private _flip :Boolean;
-    private _viewport :AcmacsPlotData.Viewport;
+    private _viewport :Viewport;
 
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
         this._flip = false;
-    }
-
-    public add_objects(user_objects :AcmacsPlotData.PlotData) :void {
-        super.add_objects(user_objects);
-        this._viewport = user_objects.viewport();
     }
 
     public number_of_dimensions() :number {
@@ -351,7 +361,10 @@ export class Objects extends AmvLevel1.Objects
         this.objects.map(o => o.rotation().setFromQuaternion(quaternion));
     }
 
-    public viewport() :AcmacsPlotData.Viewport {
+    public viewport(viewport? :Viewport) :Viewport {
+        if (viewport) {
+            this._viewport = viewport;
+        }
         return this._viewport;
     }
 
@@ -385,21 +398,17 @@ export class Objects extends AmvLevel1.Objects
     //     return obj;
     // }
 
-    protected object_factory(number_of_objects? :number) :AcmacsPlotData.ObjectFactory {
+    public object_factory(number_of_objects? :number) :AmvLevel1.ObjectFactory {
         if (!this._object_factory) {
             this._object_factory = new ObjectFactory(number_of_objects);
         }
         return super.object_factory(number_of_objects);
     }
-
-    protected make_object() :Object {
-        return new Object();
-    }
 }
 
 // ----------------------------------------------------------------------
 
-export class ObjectFactory extends AcmacsPlotData.ObjectFactory
+export class ObjectFactory extends AmvLevel1.ObjectFactory
 {
     public static geometry_size :number = 0.18;
     private ball_segments :number; // depends on the number of objects
@@ -412,6 +421,10 @@ export class ObjectFactory extends AcmacsPlotData.ObjectFactory
         this.ball_segments = 32;
         this.outline_width_scale = 0.005;
         this.outline_materials = {};
+    }
+
+    public make_object() :Object {
+        return new Object();
     }
 
     public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, shape :string, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {

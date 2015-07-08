@@ -73,9 +73,9 @@ declare module AntigenicMapViewer {
     interface MapWidgetLevel2 extends TriggeringEvent
     {
         destroy() :void;
-        plot_data(plot_data :PlotDataInterface) :void;
+        //plot_data(plot_data :PlotDataInterface) :void;
         add_popup_menu_items(items :PopupMenuDescItem[]) :void;
-        state_for_drawing() :MapStateForDrawing;
+        //state_for_drawing() :MapStateForDrawing;
     }
 
     interface MapWidgetLevel2Maker {
