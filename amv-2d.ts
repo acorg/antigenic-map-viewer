@@ -5,7 +5,6 @@
 
 import AmvUtils = require("amv-utils");
 import AmvLevel1 = require("amv-level1");
-import AcmacsPlotData = require("acmacs-plot-data");
 import AmvManipulator = require("amv-manipulator");
 import AmvManipulator2d = require("amv-manipulator-2d");
 
@@ -313,9 +312,8 @@ class Grid
 
 export class Object extends AmvLevel1.Object
 {
-    public from_plot_data(coordinates :number[], style :AcmacsPlotData.ObjectStyle, drawing_order :number, user_data :any) :void {
-        // flip layout
-        this.mesh = style.make([coordinates[0], -coordinates[1], DrawingOrderNS.base + drawing_order * DrawingOrderNS.step], user_data);
+    public set_drawing_order(drawing_order :number) {
+        this.mesh.position.setZ(DrawingOrderNS.base + drawing_order * DrawingOrderNS.step);
     }
 }
 

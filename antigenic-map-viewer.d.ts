@@ -73,20 +73,14 @@ declare module AntigenicMapViewer {
     interface MapWidgetLevel2 extends TriggeringEvent
     {
         destroy() :void;
-        //plot_data(plot_data :PlotDataInterface) :void;
         add_popup_menu_items(items :PopupMenuDescItem[]) :void;
-        //state_for_drawing() :MapStateForDrawing;
-    }
-
-    interface MapWidgetLevel2Maker {
-        make_widget(container :any /*JQuery*/, size :number, plot_data :PlotDataInterface|MapStateForDrawing, extra_popup_menu_items? :PopupMenuDescItem[]) :MapWidgetLevel2;
     }
 
 // ----------------------------------------------------------------------
 
     type Position3d = number[]; //[number, number, number];
 
-    interface Object3d
+    interface ObjectState
     {
         position :Position3d;
         scale :number;
@@ -106,11 +100,18 @@ declare module AntigenicMapViewer {
     {
         camera_position :Position3d;
         camera_looking_at :Position3d;
-        camera_fov :number;
+        camera_fov? :number;
         number_of_dimensions :number;
-        objects :Object3d[];
+        objects :ObjectState[];
         diameter :number;
         center :Position3d;
+    }
+
+// ----------------------------------------------------------------------
+
+    interface MapWidget {
+        make_widget(container :any /*JQuery*/, size :number, plot_data :PlotDataInterface|MapStateForDrawing, extra_popup_menu_items? :PopupMenuDescItem[]) :MapWidgetLevel2;
+        widget_state(widget :MapWidgetLevel2) :MapStateForDrawing;
     }
 
 // ----------------------------------------------------------------------

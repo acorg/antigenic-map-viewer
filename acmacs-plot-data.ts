@@ -41,11 +41,21 @@ export class PlotData
 
     private add_objects(widget :AmvLevel1.MapWidgetLevel1) :void {
         var number_of_objects = this.number_of_objects();
+        var number_of_dimensions = this.number_of_dimensions();
         var factory = widget.object_factory(number_of_objects);
         var styles = this.make_styles(factory);
         for (var i = 0; i < number_of_objects; ++i) {
             var obj = factory.make_object();
-            obj.from_plot_data(this.layout(i), styles[this.style_no(i)], this.drawing_order_level(i), this.user_data(i));
+            var style = styles[this.style_no(i)];
+            var coordinates = this.layout(i);
+            if (number_of_dimensions === 2) {
+                // flip layout
+                obj.mesh = style.make([coordinates[0], -coordinates[1], 0], this.user_data(i));
+                (<Amv2d.Object>obj).set_drawing_order(this.drawing_order_level(i));
+            }
+            else {
+                obj.mesh = style.make(coordinates, this.user_data(i));
+            }
             widget.objects.objects.push(obj);
             widget.add(obj);
         }
@@ -213,7 +223,7 @@ export class ObjectStyle
         // console.log('make', this.shape, this.shown, JSON.stringify(this.plot_style));
         if (this.shown) {
             obj = this.factory.make_mesh(this.plot_style, this.shape, this.geometry, this.material);
-            obj.position.set.apply(obj.position, position);
+            obj.position.fromArray(position);
             obj.scale.multiplyScalar(this.plot_style.size)
             obj.userData = user_data;
         }

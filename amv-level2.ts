@@ -8,6 +8,7 @@ import AmvUtils = require("amv-utils");
 import AcmacsPlotData = require("acmacs-plot-data");
 import AmvLevel1 = require("amv-level1");
 import AcmacsToolkit = require("acmacs-toolkit");
+import AmvState = require("amv-state");
 
 // ----------------------------------------------------------------------
 
@@ -85,22 +86,6 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
         }
     }
 
-//!    public plot_data(plot_data :AntigenicMapViewer.PlotDataInterface|AntigenicMapViewer.MapStateForDrawing) :void {
-//!        if ((<any>plot_data).layout) {
-//!            this._plot_data = new AcmacsPlotData.PlotData(<AntigenicMapViewer.PlotDataInterface>plot_data);
-//!            this.title(this._plot_data.title());
-//!            this.user_object_label_type = this._plot_data.default_label_type();
-//!            $.when(this.map_created).done(() => {
-//!                this.map.user_objects(this._plot_data);
-//!            });
-//!        }
-//!        else if ((<any>plot_data).camera_looking_at) {
-//!            $.when(this.map_created).done(() => {
-//!                this.map.restore_state(<AntigenicMapViewer.MapStateForDrawing>plot_data);
-//!            });
-//!        }
-//!    }
-
     public add_popup_menu_items(items :AcmacsToolkit.PopupMenuDescItem[]) :void {
         this.popup_menu_items_extra = (this.popup_menu_items_extra || []).concat((items || []).map(function (elt) { if (!elt.eventNode) {elt = $.extend({eventNode: this}, elt); } return elt; }, this));
     }
@@ -147,10 +132,6 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
         this.help_popup.show(this.map.help_text())
     }
 
-    public state_for_drawing() :AntigenicMapViewer.MapStateForDrawing {
-        return this.map.state_for_drawing();
-    }
-
     private auto_size(size :number) :number {
         if (!size) {
             var widget_offset = this.wrapper.offset(), map_offset = this.wrapper.find('.amv-level2-map-wrapper').offset();
@@ -189,6 +170,14 @@ export function make_widget(container :JQuery, size :number, plot_data :Antigeni
     });
 
     return widget;
+}
+
+// ----------------------------------------------------------------------
+
+export function widget_state(widget :MapWidgetLevel2|AmvLevel1.MapWidgetLevel1) :AntigenicMapViewer.MapStateForDrawing
+{
+    var w :AmvLevel1.MapWidgetLevel1 = (widget instanceof MapWidgetLevel2) ? (<MapWidgetLevel2>widget).map : <AmvLevel1.MapWidgetLevel1>widget;
+    return AmvState.widget_state(w);
 }
 
 // ----------------------------------------------------------------------

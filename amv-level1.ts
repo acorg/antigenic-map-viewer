@@ -10,7 +10,6 @@
 "use strict";
 
 import AmvUtils = require("amv-utils");
-import AcmacsPlotData = require("acmacs-plot-data");
 import Amv3d = require("amv-3d");
 import AmvManipulator = require("amv-manipulator");
 
@@ -126,17 +125,17 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         return this.viewer.help_text();
     }
 
-    public state_for_drawing() :AntigenicMapViewer.MapStateForDrawing {
-        return {
-            camera_position: this.viewer.camera.position.toArray(),
-            camera_looking_at: this.viewer.camera_looking_at.toArray(),
-            camera_fov: this.viewer.camera_fov(),
-            number_of_dimensions: this.objects.number_of_dimensions(),
-            objects: this.objects.state_for_drawing(),
-            diameter: this.objects.diameter(),
-            center: this.objects.center().toArray()
-        }
-    }
+//!    public state_for_drawing() :AntigenicMapViewer.MapStateForDrawing {
+//!        return {
+//!            camera_position: this.viewer.camera.position.toArray(),
+//!            camera_looking_at: this.viewer.camera_looking_at.toArray(),
+//!            camera_fov: this.viewer.camera_fov(),
+//!            number_of_dimensions: this.objects.number_of_dimensions(),
+//!            objects: this.objects.state_for_drawing(),
+//!            diameter: this.objects.diameter(),
+//!            center: this.objects.center().toArray()
+//!        }
+//!    }
 
     public restore_state(state :AntigenicMapViewer.MapStateForDrawing) :void {
         $.when(AmvUtils.require_deferred(['amv-' + state.number_of_dimensions + 'd'])).done((Amv :typeof Amv3d) => {
@@ -146,7 +145,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
             this.objects.restore_state(state.objects, state.diameter, state.center);
             this.viewer.camera.position.fromArray(state.camera_position);
             if (state.camera_fov) {
-                this.viewer.camera_fov(state.camera_fov);
+                (<Amv3d.Viewer>this.viewer).camera_fov(state.camera_fov);
             }
             this.viewer.camera_look_at((new THREE.Vector3()).fromArray(state.camera_looking_at));
             this.viewer.objects_updated();
@@ -201,11 +200,6 @@ export class Viewer implements AntigenicMapViewer.TriggeringEvent
         this.camera.lookAt(this.camera_looking_at);
     }
 
-    // overridden in 3d
-    public camera_fov(fov?: number) :number {
-        return 0;
-    }
-
     public width() :number {
         return this.element.width();
     }
@@ -228,6 +222,7 @@ export class Viewer implements AntigenicMapViewer.TriggeringEvent
 export class Object
 {
     public mesh :THREE.Mesh;
+    public outline_mesh :THREE.Mesh;
 
     constructor() {
     }
@@ -263,7 +258,7 @@ export class Object
         return this.mesh.userData;
     }
 
-    public state_for_drawing() :AntigenicMapViewer.Object3d {
+    public state_for_drawing() :AntigenicMapViewer.ObjectState {
         var mesh = this.mesh;
         var shape = ((mesh.geometry && mesh.geometry.type) || "circle").toLowerCase().replace('geometry', '');
         if (shape === "shape") {
@@ -284,7 +279,7 @@ export class Object
             }
         }
         // console.log('mesh', mesh);
-        var r :AntigenicMapViewer.Object3d = {
+        var r :AntigenicMapViewer.ObjectState = {
             position: mesh.position.toArray(),
             scale: mesh.scale.y,
             shape: shape,
@@ -313,10 +308,7 @@ export class Object
         return r;
     }
 
-    public from_plot_data(coordinates :number[], style :AcmacsPlotData.ObjectStyle, drawing_order :number, user_data :any) :void {
-    }
-
-    public from_state(state :AntigenicMapViewer.Object3d, object_factory :ObjectFactory) :void {
+    public from_state(state :AntigenicMapViewer.ObjectState, object_factory :ObjectFactory) :void { //?
         this.mesh = object_factory.make_mesh_restoring_state(state);
         this.position().fromArray(state.position);
         this.scale().multiplyScalar(state.scale);
@@ -398,15 +390,11 @@ export class Objects
         // console.log('calculate_bounding_sphere2', JSON.stringify(this._center), this._diameter);
     }
 
-    public state_for_drawing() :AntigenicMapViewer.Object3d[] {
-        return this.objects.map((obj) => obj.state_for_drawing());
-    }
-
     public number_of_dimensions() :number {
         return 0;               // override in derived
     }
 
-    public restore_state(state :AntigenicMapViewer.Object3d[], diameter :number, center :number[]) :void {
+    public restore_state(state :AntigenicMapViewer.ObjectState[], diameter :number, center :number[]) :void {
         this.objects = state.map((elt) => { var obj = this.object_factory().make_object(); obj.from_state(elt, this.object_factory()); return obj; });
         //console.log('objects', this.objects);
         this.objects.forEach((obj) => this.widget.add(obj));
@@ -515,7 +503,7 @@ export class ObjectFactory
         return material_color;
     }
 
-    public make_mesh_restoring_state(plot_style :AntigenicMapViewer.Object3d) :THREE.Mesh {
+    public make_mesh_restoring_state(plot_style :AntigenicMapViewer.ObjectState) :THREE.Mesh {
         var color :any = plot_style.fill_opacity !== null && plot_style.fill_opacity !== undefined ? [plot_style.fill_color, plot_style.fill_opacity] : plot_style.fill_color;
         return this.make_mesh_2(plot_style.aspect, plot_style.rotation,
                                 this.make_geometry(plot_style.shape, plot_style.outline_width),
