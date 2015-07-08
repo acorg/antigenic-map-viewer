@@ -112,6 +112,7 @@ declare module AntigenicMapViewer {
     interface MapWidget {
         make_widget(container :any /*JQuery*/, size :number, plot_data :PlotDataInterface|MapStateForDrawing, extra_popup_menu_items? :PopupMenuDescItem[]) :MapWidgetLevel2;
         widget_state(widget :MapWidgetLevel2) :MapStateForDrawing;
+        widget_restore(widget :MapWidgetLevel2, state :MapStateForDrawing) :void;
     }
 
 // ----------------------------------------------------------------------

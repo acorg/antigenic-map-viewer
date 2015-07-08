@@ -158,7 +158,7 @@ export function make_widget(container :JQuery, size :number, plot_data :Antigeni
             pd.setup_map(widget.map);
         }
         else if ((<AntigenicMapViewer.MapStateForDrawing>plot_data).camera_looking_at) {
-            widget.map.restore_state(<AntigenicMapViewer.MapStateForDrawing>plot_data);
+            widget_restore(widget, <AntigenicMapViewer.MapStateForDrawing>plot_data);
         }
         else {
             console.error('internal in make_widget');
@@ -178,6 +178,14 @@ export function widget_state(widget :MapWidgetLevel2|AmvLevel1.MapWidgetLevel1) 
 {
     var w :AmvLevel1.MapWidgetLevel1 = (widget instanceof MapWidgetLevel2) ? (<MapWidgetLevel2>widget).map : <AmvLevel1.MapWidgetLevel1>widget;
     return AmvState.widget_state(w);
+}
+
+// ----------------------------------------------------------------------
+
+export function widget_restore(widget :MapWidgetLevel2|AmvLevel1.MapWidgetLevel1, state :AntigenicMapViewer.MapStateForDrawing) :void
+{
+    var w :AmvLevel1.MapWidgetLevel1 = (widget instanceof MapWidgetLevel2) ? (<MapWidgetLevel2>widget).map : <AmvLevel1.MapWidgetLevel1>widget;
+    AmvState.widget_restore(w, state);
 }
 
 // ----------------------------------------------------------------------

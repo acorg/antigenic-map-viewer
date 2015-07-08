@@ -425,11 +425,11 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
         return new Object();
     }
 
-    public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, shape :string, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
-        var mesh = super.make_mesh(plot_style, shape, geometry, material);
-        var outline_material = this.outline_material(this.convert_color(plot_style.outline_color), plot_style.outline_width);
+    public make_mesh(aspect :number, rotation :number, shape :string, outline_width :number, fill_color :any, outline_color :any) :THREE.Mesh {
+        var mesh = super.make_mesh(aspect, rotation, shape, outline_width, fill_color, outline_color);
+        var outline_material = this.outline_material(this.convert_color(outline_color), outline_width);
         if (shape === "circle" || shape === "sphere") {
-            mesh.add(new THREE.Mesh(this.geometries[`${shape}-outline-${plot_style.outline_width}`], outline_material));
+            mesh.add(new THREE.Mesh(this.geometries[`${shape}-outline-${outline_width}`], outline_material));
         }
         else {
             mesh.add(new THREE.Line(this.geometries[`${shape}-outline`], <THREE.ShaderMaterial>outline_material));

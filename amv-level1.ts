@@ -124,34 +124,6 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     public help_text() :string {
         return this.viewer.help_text();
     }
-
-//!    public state_for_drawing() :AntigenicMapViewer.MapStateForDrawing {
-//!        return {
-//!            camera_position: this.viewer.camera.position.toArray(),
-//!            camera_looking_at: this.viewer.camera_looking_at.toArray(),
-//!            camera_fov: this.viewer.camera_fov(),
-//!            number_of_dimensions: this.objects.number_of_dimensions(),
-//!            objects: this.objects.state_for_drawing(),
-//!            diameter: this.objects.diameter(),
-//!            center: this.objects.center().toArray()
-//!        }
-//!    }
-
-    public restore_state(state :AntigenicMapViewer.MapStateForDrawing) :void {
-        $.when(AmvUtils.require_deferred(['amv-' + state.number_of_dimensions + 'd'])).done((Amv :typeof Amv3d) => {
-            this.viewer = new Amv.Viewer(this);
-            this.viewer_created.resolve();
-            this.objects = new Amv.Objects(this);
-            this.objects.restore_state(state.objects, state.diameter, state.center);
-            this.viewer.camera.position.fromArray(state.camera_position);
-            if (state.camera_fov) {
-                (<Amv3d.Viewer>this.viewer).camera_fov(state.camera_fov);
-            }
-            this.viewer.camera_look_at((new THREE.Vector3()).fromArray(state.camera_looking_at));
-            this.viewer.objects_updated();
-            this.viewer.camera_update();
-        });
-    }
 }
 
 // ----------------------------------------------------------------------
@@ -257,63 +229,6 @@ export class Object
         }
         return this.mesh.userData;
     }
-
-    public state_for_drawing() :AntigenicMapViewer.ObjectState {
-        var mesh = this.mesh;
-        var shape = ((mesh.geometry && mesh.geometry.type) || "circle").toLowerCase().replace('geometry', '');
-        if (shape === "shape") {
-            // 2d box or triangle
-            if (mesh.geometry.vertices) {
-                if (mesh.geometry.vertices.length === 3)
-                    shape = "triangle";
-                else
-                    shape = "box";
-            }
-        }
-        var material = mesh.material && (<THREE.MeshPhongMaterial>mesh.material);
-        var fill_color = "transparent", fill_opacity = 1;
-        if (material && ! (material.transparent && material.opacity === 0)) {
-            fill_color = '#' + material.color.getHexString();
-            if (material.transparent) {
-                fill_opacity = material.opacity;
-            }
-        }
-        // console.log('mesh', mesh);
-        var r :AntigenicMapViewer.ObjectState = {
-            position: mesh.position.toArray(),
-            scale: mesh.scale.y,
-            shape: shape,
-            fill_color: fill_color
-        };
-        if (fill_opacity !== 1) {
-            r.fill_opacity = fill_opacity;
-        }
-        if (mesh.userData !== undefined && mesh.userData !== null) {
-            r.user_data = mesh.userData;
-        }
-        if (mesh.scale.x !== mesh.scale.y) {
-            r.aspect = mesh.scale.x / mesh.scale.y;
-        }
-        if (mesh.rotation.z !== 0) {
-            r.rotation = mesh.rotation.z;
-        }
-        var outline = this.outline();
-        if (outline) {
-            var outline_material = <THREE.LineBasicMaterial>outline.material;
-            if (outline_material && ! (outline_material.transparent && outline_material.opacity === 0)) {
-                r.outline_color = '#' + outline_material.color.getHexString();
-                r.outline_width = outline_material.linewidth;
-            }
-        }
-        return r;
-    }
-
-    public from_state(state :AntigenicMapViewer.ObjectState, object_factory :ObjectFactory) :void { //?
-        this.mesh = object_factory.make_mesh_restoring_state(state);
-        this.position().fromArray(state.position);
-        this.scale().multiplyScalar(state.scale);
-        this.user_data(state.user_data);
-    }
 }
 
 // ----------------------------------------------------------------------
@@ -347,15 +262,26 @@ export class Objects
     public reorient() :void {
     }
 
-    public diameter() :number {
-        if (this._diameter === undefined || this._diameter === null) {
+    public diameter(diameter? :number) :number {
+        if (diameter !== undefined && diameter !== null) {
+            this._diameter = diameter;
+        }
+        else if (this._diameter === undefined || this._diameter === null) {
             this.calculate_bounding_sphere();
         }
         return this._diameter;
     }
 
-    public center() :THREE.Vector3 {
-        if (this._center === undefined || this._center === null) {
+    public center(center? :THREE.Vector3|number[]) :THREE.Vector3 {
+        if (center !== undefined && center !== null) {
+            if (center instanceof THREE.Vector3) {
+                this._center = center.clone();
+            }
+            else {
+                this._center = (new THREE.Vector3()).fromArray(<number[]>center);
+            }
+        }
+        else if (this._center === undefined || this._center === null) {
             this.calculate_bounding_sphere();
         }
         return this._center;
@@ -394,14 +320,6 @@ export class Objects
         return 0;               // override in derived
     }
 
-    public restore_state(state :AntigenicMapViewer.ObjectState[], diameter :number, center :number[]) :void {
-        this.objects = state.map((elt) => { var obj = this.object_factory().make_object(); obj.from_state(elt, this.object_factory()); return obj; });
-        //console.log('objects', this.objects);
-        this.objects.forEach((obj) => this.widget.add(obj));
-        this._diameter = diameter;
-        this._center = (new THREE.Vector3()).fromArray(center);
-    }
-
     public object_factory(number_of_objects? :number) :ObjectFactory { // override in derived
         return this._object_factory;
     }
@@ -429,11 +347,15 @@ export class ObjectFactory
         return null;
     }
 
-    public make_geometry_material(plot_style :AntigenicMapViewer.PlotDataStyle) :[string, THREE.Geometry, THREE.Material] {
-        var material = new this.material(this.convert_color(plot_style.fill_color));
-        var shape :string = (plot_style.shape === undefined || plot_style.shape === null) ? "circle" : plot_style.shape;
-        var geometry = this.make_geometry(shape, plot_style.outline_width);
-        return [shape, geometry, material];
+    public make_mesh(aspect :number, rotation :number, shape :string, outline_width :number, fill_color :any, outline_color :any) :THREE.Mesh {
+        var mesh = new THREE.Mesh(this.make_geometry(shape, outline_width), this.make_material(fill_color));
+        if (aspect !== 1 && aspect !== undefined && aspect !== null) {
+            mesh.scale.set(aspect, 1, aspect);
+        }
+        if (rotation !== 0 && rotation !== undefined && rotation !== null) {
+            mesh.rotation.set(0, 0, rotation);
+        }
+        return mesh;
     }
 
     private make_geometry(shape :string, outline_width :number) :THREE.Geometry {
@@ -457,19 +379,8 @@ export class ObjectFactory
         return geometry;
     }
 
-    public make_mesh(plot_style :AntigenicMapViewer.PlotDataStyle, shape :string, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
-        return this.make_mesh_2(plot_style.aspect, plot_style.rotation, geometry, material);
-    }
-
-    private make_mesh_2(aspect :number, rotation :number, geometry :THREE.Geometry, material :THREE.Material) :THREE.Mesh {
-        var mesh = new THREE.Mesh(geometry, material);
-        if (aspect !== 1 && aspect !== undefined && aspect !== null) {
-            mesh.scale.set(aspect, 1, aspect);
-        }
-        if (rotation !== 0 && rotation !== undefined && rotation !== null) {
-            mesh.rotation.set(0, 0, rotation);
-        }
-        return mesh;
+    private make_material(fill_color :any) :THREE.Material {
+        return new this.material(this.convert_color(fill_color));
     }
 
     // adds to this.geometries
@@ -501,13 +412,6 @@ export class ObjectFactory
         }
         // console.log('convert_color', JSON.stringify(material_color));
         return material_color;
-    }
-
-    public make_mesh_restoring_state(plot_style :AntigenicMapViewer.ObjectState) :THREE.Mesh {
-        var color :any = plot_style.fill_opacity !== null && plot_style.fill_opacity !== undefined ? [plot_style.fill_color, plot_style.fill_opacity] : plot_style.fill_color;
-        return this.make_mesh_2(plot_style.aspect, plot_style.rotation,
-                                this.make_geometry(plot_style.shape, plot_style.outline_width),
-                                new this.material(this.convert_color(color)));
     }
 }
 

@@ -208,13 +208,9 @@ export interface ObjectUserData
 
 export class ObjectStyle
 {
-    private shape :string;
-    private material :THREE.Material;
-    private geometry :THREE.Geometry;
     private shown :Boolean;
 
     constructor(private plot_style :AntigenicMapViewer.PlotDataStyle, private factory :AmvLevel1.ObjectFactory) {
-        [this.shape, this.geometry, this.material] = this.factory.make_geometry_material(plot_style);
         this.shown = this.plot_style.shown === undefined || this.plot_style.shown
     }
 
@@ -222,7 +218,7 @@ export class ObjectStyle
         var obj :THREE.Mesh = null;
         // console.log('make', this.shape, this.shown, JSON.stringify(this.plot_style));
         if (this.shown) {
-            obj = this.factory.make_mesh(this.plot_style, this.shape, this.geometry, this.material);
+            obj = this.factory.make_mesh(this.plot_style.aspect, this.plot_style.rotation, this.plot_style.shape || "circle", this.plot_style.outline_width, this.plot_style.fill_color, this.plot_style.outline_color);
             obj.position.fromArray(position);
             obj.scale.multiplyScalar(this.plot_style.size)
             obj.userData = user_data;
