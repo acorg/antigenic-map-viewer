@@ -435,29 +435,21 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
         return new Object();
     }
 
-    public make_mesh(aspect :number, shape :string, outline_width :number, fill_color :any, outline_color :any) :THREE.Mesh {
-        var mesh = super.make_mesh(aspect, shape, outline_width, fill_color, outline_color);
+    public make_outline(shape :string, outline_width :number, outline_color :any) :THREE.Object3D {
         var outline_material = this.outline_material(this.convert_color(outline_color), outline_width);
-        if (shape === "circle" || shape === "sphere") {
-            mesh.add(new THREE.Mesh(this.geometries[`${shape}-outline-${outline_width}`], outline_material));
-        }
-        else {
-            mesh.add(new THREE.Line(this.geometries[`${shape}-outline`], <THREE.ShaderMaterial>outline_material));
-        }
-        return mesh;
+        return new THREE.Line(this.geometries[`${shape}-outline`], <THREE.ShaderMaterial>outline_material);
     }
 
     // adds to this.geometries
-    protected make_circle(outline_width :number) :void {
+    protected make_circle() :void {
         this.geometries["circle"] = this.geometries["sphere"] = new THREE.CircleGeometry(ObjectFactory.geometry_size / 2, this.ball_segments);
-        var n_outline_width = (outline_width === undefined || outline_width === null) ? 1.0 : outline_width;
-        this.geometries[`circle-outline-${outline_width}`] = this.geometries[`sphere-outline-${outline_width}`] =
-              new THREE.RingGeometry(ObjectFactory.geometry_size / 2 - n_outline_width * this.outline_width_scale,
-                                     ObjectFactory.geometry_size / 2, this.ball_segments);
+        var circle_curve = new THREE.EllipseCurve(0, 0, ObjectFactory.geometry_size / 2, ObjectFactory.geometry_size / 2, 0, Math.PI * 2, false);
+        var circle_path = new THREE.Path(circle_curve.getPoints(this.ball_segments));
+        this.geometries["circle-outline"] = this.geometries["sphere-outline"] = circle_path.createPointsGeometry(this.ball_segments);
     }
 
     // adds to this.geometries
-    protected make_box(outline_width :number) :void {
+    protected make_box() :void {
         var offset = ObjectFactory.geometry_size / 2;
         var shape = new THREE.Shape();
         shape.moveTo(-offset, -offset);
@@ -469,7 +461,7 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
         this.geometries["box-outline"] = this.geometries["cube-outline"] = (<any>shape).createPointsGeometry();
     }
 
-    protected make_triangle(outline_width :number = 1.0) :void {
+    protected make_triangle() :void {
         var offset = ObjectFactory.geometry_size / 2;
         var shape = new THREE.Shape();
         shape.moveTo(-offset, -offset);

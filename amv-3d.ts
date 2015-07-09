@@ -215,16 +215,16 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
     }
 
     // adds to this.geometries
-    protected make_circle(outline_width :number = 1.0) :void {
+    protected make_circle() :void {
         this.geometries["circle"] = this.geometries["sphere"] = new THREE.SphereGeometry(this.geometry_size / 2, this.ball_segments, this.ball_segments);
     }
 
     // adds to this.geometries
-    protected make_box(outline_width :number = 1.0) :void {
+    protected make_box() :void {
         this.geometries["box"] = this.geometries["cube"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
     }
 
-    protected make_triangle(outline_width :number = 1.0) :void {
+    protected make_triangle() :void {
         this.geometries["triangle"] = new THREE.BoxGeometry(this.geometry_size, this.geometry_size, this.geometry_size);
     }
 

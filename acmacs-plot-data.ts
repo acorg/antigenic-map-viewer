@@ -48,14 +48,18 @@ export class PlotData
             var obj = factory.make_object();
             var style = styles[this.style_no(i)];
             var coordinates = this.layout(i);
+            var mesh :THREE.Mesh;
             if (number_of_dimensions === 2) {
                 // flip layout
-                obj.mesh = style.make([coordinates[0], -coordinates[1], 0], this.user_data(i));
-                (<Amv2d.Object>obj).style_rotation = style.rotation();
-                (<Amv2d.Object>obj).set_drawing_order(this.drawing_order_level(i));
+                mesh = style.make([coordinates[0], -coordinates[1], 0], this.user_data(i));
             }
             else {
-                obj.mesh = style.make(coordinates, this.user_data(i));
+                mesh = style.make(coordinates, this.user_data(i));
+            }
+            obj.set_mesh(mesh, style.make_outline());
+            if (number_of_dimensions === 2) {
+                (<Amv2d.Object>obj).style_rotation = style.rotation();
+                (<Amv2d.Object>obj).set_drawing_order(this.drawing_order_level(i));
             }
             widget.objects.objects.push(obj);
             widget.add(obj);
@@ -216,15 +220,19 @@ export class ObjectStyle
     }
 
     public make(position :number[], user_data :ObjectUserData) :THREE.Mesh {
-        var obj :THREE.Mesh = null;
+        var mesh :THREE.Mesh = null;
         // console.log('make', this.shape, this.shown, JSON.stringify(this.plot_style));
         if (this.shown) {
-            obj = this.factory.make_mesh(this.plot_style.aspect, this.plot_style.shape || "circle", this.plot_style.outline_width, this.plot_style.fill_color, this.plot_style.outline_color);
-            obj.position.fromArray(position);
-            obj.scale.multiplyScalar(this.plot_style.size)
-            obj.userData = user_data;
+            mesh = this.factory.make_mesh(this.plot_style.aspect, this.plot_style.shape || "circle", this.plot_style.fill_color);
+            mesh.position.fromArray(position);
+            mesh.scale.multiplyScalar(this.plot_style.size)
+            mesh.userData = user_data;
         }
-        return obj
+        return mesh
+    }
+
+    public make_outline() :THREE.Object3D {
+        return this.factory.make_outline(this.plot_style.shape || "circle", this.plot_style.outline_width, this.plot_style.outline_color);
     }
 
     public rotation() :number {

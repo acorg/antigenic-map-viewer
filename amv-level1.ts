@@ -194,9 +194,17 @@ export class Viewer implements AntigenicMapViewer.TriggeringEvent
 export class Object
 {
     public mesh :THREE.Mesh;
-    public outline_mesh :THREE.Mesh;
+    public outline_mesh :THREE.Object3D;
 
     constructor() {
+    }
+
+    public set_mesh(fill :THREE.Mesh, outline :THREE.Object3D) :void {
+        this.mesh = fill;
+        this.outline_mesh = outline;
+        if (outline) {
+            this.mesh.add(outline);
+        }
     }
 
     public outline() :THREE.Mesh {
@@ -347,28 +355,32 @@ export class ObjectFactory
         return null;
     }
 
-    public make_mesh(aspect :number, shape :string, outline_width :number, fill_color :any, outline_color :any) :THREE.Mesh {
-        var mesh = new THREE.Mesh(this.make_geometry(shape, outline_width), this.make_material(fill_color));
+    public make_mesh(aspect :number, shape :string, fill_color :any) :THREE.Mesh {
+        var mesh = new THREE.Mesh(this.make_geometry(shape), this.make_material(fill_color));
         if (aspect !== 1 && aspect !== undefined && aspect !== null) {
             mesh.scale.set(aspect, 1, aspect);
         }
         return mesh;
     }
 
-    private make_geometry(shape :string, outline_width :number) :THREE.Geometry {
+    public make_outline(shape :string, outline_width :number, outline_color :any) :THREE.Object3D {
+        return null;
+    }
+
+    private make_geometry(shape :string) :THREE.Geometry {
         var geometry = this.geometries[shape];
         if (!geometry) {
             switch (shape) {
             case "box":
             case "cube":
-                this.make_box(outline_width);
+                this.make_box();
                 break;
             case "circle":
             case "sphere":
-                this.make_circle(outline_width);
+                this.make_circle();
                 break;
             case "triangle":
-                this.make_triangle(outline_width);
+                this.make_triangle();
                 break;
             }
             geometry = this.geometries[shape];
@@ -381,17 +393,17 @@ export class ObjectFactory
     }
 
     // adds to this.geometries
-    protected make_circle(outline_width :number = 1.0) :void {
-        throw "Override in derived";
+    protected make_circle() :void {
+        // throw "Override in derived";
     }
 
     // adds to this.geometries
-    protected make_box(outline_width :number = 1.0) :void {
-        throw "Override in derived";
+    protected make_box() :void {
+        // throw "Override in derived";
     }
 
-    protected make_triangle(outline_width :number = 1.0) :void {
-        throw "Override in derived";
+    protected make_triangle() :void {
+        // throw "Override in derived";
     }
 
     protected convert_color(source :any) :THREE.MeshBasicMaterialParameters {

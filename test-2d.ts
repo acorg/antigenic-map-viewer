@@ -35,7 +35,7 @@ export class Application
                              {shape: "circle", size: 3.0, outline_color: "#000", fill_color: "transparent", aspect: 0.75, rotation: 1.5, outline_width: 1},
                              {shape: "triangle", size: 2.0, outline_color: "#000", fill_color: "#0F0", outline_width: 10},
                             ],
-                    drawing_order: [[5], [4], [3], [2], [1], [0]]
+                    drawing_order: [[5], [0], [3], [2], [1], [4]]
                 },
                 // title: {"0": {text: ["2D map"]}}};
                 title: {"0": {text: <string[]>[]}},

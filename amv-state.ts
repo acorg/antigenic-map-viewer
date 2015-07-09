@@ -121,7 +121,8 @@ function restore_objects(widget :AmvLevel1.MapWidgetLevel1, state :AntigenicMapV
         var obj_state = state[i];
         var obj = factory.make_object();
         var fill_color :any = obj_state.fill_opacity !== null && obj_state.fill_opacity !== undefined ? [obj_state.fill_color, obj_state.fill_opacity] : obj_state.fill_color;
-        obj.mesh = factory.make_mesh(obj_state.aspect, obj_state.shape, obj_state.outline_width, fill_color, obj_state.outline_color);
+        var outline = (obj_state.outline_width && obj_state.outline_color !== undefined && obj_state.outline_color !== null) ? factory.make_outline(obj_state.shape, obj_state.outline_width, obj_state.outline_color) : null;
+        obj.set_mesh(factory.make_mesh(obj_state.aspect, obj_state.shape, fill_color), outline);
         if (obj_state.rotation) {
             (<any>obj).style_rotation = obj_state.rotation;
         }
