@@ -84,9 +84,9 @@ function object_state(obj :AmvLevel1.Object) :AntigenicMapViewer.ObjectState
     if ((<any>obj).style_rotation) {
         state.rotation = (<any>obj).style_rotation;
     }
-    var outline = obj.outline();
+    var outline = obj.outline_mesh;
     if (outline) {
-        var outline_material = <THREE.LineBasicMaterial>outline.material;
+        var outline_material = <THREE.LineBasicMaterial>(<THREE.Mesh>outline).material;
         if (outline_material && ! (outline_material.transparent && outline_material.opacity === 0)) {
             state.outline_color = '#' + outline_material.color.getHexString();
             state.outline_width = outline_material.linewidth;

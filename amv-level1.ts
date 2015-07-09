@@ -207,14 +207,6 @@ export class Object
         }
     }
 
-    public outline() :THREE.Mesh {
-        var r :THREE.Mesh = null;
-        if (this.mesh.children && this.mesh.children.length === 1) {
-            r = <THREE.Mesh>this.mesh.children[0];
-        }
-        return r;
-    }
-
     public rescale(factor :number) :void {
         this.mesh.scale.multiplyScalar(factor);
     }
@@ -302,6 +294,10 @@ export class Objects
             this._scale = new_scale;
             this.objects.map(o => o.rescale(factor));
         }
+    }
+
+    public user_data(index :number) :any {
+        return this.objects[index].user_data();
     }
 
     protected scale_limits() :{min :number, max :number} {

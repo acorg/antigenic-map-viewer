@@ -121,47 +121,47 @@ export class PlotData
         return this._label_types;
     }
 
-    public default_label_type() :string {
-        var label_type = "label_capitalized";
-        var all_label_types = this.label_types();
-        if (all_label_types.length !== 0 && all_label_types.indexOf(label_type) === -1) {
-            label_type = all_label_types[0];
-        }
-        return label_type;
-    }
-
-    public label_of(index :number, label_type :string) :string {
-        var labels :any = this.plot_data.point_info[index];
-        var label :string = labels[label_type];
-        if (label === null || label === undefined) {
-            // No label_type present for this point, return any existing label_type
-            for (var lt in labels) {
-                label = labels[lt];
-                break;
-            }
-            if (label === null || label === undefined) {
-                // no labels for this point at all
-                label = "*no label for " + index + "*";
-            }
-        }
-        return label;
-    }
+//!    public default_label_type() :string {
+//!        var label_type = "label_capitalized";
+//!        var all_label_types = this.label_types();
+//!        if (all_label_types.length !== 0 && all_label_types.indexOf(label_type) === -1) {
+//!            label_type = all_label_types[0];
+//!        }
+//!        return label_type;
+//!    }
+//!
+//!    public label_of(index :number, label_type :string) :string {
+//!        var labels :any = this.plot_data.point_info[index];
+//!        var label :string = labels[label_type];
+//!        if (label === null || label === undefined) {
+//!            // No label_type present for this point, return any existing label_type
+//!            for (var lt in labels) {
+//!                label = labels[lt];
+//!                break;
+//!            }
+//!            if (label === null || label === undefined) {
+//!                // no labels for this point at all
+//!                label = "*no label for " + index + "*";
+//!            }
+//!        }
+//!        return label;
+//!    }
 
     public user_data(index :number) :ObjectUserData {
         var point_info :any = this.plot_data.point_info[index];
         var r :ObjectUserData = {
             index: index,
-            name: point_info.label_full_name_only || point_info.label_full
+            names: this.make_names(point_info)
         };
-        if (point_info.passage) {
-            r.passage = point_info.passage;
-        }
-        if (point_info.serum_id) {
-            r.serum_id = point_info.serum_id;
-        }
-        if (point_info.extra) {
-            r.extra = point_info.extra;
-        }
+        // if (point_info.passage) {
+        //     r.passage = point_info.passage;
+        // }
+        // if (point_info.serum_id) {
+        //     r.serum_id = point_info.serum_id;
+        // }
+        // if (point_info.extra) {
+        //     r.extra = point_info.extra;
+        // }
         return r;
     }
 
@@ -196,6 +196,52 @@ export class PlotData
             }, this);
         }
     }
+
+    private make_names(point_info :any) :any {
+        var r :any = {};
+        if (point_info.name) {
+            var n = point_info.name;
+            if (n.isolation_number) {
+                r.full = [n.virus_type || '', n.host || '', n.location || '', n.isolation_number || '', n.year || ''].join('/')
+                r.short = [(n.virus_type && n.virus_type[0]) || '', (n.host && n.host !== "HUMAN") ? n.host : '', n.location || '', n.isolation_number || '', n.year || ''].filter(function(e) {return e !== '';}).join('/')
+                r.abbreviated = [(n.virus_type && n.virus_type[0]) || '', (n.host && n.host !== "HUMAN") ? n.host.substr(0, 2) : '', (n.location && n.location.substr(0, 2)) || '', n.isolation_number || '', (n.year && n.year.substr(2)) || ''].filter(function(e) {return e !== '';}).join('/')
+            }
+            else if (n.name) {
+                if (n.cdc_abbreviation) {
+                    r.full = n.cdc_abbreviation + ' ' + n.name;
+                }
+                else {
+                    r.full = n.name
+                }
+                r.short = r.full;
+                r.abbreviated = r.full;
+            }
+            if (point_info.serum_id) {
+                r.full += ' ' + point_info.serum_id;
+            }
+            if (point_info.passage) {
+                r.full += ' ' + point_info.passage;
+            }
+            if (point_info.extra) {
+                r.full += ' ' + point_info.extra;
+                r.short += ' ' + point_info.extra;
+                r.abbreviated += ' ' + point_info.extra;
+            }
+        }
+        if (point_info.date) {
+            r.date = point_info.date;
+        }
+        if (point_info.location) {
+            var l = point_info.location;
+            if (l.continent) {
+                r.continent = l.continent;
+            }
+            if (l.country) {
+                r.country = l.country;
+            }
+        }
+        return r;
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -203,10 +249,7 @@ export class PlotData
 export interface ObjectUserData
 {
     index :number;
-    name :string;
-    passage? :string;
-    serum_id? :string;
-    extra? :string;
+    names :any;
 }
 
 // ----------------------------------------------------------------------

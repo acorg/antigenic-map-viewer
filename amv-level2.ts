@@ -99,15 +99,16 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     }
 
     private show_hovered(indice :number[]) :void {
-        // if (indice.length && this._plot_data) {
-        //     this.popup_hovered.show(MapWidgetLevel2.popup_hovered_message_prefix
-        //                             + indice.map((index :number) => this._plot_data.label_of(index, this.user_object_label_type)).join(MapWidgetLevel2.popup_hovered_message_infix)
-        //                             + MapWidgetLevel2.popup_hovered_message_suffix,
-        //                            {left: this.wrapper.find('.amv-level2-map-wrapper').width()});
-        // }
-        // else {
-        //     this.popup_hovered.hide();
-        // }
+        if (indice.length) {
+            this.popup_hovered.show(MapWidgetLevel2.popup_hovered_message_prefix
+                                    //+ indice.map((index :number) => this._plot_data.label_of(index, this.user_object_label_type)).join(MapWidgetLevel2.popup_hovered_message_infix)
+                                    + indice.map((index :number) => JSON.stringify(this.map.objects.user_data(index))).join(MapWidgetLevel2.popup_hovered_message_infix)
+                                    + MapWidgetLevel2.popup_hovered_message_suffix,
+                                   {left: this.wrapper.find('.amv-level2-map-wrapper').width()});
+        }
+        else {
+            this.popup_hovered.hide();
+        }
     }
 
     private resized(size :number) :void {
