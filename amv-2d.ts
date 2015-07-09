@@ -458,7 +458,7 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
         shape.lineTo( offset, -offset);
         shape.lineTo(-offset, -offset);
         this.geometries["box"] = this.geometries["cube"] = new THREE.ShapeGeometry(shape);
-        this.geometries["box-outline"] = this.geometries["cube-outline"] = (<any>shape).createPointsGeometry();
+        this.geometries["box-outline"] = this.geometries["cube-outline"] = shape.createPointsGeometry(null);
     }
 
     protected make_triangle() :void {
@@ -469,7 +469,7 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
         shape.lineTo(      0,  offset);
         shape.lineTo(-offset, -offset);
         this.geometries["triangle"] = new THREE.ShapeGeometry(shape);
-        this.geometries["triangle-outline"] = (<any>shape).createPointsGeometry();
+        this.geometries["triangle-outline"] = shape.createPointsGeometry(null);
     }
 
     private outline_material(outline_color :THREE.MeshBasicMaterialParameters, outline_width :number) :THREE.Material {

@@ -33,7 +33,7 @@ export class Application
                              {shape: "box", size: 3.0, outline_color: "#F00", fill_color: "#AAF", aspect: 1 / 0.75, rotation: 0.5, outline_width: 5},
                              {shape: "box", size: 3.0, outline_color: "#0F0", fill_color: "#AFA", aspect: 1 / 0.75, outline_width: 1},
                              {shape: "circle", size: 3.0, outline_color: "#000", fill_color: "transparent", aspect: 0.75, rotation: 1.5, outline_width: 1},
-                             {shape: "triangle", size: 2.0, outline_color: "#000", fill_color: "#0F0", outline_width: 10},
+                             {shape: "triangle", size: 2.0, outline_color: "#000", fill_color: "#0F0", outline_width: 55},
                             ],
                     drawing_order: [[5], [0], [3], [2], [1], [4]]
                 },
