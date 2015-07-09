@@ -312,9 +312,19 @@ class Grid
 
 export class Object extends AmvLevel1.Object
 {
+    public style_rotation :number;
+
     public set_drawing_order(drawing_order :number) {
         this.mesh.position.setZ(DrawingOrderNS.base + drawing_order * DrawingOrderNS.step);
     }
+
+    public rotation(quaternion :THREE.Quaternion) :void {
+        super.rotation(quaternion);
+        if (this.style_rotation) {
+            this.mesh.rotation.z += this.style_rotation;
+        }
+    }
+
 }
 
 // ----------------------------------------------------------------------
@@ -356,7 +366,7 @@ export class Objects extends AmvLevel1.Objects
 
     public reorient() :void {
         var quaternion = new THREE.Quaternion().setFromUnitVectors(Viewer.camera_up, this.widget.viewer.camera.up);
-        this.objects.map(o => o.rotation().setFromQuaternion(quaternion));
+        this.objects.map(o => o.rotation(quaternion));
     }
 
     public viewport(viewport? :Viewport) :Viewport {
@@ -425,8 +435,8 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
         return new Object();
     }
 
-    public make_mesh(aspect :number, rotation :number, shape :string, outline_width :number, fill_color :any, outline_color :any) :THREE.Mesh {
-        var mesh = super.make_mesh(aspect, rotation, shape, outline_width, fill_color, outline_color);
+    public make_mesh(aspect :number, shape :string, outline_width :number, fill_color :any, outline_color :any) :THREE.Mesh {
+        var mesh = super.make_mesh(aspect, shape, outline_width, fill_color, outline_color);
         var outline_material = this.outline_material(this.convert_color(outline_color), outline_width);
         if (shape === "circle" || shape === "sphere") {
             mesh.add(new THREE.Mesh(this.geometries[`${shape}-outline-${outline_width}`], outline_material));

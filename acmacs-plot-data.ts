@@ -51,6 +51,7 @@ export class PlotData
             if (number_of_dimensions === 2) {
                 // flip layout
                 obj.mesh = style.make([coordinates[0], -coordinates[1], 0], this.user_data(i));
+                (<Amv2d.Object>obj).style_rotation = style.rotation();
                 (<Amv2d.Object>obj).set_drawing_order(this.drawing_order_level(i));
             }
             else {
@@ -218,7 +219,7 @@ export class ObjectStyle
         var obj :THREE.Mesh = null;
         // console.log('make', this.shape, this.shown, JSON.stringify(this.plot_style));
         if (this.shown) {
-            obj = this.factory.make_mesh(this.plot_style.aspect, this.plot_style.rotation, this.plot_style.shape || "circle", this.plot_style.outline_width, this.plot_style.fill_color, this.plot_style.outline_color);
+            obj = this.factory.make_mesh(this.plot_style.aspect, this.plot_style.shape || "circle", this.plot_style.outline_width, this.plot_style.fill_color, this.plot_style.outline_color);
             obj.position.fromArray(position);
             obj.scale.multiplyScalar(this.plot_style.size)
             obj.userData = user_data;
@@ -226,6 +227,9 @@ export class ObjectStyle
         return obj
     }
 
+    public rotation() :number {
+        return this.plot_style.rotation;
+    }
 }
 
 // ----------------------------------------------------------------------

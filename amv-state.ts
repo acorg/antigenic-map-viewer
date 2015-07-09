@@ -81,8 +81,8 @@ function object_state(obj :AmvLevel1.Object) :AntigenicMapViewer.ObjectState
     if (mesh.scale.x !== mesh.scale.y) {
         state.aspect = mesh.scale.x / mesh.scale.y;
     }
-    if (mesh.rotation.z !== 0) {
-        state.rotation = mesh.rotation.z;
+    if ((<any>obj).style_rotation) {
+        state.rotation = (<any>obj).style_rotation;
     }
     var outline = obj.outline();
     if (outline) {
@@ -121,7 +121,10 @@ function restore_objects(widget :AmvLevel1.MapWidgetLevel1, state :AntigenicMapV
         var obj_state = state[i];
         var obj = factory.make_object();
         var fill_color :any = obj_state.fill_opacity !== null && obj_state.fill_opacity !== undefined ? [obj_state.fill_color, obj_state.fill_opacity] : obj_state.fill_color;
-        obj.mesh = factory.make_mesh(obj_state.aspect, obj_state.rotation, obj_state.shape, obj_state.outline_width, fill_color, obj_state.outline_color);
+        obj.mesh = factory.make_mesh(obj_state.aspect, obj_state.shape, obj_state.outline_width, fill_color, obj_state.outline_color);
+        if (obj_state.rotation) {
+            (<any>obj).style_rotation = obj_state.rotation;
+        }
         obj.position().fromArray(obj_state.position);
         obj.scale().multiplyScalar(obj_state.scale);
         obj.user_data(obj_state.user_data);

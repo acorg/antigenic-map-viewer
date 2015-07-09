@@ -28,12 +28,12 @@ export class Application
                 "point_info":[{label: "A"}, {label: "B"}, {label: "C"}, {label: "D"}, {label: "E"}, {label: "F"}],
                 styles: {
                     points: [0, 1, 2, 3, 4, 5],
-                    styles: [{shape: "circle", size: 5.0, outline_color: "#000", fill_color: "#F00", aspect: 0.75, rotation: 0.5},
-                             {shape: "circle", size: 5.0, outline_color: "#000", fill_color: "#FA0", aspect: 0.75, rotation: 0.5},
-                             {shape: "box", size: 3.0, outline_color: "#F00", fill_color: "#AAF", aspect: 1 / 0.75, outline_width: 1},
+                    styles: [{shape: "circle", size: 5.0, outline_color: "#000", fill_color: "#F00", aspect: 0.75, rotation: 0.5, outline_width: 5},
+                             {shape: "circle", size: 5.0, outline_color: "#000", fill_color: "#FA0", aspect: 0.75, rotation: 0.5, outline_width: 1},
+                             {shape: "box", size: 3.0, outline_color: "#F00", fill_color: "#AAF", aspect: 1 / 0.75, rotation: 0.5, outline_width: 5},
                              {shape: "box", size: 3.0, outline_color: "#0F0", fill_color: "#AFA", aspect: 1 / 0.75, outline_width: 1},
-                             {shape: "circle", size: 3.0, outline_color: "#000", fill_color: "transparent", aspect: 0.75, rotation: 1.5},
-                             {shape: "triangle", size: 2.0, outline_color: "#000", fill_color: "#0F0"},
+                             {shape: "circle", size: 3.0, outline_color: "#000", fill_color: "transparent", aspect: 0.75, rotation: 1.5, outline_width: 1},
+                             {shape: "triangle", size: 2.0, outline_color: "#000", fill_color: "#0F0", outline_width: 10},
                             ],
                     drawing_order: [[5], [4], [3], [2], [1], [0]]
                 },

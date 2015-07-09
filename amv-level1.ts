@@ -219,8 +219,8 @@ export class Object
         return this.mesh.scale;
     }
 
-    public rotation() :THREE.Euler {
-        return this.mesh.rotation;
+    public rotation(quaternion :THREE.Quaternion) :void {
+        this.mesh.rotation.setFromQuaternion(quaternion);
     }
 
     public user_data(user_data? :any) :any {
@@ -337,7 +337,7 @@ export interface MaterialClass
 export class ObjectFactory
 {
     protected material :MaterialClass;
-    protected geometries :any;  // "shape-aspect-rotation[-outline_width]": THREE.Geometry, e.g  "circle-1.0-0.0", "box-1.0-0.0", "circle-outline-1.0-0.0-1.0", "box-outline-1.0-0.0-1.0"
+    protected geometries :any;  // "shape-[-outline-<outline_width>]": THREE.Geometry
 
     constructor() {
         this.geometries = {};
@@ -347,13 +347,10 @@ export class ObjectFactory
         return null;
     }
 
-    public make_mesh(aspect :number, rotation :number, shape :string, outline_width :number, fill_color :any, outline_color :any) :THREE.Mesh {
+    public make_mesh(aspect :number, shape :string, outline_width :number, fill_color :any, outline_color :any) :THREE.Mesh {
         var mesh = new THREE.Mesh(this.make_geometry(shape, outline_width), this.make_material(fill_color));
         if (aspect !== 1 && aspect !== undefined && aspect !== null) {
             mesh.scale.set(aspect, 1, aspect);
-        }
-        if (rotation !== 0 && rotation !== undefined && rotation !== null) {
-            mesh.rotation.set(0, 0, rotation);
         }
         return mesh;
     }
