@@ -325,6 +325,42 @@ export class Object extends AmvLevel1.Object
         }
     }
 
+    public show_name(show :Boolean, name_type :string) :void {
+        if (show) {
+            if (!this.name_mesh) {
+                this.make_name_mesh();
+            }
+            if (this.name_mesh) {
+                this.mesh.add(this.name_mesh);
+            }
+        }
+        else if (this.name_mesh) {
+            this.mesh.remove(this.name_mesh);
+        }
+    }
+
+    private make_name_mesh() :void {
+        var text_size = 0.05, text_color = 0
+
+        try {
+            var mesh = this.mesh, geometry = mesh.geometry;
+            geometry.computeBoundingSphere();
+            var radius = geometry.boundingSphere.radius;
+
+            var text = new THREE.TextGeometry("NAM-E", {size: text_size, font: 'helvetiker'}); //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
+            this.name_mesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: text_color}));
+            this.name_mesh.scale.set(mesh.scale.y / (mesh.scale.x * mesh.scale.x), 1 / mesh.scale.y, 1 / mesh.scale.z);
+
+            text.computeBoundingBox();
+            var text_height = text.boundingBox.max.y - text.boundingBox.min.y;
+            var text_width = text.boundingBox.max.x - text.boundingBox.min.x;
+
+            this.name_mesh.position.set(- text_width / 2, - radius - text_height, DrawingOrderNS.step / 2);
+        }
+        catch (e) {
+            console.error('make_name_mesh', e);
+        }
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -381,30 +417,30 @@ export class Objects extends AmvLevel1.Objects
         return {min: units_per_pixel * 5, max:  this.widget.size() * units_per_pixel / 3};
     }
 
-    // private add_label(label :string, obj :THREE.Object3D, index :number) :THREE.Object3D {
-    //     try {
-    //         //console.log('obj scale', index, JSON.stringify(obj.scale));
-    //         var obj_geometry = (<THREE.Mesh>obj).geometry;
-    //         obj_geometry.computeBoundingSphere();
-    //         var obj_radius = obj_geometry.boundingSphere.radius;
-
-    //         var text = new THREE.TextGeometry(label, {size: 0.05});
-    //         var textMesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: 0}));
-    //         textMesh.scale.set(obj.scale.y / (obj.scale.x * obj.scale.x), 1 / obj.scale.y, 1 / obj.scale.z);
-
-    //         text.computeBoundingBox();
-    //         var text_height = text.boundingBox.max.y - text.boundingBox.min.y;
-    //         var text_width = text.boundingBox.max.x - text.boundingBox.min.x;
-
-    //         textMesh.position.set(- text_width / 2, - obj_radius - text_height, DrawingOrderNS.step / 2);
-    //         obj.add(textMesh);
-    //         // Example text options : {'font' : 'helvetiker','weight' : 'normal', 'style' : 'normal','size' : 100,'curveSegments' : 300};        return obj;
-    //     }
-    //     catch (err) {
-    //         console.error(err);
-    //     }
-    //     return obj;
-    // }
+//!    // private add_label(label :string, obj :THREE.Object3D, index :number) :THREE.Object3D {
+//!    //     try {
+//!    //         //console.log('obj scale', index, JSON.stringify(obj.scale));
+//!    //         var obj_geometry = (<THREE.Mesh>obj).geometry;
+//!    //         obj_geometry.computeBoundingSphere();
+//!    //         var obj_radius = obj_geometry.boundingSphere.radius;
+//!
+//!    //         var text = new THREE.TextGeometry(label, {size: 0.05});
+//!    //         var textMesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: 0}));
+//!    //         textMesh.scale.set(obj.scale.y / (obj.scale.x * obj.scale.x), 1 / obj.scale.y, 1 / obj.scale.z);
+//!
+//!    //         text.computeBoundingBox();
+//!    //         var text_height = text.boundingBox.max.y - text.boundingBox.min.y;
+//!    //         var text_width = text.boundingBox.max.x - text.boundingBox.min.x;
+//!
+//!    //         textMesh.position.set(- text_width / 2, - obj_radius - text_height, DrawingOrderNS.step / 2);
+//!    //         obj.add(textMesh);
+//!    //         // Example text options : {'font' : 'helvetiker','weight' : 'normal', 'style' : 'normal','size' : 100,'curveSegments' : 300};        return obj;
+//!    //     }
+//!    //     catch (err) {
+//!    //         console.error(err);
+//!    //     }
+//!    //     return obj;
+//!    // }
 
     public object_factory(number_of_objects? :number) :AmvLevel1.ObjectFactory {
         if (!this._object_factory) {

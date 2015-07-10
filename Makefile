@@ -10,8 +10,9 @@ AMV_LIB = acmacs-plot-data.ts amv-level1.ts amv-level2.ts \
 	  amv-utils.ts acmacs-toolkit.ts amv-state.ts
 AMV_LESS = acmacs-toolkit.less amv.less
 AMV_TYPINGS = antigenic-map-viewer.d.ts
+AMV_FONTS = fonts/helvetiker_regular.typeface.js fonts/helvetiker_bold.typeface.js
 
-LIB_JS = jquery jquery.mousewheel jquery-ui require three css json three.regular.helvetiker
+LIB_JS = jquery jquery.mousewheel jquery-ui require three css json
 LIB_TYPINGS = jquery jqueryui require three
 
 # override in command line
@@ -23,13 +24,13 @@ BUILD = build
 DIST = dist
 TYPINGS = $(BUILD)/typings
 
-TARGET_JS = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV))) $(patsubst %.js,$(DIST)/%.js,$(filter %.js,$(AMV))) $(patsubst %.json,$(DIST)/%.json,$(filter %.json,$(AMV))) $(patsubst %,$(DIST)/%.js,$(LIB_JS))
+TARGET_JS = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV))) $(patsubst %.js,$(DIST)/%.js,$(filter %.js,$(AMV))) $(patsubst %.json,$(DIST)/%.json,$(filter %.json,$(AMV))) $(patsubst fonts/%.js,$(DIST)/%.js,$(AMV_FONTS)) $(patsubst %,$(DIST)/%.js,$(LIB_JS))
 TARGET_CSS = $(patsubst %.less,$(DIST)/%.css,$(filter %.less,$(AMV)))
 TARGET_HTML = $(patsubst %,$(DIST)/%,$(filter %.html,$(AMV)))
 
 BUILD_TYPINGS = $(patsubst %,$(BUILD)/%.d.ts,$(LIB_TYPINGS)) $(AMV_TYPINGS)
 
-INSTALL_FILES = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV_LIB))) $(AMV_LESS) $(DIST)/three.regular.helvetiker.js
+INSTALL_FILES = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV_LIB))) $(AMV_LESS) $(patsubst fonts/%.js,$(DIST)/%.js,$(AMV_FONTS))
 
 VERSION = $(shell cat VERSION.txt)
 PKG_CONFIG_PATH = $(firstword $(subst :, ,$(shell pkg-config --variable pc_path pkg-config)))
@@ -123,10 +124,6 @@ $(DIST)/json.js: | $(BUILD) $(DIST) $(DIST)/require.js
 	ln -sf $(call RELPATH,$(BUILD)/bower_components/requirejs-plugins/lib,$(dir $@))/text.js $(dir $@)text.js
 	ln -sf $(call RELPATH,$(BUILD)/bower_components/requirejs-plugins/src,$(dir $@))/json.js $@
 
-$(DIST)/three.regular.helvetiker.js: | $(BUILD) $(DIST)
-	cd $(BUILD) && npm install three.regular.helvetiker
-	ln -sf $(call RELPATH,$(BUILD)/node_modules/three.regular.helvetiker,$(dir $@))/index.js $@
-
 # ----------------------------------------------------------------------
 
 $(DIST)/%.js: %.ts $(BUILD_TYPINGS) | $(DIST)
@@ -134,6 +131,9 @@ $(DIST)/%.js: %.ts $(BUILD_TYPINGS) | $(DIST)
 
 $(DIST)/%.js: %.js | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@
+
+$(DIST)/%.js: fonts/%.js | $(DIST)
+	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$(notdir $^) $@
 
 $(DIST)/%.json: %.json | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@

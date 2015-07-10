@@ -22,6 +22,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     private popup_hovered :AcmacsToolkit.PopupMessage;
     private help_popup :AcmacsToolkit.PopupMessage;
     private popup_menu_items_extra :AcmacsToolkit.PopupMenuDescItem[];
+    private names_shown :Boolean;
 
     private static popup_hovered_message_prefix = "<ul><li>";
     private static popup_hovered_message_suffix = "</li></ul>";
@@ -31,6 +32,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
 
     constructor(container :JQuery, size :number) {
         this.user_object_label_type = "full";
+        this.names_shown = false;
         this.initialization_completed = $.Deferred();
         this.wrapper = $('<div class="amv-widget-wrapper">\
                             <div class="amv-level2-title">\
@@ -40,7 +42,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
                             <div class="amv-level2-map-wrapper"></div>\
                           </div>').appendTo(container); // '<div class="amv-level2-hovered-points"></div>');
         size = this.auto_size(size);
-        $.when(AmvUtils.require_deferred(['amv-level1'])).done(() => {
+        $.when(AmvUtils.require_deferred(["amv-level1", "helvetiker_regular.typeface"])).done(() => {
             var map_container = this.wrapper.find('.amv-level2-map-wrapper');
             map_container.css({width: size, height: size});
             if (map_container.resizable) {
@@ -57,6 +59,8 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
             this.popup_hovered = new AcmacsToolkit.PopupMessage(map_container);
             this.help_popup = (new AcmacsToolkit.PopupMessage(this.wrapper, 'amv2-help-popup')).hide_on_click();
 
+            // show/hide names via popup menu
+            this.map.on("show-names:amv", (show :Boolean) :void => { this.map.show_names(show, "all"); this.names_shown = show; });
             // change label type via popup menu
             this.map.on("label-type:amv", (data :any) :void => { this.user_object_label_type = data.label_type; });
         });
@@ -146,7 +150,10 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     private popup_menu_items() :AcmacsToolkit.PopupMenuDescItem[] {
         var label_menu :AcmacsToolkit.PopupMenuDescItem[] = MapWidgetLevel2.user_object_label_types.map((lt :string) => ({
             label: lt, icon: lt.toLowerCase() === this.user_object_label_type ? "ui-icon-check" : null, event: "label-type:amv", eventNode: this.map, eventData: {label_type: lt.toLowerCase()}})) || [];
-        var m :AcmacsToolkit.PopupMenuDescItem[] = [{label: "Reset", event: "reset:amv", eventNode: this.map}];
+        var m :AcmacsToolkit.PopupMenuDescItem[] = [
+            {label: "Reset", event: "reset:amv", eventNode: this.map},
+            {label: this.names_shown ? "Hide names" : "Show names", event: "show-names:amv", eventNode: this.map, eventData: !this.names_shown},
+        ];
         return m.concat(this.popup_menu_items_extra || [], [{}, {label: "Label type", title: true}], label_menu);
     }
 

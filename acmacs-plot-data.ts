@@ -147,21 +147,13 @@ export class PlotData
 //!        return label;
 //!    }
 
-    public user_data(index :number) :ObjectUserData {
+    public user_data(index :number) :AmvLevel1.ObjectUserData {
         var point_info :any = this.plot_data.point_info[index];
-        var r :ObjectUserData = {
+        var r :AmvLevel1.ObjectUserData = {
             index: index,
-            names: this.make_names(point_info)
+            names: this.make_names(point_info),
+            state: {name_shown :false}
         };
-        // if (point_info.passage) {
-        //     r.passage = point_info.passage;
-        // }
-        // if (point_info.serum_id) {
-        //     r.serum_id = point_info.serum_id;
-        // }
-        // if (point_info.extra) {
-        //     r.extra = point_info.extra;
-        // }
         return r;
     }
 
@@ -262,14 +254,6 @@ export class PlotData
 
 // ----------------------------------------------------------------------
 
-export interface ObjectUserData
-{
-    index :number;
-    names :any;
-}
-
-// ----------------------------------------------------------------------
-
 export class ObjectStyle
 {
     private shown :Boolean;
@@ -278,7 +262,7 @@ export class ObjectStyle
         this.shown = this.plot_style.shown === undefined || this.plot_style.shown
     }
 
-    public make(position :number[], user_data :ObjectUserData) :THREE.Mesh {
+    public make(position :number[], user_data :AmvLevel1.ObjectUserData) :THREE.Mesh {
         var mesh :THREE.Mesh = null;
         // console.log('make', this.shape, this.shown, JSON.stringify(this.plot_style));
         if (this.shown) {

@@ -124,6 +124,41 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     public help_text() :string {
         return this.viewer.help_text();
     }
+
+    // --------------------------------------------------
+    // showing/hiding object names
+
+    public show_names(show :Boolean, list :string|number[], name_type :string = "full") :void {
+        // list: "all", [indices]
+        if (this.objects.number_of_dimensions() === 2) {
+            var indices :number[] = [];
+            if (typeof list === "string") {
+                if (list === "all") {
+                    for (var i = 0; i < this.objects.objects.length; ++i) {
+                        indices.push(i);
+                    }
+                }
+                else {
+                    console.warn("unrecognized show_names list argument value", list);
+                }
+            }
+            else {
+                indices = <number[]>list;
+            }
+            indices.forEach((index) => {
+                var obj = this.objects.objects[index];
+                if (obj) {
+                    obj.show_name(show, name_type);
+                }
+                else {
+                    console.warn('cannot show/hide name: invalid object index', index);
+                }
+            });
+        }
+        else {
+            console.warn('showing names in 3D is not supported');
+        }
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -191,10 +226,32 @@ export class Viewer implements AntigenicMapViewer.TriggeringEvent
 
 // ----------------------------------------------------------------------
 
+export interface ObjectUserData
+{
+    index :number;
+    names :{
+        full :string;
+        short :string;
+        abbreviated :string;
+        date? :string;
+        passage? :string;
+        serum_id? :string;
+        country? :string;
+        continent? :string;
+    };
+    state :{
+        display_name? :string;
+        name_shown :Boolean;
+    };
+}
+
+// ----------------------------------------------------------------------
+
 export class Object
 {
     public mesh :THREE.Mesh;
     public outline_mesh :THREE.Object3D;
+    public name_mesh :THREE.Mesh;
 
     constructor() {
     }
@@ -228,6 +285,10 @@ export class Object
             this.mesh.userData = user_data;
         }
         return this.mesh.userData;
+    }
+
+    public show_name(show :Boolean, name_type :string) :void {
+        // override in derived
     }
 }
 
