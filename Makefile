@@ -11,7 +11,7 @@ AMV_LIB = acmacs-plot-data.ts amv-level1.ts amv-level2.ts \
 AMV_LESS = acmacs-toolkit.less amv.less
 AMV_TYPINGS = antigenic-map-viewer.d.ts
 
-LIB_JS = jquery jquery.mousewheel jquery-ui require three css json
+LIB_JS = jquery jquery.mousewheel jquery-ui require three css json three.regular.helvetiker
 LIB_TYPINGS = jquery jqueryui require three
 
 # override in command line
@@ -122,6 +122,10 @@ $(DIST)/json.js: | $(BUILD) $(DIST) $(DIST)/require.js
 	cd $(BUILD) && bower install requirejs-plugins
 	ln -sf $(call RELPATH,$(BUILD)/bower_components/requirejs-plugins/lib,$(dir $@))/text.js $(dir $@)text.js
 	ln -sf $(call RELPATH,$(BUILD)/bower_components/requirejs-plugins/src,$(dir $@))/json.js $@
+
+$(DIST)/three.regular.helvetiker.js: | $(BUILD) $(DIST)
+	cd $(BUILD) && npm install three.regular.helvetiker
+	ln -sf $(call RELPATH,$(BUILD)/node_modules/three.regular.helvetiker,$(dir $@))/index.js $@
 
 # ----------------------------------------------------------------------
 
