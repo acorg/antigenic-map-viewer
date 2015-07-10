@@ -344,18 +344,33 @@ export class Object extends AmvLevel1.Object
 
         try {
             var mesh = this.mesh, geometry = mesh.geometry;
+            geometry.computeBoundingBox();
             geometry.computeBoundingSphere();
+            //console.log(this.mesh.userData.index, 'bb', JSON.stringify(geometry.boundingBox), 'bs', JSON.stringify(geometry.boundingSphere));
             var radius = geometry.boundingSphere.radius;
 
+            // var text = new THREE.TextGeometry("NAM-E", {size: text_size, font: 'helvetiker'}); //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
+            // this.name_mesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: text_color}));
+            // this.name_mesh.scale.set(mesh.scale.y / (mesh.scale.x * mesh.scale.x), 1 / mesh.scale.y, 1 / mesh.scale.z);
+
+            // text.computeBoundingBox();
+            // var text_height = text.boundingBox.max.y - text.boundingBox.min.y;
+            // var text_width = text.boundingBox.max.x - text.boundingBox.min.x;
+
+            // // this.name_mesh.position.set(- text_width / 2, - radius - text_height, DrawingOrderNS.step / 2);
+            // this.name_mesh.position.set(/* - text_width * this.name_mesh.scale.x / 2 */ 0, - radius * mesh.scale.y / mesh.scale.x, DrawingOrderNS.step / 2);
+            // this.name_mesh.position.applyEuler(new THREE.Euler(0, 0, - this.style_rotation));
+            // this.name_mesh.rotation.z = this.style_rotation;
+
             var text = new THREE.TextGeometry("NAM-E", {size: text_size, font: 'helvetiker'}); //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
-            this.name_mesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: text_color}));
-            this.name_mesh.scale.set(mesh.scale.y / (mesh.scale.x * mesh.scale.x), 1 / mesh.scale.y, 1 / mesh.scale.z);
+            var text_mesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: text_color}));
 
-            text.computeBoundingBox();
-            var text_height = text.boundingBox.max.y - text.boundingBox.min.y;
-            var text_width = text.boundingBox.max.x - text.boundingBox.min.x;
+            this.name_mesh = new THREE.Object3D();
+            this.name_mesh.position.set(/* - text_width * this.name_mesh.scale.x / 2 */ 0, - radius * mesh.scale.y / mesh.scale.x, DrawingOrderNS.step / 2);
+            this.name_mesh.position.applyEuler(new THREE.Euler(0, 0, - this.style_rotation));
+            // this.name_mesh.rotation.z = - this.style_rotation;
+            this.name_mesh.add(text_mesh);
 
-            this.name_mesh.position.set(- text_width / 2, - radius - text_height, DrawingOrderNS.step / 2);
         }
         catch (e) {
             console.error('make_name_mesh', e);

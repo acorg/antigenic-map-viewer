@@ -15,7 +15,7 @@ export class Application
     public run() :void {
         //var json_file = "test-3d.json";
         var json_file = "../test-2d-67.json";
-        require([`json!${json_file}`, "amv-level2", "three.regular.helvetiker", "css!test", "acmacs-toolkit", "acmacs-plot-data", "amv-utils"], (test_data_2d :AntigenicMapViewer.PlotDataInterface, amv :AntigenicMapViewer.MapWidget) => {
+        require([`json!${json_file}`, "amv-level2", "css!test", "acmacs-toolkit", "acmacs-plot-data", "amv-utils"], (test_data_2d :AntigenicMapViewer.PlotDataInterface, amv :AntigenicMapViewer.MapWidget) => {
         //require(["amv-level2", "css!test", "acmacs-toolkit", "acmacs-plot-data", "amv-utils"], (amv :AntigenicMapViewer.MapWidgetLevel2Maker) => {
             console.log('amv-test 2d', new Date());
 

@@ -251,7 +251,7 @@ export class Object
 {
     public mesh :THREE.Mesh;
     public outline_mesh :THREE.Object3D;
-    public name_mesh :THREE.Mesh;
+    public name_mesh :THREE.Object3D;
 
     constructor() {
     }
