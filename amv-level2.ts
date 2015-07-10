@@ -18,8 +18,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
 
     private wrapper :JQuery;
     public map :AmvLevel1.MapWidgetLevel1;
-//!    private _plot_data :AcmacsPlotData.PlotData;
-    // private user_object_label_type :string;
+    private user_object_label_type :string; // user_object_label_types
     private popup_hovered :AcmacsToolkit.PopupMessage;
     private help_popup :AcmacsToolkit.PopupMessage;
     private popup_menu_items_extra :AcmacsToolkit.PopupMenuDescItem[];
@@ -28,7 +27,10 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     private static popup_hovered_message_suffix = "</li></ul>";
     private static popup_hovered_message_infix =  "</li><li>";
 
+    private static user_object_label_types = ["Full", "Short", "Abbreviated", "Location", "Date"];
+
     constructor(container :JQuery, size :number) {
+        this.user_object_label_type = "full";
         this.initialization_completed = $.Deferred();
         this.wrapper = $('<div class="amv-widget-wrapper">\
                             <div class="amv-level2-title">\
@@ -56,7 +58,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
             this.help_popup = (new AcmacsToolkit.PopupMessage(this.wrapper, 'amv2-help-popup')).hide_on_click();
 
             // change label type via popup menu
-//?            this.map.on("label-type:amv", (data :any) :void => { this.user_object_label_type = data.label_type || (this._plot_data && this._plot_data.default_label_type()); });
+            this.map.on("label-type:amv", (data :any) :void => { this.user_object_label_type = data.label_type; });
         });
 
         // buttons
@@ -102,13 +104,33 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
         if (indice.length) {
             this.popup_hovered.show(MapWidgetLevel2.popup_hovered_message_prefix
                                     //+ indice.map((index :number) => this._plot_data.label_of(index, this.user_object_label_type)).join(MapWidgetLevel2.popup_hovered_message_infix)
-                                    + indice.map((index :number) => JSON.stringify(this.map.objects.user_data(index))).join(MapWidgetLevel2.popup_hovered_message_infix)
+                                    + indice.map((index :number) => this.object_label(index)).join(MapWidgetLevel2.popup_hovered_message_infix)
                                     + MapWidgetLevel2.popup_hovered_message_suffix,
                                    {left: this.wrapper.find('.amv-level2-map-wrapper').width()});
         }
         else {
             this.popup_hovered.hide();
         }
+    }
+
+    private object_label(index :number) :string {
+        var user_data = this.map.objects.user_data(index);
+        var r :string = '' + (index + 1);
+        if (user_data && user_data.names) {
+            if (user_data.names[this.user_object_label_type]) {
+                r += " " + user_data.names[this.user_object_label_type];
+            }
+            else if (this.user_object_label_type === "location" && user_data.names.country) {
+                r += " " + user_data.names.country;
+                if (user_data.names.continent) {
+                    r += " [" + user_data.names.continent + "]";
+                }
+            }
+            else if (user_data.names.full) {
+                r += " " + user_data.names.full;
+            }
+        }
+        return r
     }
 
     private resized(size :number) :void {
@@ -122,9 +144,8 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     }
 
     private popup_menu_items() :AcmacsToolkit.PopupMenuDescItem[] {
-        var label_menu :AcmacsToolkit.PopupMenuDescItem[] = [];
-        // var label_menu = (this._plot_data && this._plot_data.label_types().map((lt :string) => ({
-        //     label: lt, icon: lt === this.user_object_label_type ? "ui-icon-check" : null, event: "label-type:amv", eventNode: this.map, eventData: {label_type: lt}}))) || [];
+        var label_menu :AcmacsToolkit.PopupMenuDescItem[] = MapWidgetLevel2.user_object_label_types.map((lt :string) => ({
+            label: lt, icon: lt.toLowerCase() === this.user_object_label_type ? "ui-icon-check" : null, event: "label-type:amv", eventNode: this.map, eventData: {label_type: lt.toLowerCase()}})) || [];
         var m :AcmacsToolkit.PopupMenuDescItem[] = [{label: "Reset", event: "reset:amv", eventNode: this.map}];
         return m.concat(this.popup_menu_items_extra || [], [{}, {label: "Label type", title: true}], label_menu);
     }

@@ -25,7 +25,7 @@ export class Application
             var test_data_2d_x = {
                 version: 1,
                 layout:[[-1, 0], [-0.5, 0], [1, 0], [0.6, 0.2], [0, 0.5], [0, -1]],
-                "point_info":[{"date": "2012-04-15", "location": {"continent": "NORTH-AMERICA", "country": "UNITED STATES OF AMERICA", "latitude": "30.31", "longitude": "-97.75", "name": "TEXAS"}, "name": {"host": "HUMAN", "isolation_number": "50", "location": "TEXAS", "virus_type": "A(H3N2)", "year": "2012"}, "passage": "E5 (2013-09-02)"},
+                "point_info":[{"date": "2012-04-15", "location": {"continent": "NORTH-AMERICA", "country": "UNITED STATES OF AMERICA", "latitude": "30.31", "longitude": "-97.75", "name": "TEXAS", "cdc_abbreviation": "TX"}, "name": {"host": "HUMAN", "isolation_number": "50", "location": "TEXAS", "virus_type": "A(H3N2)", "year": "2012"}, "passage": "E5 (2013-09-02)"},
                               {"date": "2015-03-02", "location": {"cdc_abbreviation": "MD", "continent": "NORTH-AMERICA", "country": "UNITED STATES OF AMERICA", "latitude": "38.97", "longitude": "-76.5"}, "name": {"cdc_abbreviation": "MD", "name": "A15026936"}, "passage": "MDCK?/SIAT2 (2015-05-26)"},
                               {label: "C"}, {label: "D"}, {label: "E"}, {label: "F"}],
                 styles: {

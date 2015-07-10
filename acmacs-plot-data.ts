@@ -16,7 +16,7 @@ export type PlotDataLayout = AntigenicMapViewer.PlotDataLayout;
 
 export class PlotData
 {
-    private _label_types :string[];
+//!    private _label_types :string[];
     private _drawing_order :number[]; // drawing order for an object by its index
 
     constructor(private plot_data :AntigenicMapViewer.PlotDataInterface) {
@@ -98,28 +98,28 @@ export class PlotData
         return this.plot_data.transformation;
     }
 
-    public label_types() :string[] {
-        if (!this._label_types) {
-            this._label_types = [];
-            try {
-                var kk :string[] = [];
-                for (var point_no = 0; point_no < this.plot_data.point_info.length; ++point_no) {
-                    for (var k in this.plot_data.point_info[point_no]) {
-                        kk.push(k);
-                    }
-                }
-                kk.sort();
-                for (var k_no = 0; k_no < kk.length; ++k_no) {
-                    if (k_no === 0 || kk[k_no] !== kk[k_no - 1]) {
-                        this._label_types.push(kk[k_no]);
-                    }
-                }
-            } catch (err) {
-                console.error('error looking for label_types:', err);
-            }
-        }
-        return this._label_types;
-    }
+//!    public label_types() :string[] {
+//!        if (!this._label_types) {
+//!            this._label_types = [];
+//!            try {
+//!                var kk :string[] = [];
+//!                for (var point_no = 0; point_no < this.plot_data.point_info.length; ++point_no) {
+//!                    for (var k in this.plot_data.point_info[point_no]) {
+//!                        kk.push(k);
+//!                    }
+//!                }
+//!                kk.sort();
+//!                for (var k_no = 0; k_no < kk.length; ++k_no) {
+//!                    if (k_no === 0 || kk[k_no] !== kk[k_no - 1]) {
+//!                        this._label_types.push(kk[k_no]);
+//!                    }
+//!                }
+//!            } catch (err) {
+//!                console.error('error looking for label_types:', err);
+//!            }
+//!        }
+//!        return this._label_types;
+//!    }
 
 //!    public default_label_type() :string {
 //!        var label_type = "label_capitalized";
@@ -204,7 +204,7 @@ export class PlotData
             if (n.isolation_number) {
                 r.full = [n.virus_type || '', n.host || '', n.location || '', n.isolation_number || '', n.year || ''].join('/')
                 r.short = [(n.virus_type && n.virus_type[0]) || '', (n.host && n.host !== "HUMAN") ? n.host : '', n.location || '', n.isolation_number || '', n.year || ''].filter(function(e) {return e !== '';}).join('/')
-                r.abbreviated = [(n.virus_type && n.virus_type[0]) || '', (n.host && n.host !== "HUMAN") ? n.host.substr(0, 2) : '', (n.location && n.location.substr(0, 2)) || '', n.isolation_number || '', (n.year && n.year.substr(2)) || ''].filter(function(e) {return e !== '';}).join('/')
+                r.abbreviated = [(n.virus_type && n.virus_type[0]) || '', (n.host && n.host !== "HUMAN") ? n.host.substr(0, 2) : '', this.make_location_abbreviation(point_info), n.isolation_number || '', (n.year && n.year.substr(2)) || ''].filter(function(e) {return e !== '';}).join('/')
             }
             else if (n.name) {
                 if (n.cdc_abbreviation) {
@@ -218,9 +218,11 @@ export class PlotData
             }
             if (point_info.serum_id) {
                 r.full += ' ' + point_info.serum_id;
+                r.serum_id = point_info.serum_id;
             }
             if (point_info.passage) {
                 r.full += ' ' + point_info.passage;
+                r.passage = point_info.passage;
             }
             if (point_info.extra) {
                 r.full += ' ' + point_info.extra;
@@ -239,6 +241,20 @@ export class PlotData
             if (l.country) {
                 r.country = l.country;
             }
+        }
+        return r;
+    }
+
+    private make_location_abbreviation(point_info :any) :string {
+        var r :string;
+        if (point_info.location && point_info.location.country === "UNITED STATES OF AMERICA" && point_info.location.cdc_abbreviation) {
+            r = point_info.location.cdc_abbreviation;
+        }
+        else if (point_info.name && point_info.name.location) {
+            r = point_info.name.location[0].toUpperCase() + point_info.name.location[1].toLowerCase();
+        }
+        else {
+            r = "??";
         }
         return r;
     }
