@@ -29,7 +29,7 @@ TARGET_HTML = $(patsubst %,$(DIST)/%,$(filter %.html,$(AMV)))
 
 BUILD_TYPINGS = $(patsubst %,$(BUILD)/%.d.ts,$(LIB_TYPINGS)) $(AMV_TYPINGS)
 
-INSTALL_FILES = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV_LIB))) $(AMV_LESS)
+INSTALL_FILES = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV_LIB))) $(AMV_LESS) $(DIST)/three.regular.helvetiker.js
 
 VERSION = $(shell cat VERSION.txt)
 PKG_CONFIG_PATH = $(firstword $(subst :, ,$(shell pkg-config --variable pc_path pkg-config)))
