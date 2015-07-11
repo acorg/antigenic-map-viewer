@@ -48,18 +48,16 @@ export class PlotData
             var obj = factory.make_object();
             var style = styles[this.style_no(i)];
             var coordinates = this.layout(i);
-            var mesh :THREE.Mesh;
+            obj.set_body(style.make_body(), style.make_outline());
+            obj.userData = this.user_data(i);
             if (number_of_dimensions === 2) {
                 // flip layout
-                mesh = style.make([coordinates[0], -coordinates[1], 0], this.user_data(i));
+                obj.position.set(coordinates[0], -coordinates[1], 0);
+                obj.body.rotation.z = style.rotation() || 0;
+                (<Amv2d.Object>obj).set_drawing_order(this.drawing_order_level(i));
             }
             else {
-                mesh = style.make(coordinates, this.user_data(i));
-            }
-            obj.set_mesh(mesh, style.make_outline());
-            if (number_of_dimensions === 2) {
-                (<Amv2d.Object>obj).style_rotation = style.rotation();
-                (<Amv2d.Object>obj).set_drawing_order(this.drawing_order_level(i));
+                obj.position.fromArray(coordinates);
             }
             widget.objects.objects.push(obj);
             widget.add(obj);
@@ -262,15 +260,13 @@ export class ObjectStyle
         this.shown = this.plot_style.shown === undefined || this.plot_style.shown
     }
 
-    public make(position :number[], user_data :AmvLevel1.ObjectUserData) :THREE.Mesh {
+    public make_body() :THREE.Mesh {
         var mesh :THREE.Mesh = null;
         // console.log('make', this.shape, this.shown, JSON.stringify(this.plot_style));
-        if (this.shown) {
+        // if (this.shown) {
             mesh = this.factory.make_mesh(this.plot_style.aspect, this.plot_style.shape || "circle", this.plot_style.fill_color);
-            mesh.position.fromArray(position);
             mesh.scale.multiplyScalar(this.plot_style.size)
-            mesh.userData = user_data;
-        }
+        // }
         return mesh
     }
 

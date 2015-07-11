@@ -108,13 +108,8 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         return this._size;
     }
 
-    public add(o :Object|THREE.Object3D) :void {
-        if ((<Object>o).mesh) {
-            this.scene.add((<Object>o).mesh);
-        }
-        else {
-            this.scene.add(<THREE.Object3D>o);
-        }
+    public add(obj :THREE.Object3D) :void {
+        this.scene.add(obj);
     }
 
     public domElement() :Element {
@@ -148,7 +143,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
             indices.forEach((index) => {
                 var obj = this.objects.objects[index];
                 if (obj) {
-                    obj.show_name(show, name_type);
+                    obj.label_show(show, name_type);
                 }
                 else {
                     console.warn('cannot show/hide name: invalid object index', index);
@@ -247,47 +242,42 @@ export interface ObjectUserData
 
 // ----------------------------------------------------------------------
 
-export class Object
+export class Object extends THREE.Object3D
 {
-    public mesh :THREE.Mesh;
-    public outline_mesh :THREE.Object3D;
-    public name_mesh :THREE.Object3D;
+    public body :THREE.Mesh;
+    public outline :THREE.Object3D;
+    public label :THREE.Object3D;
 
-    constructor() {
-    }
-
-    public set_mesh(fill :THREE.Mesh, outline :THREE.Object3D) :void {
-        this.mesh = fill;
-        this.outline_mesh = outline;
-        if (outline) {
-            this.mesh.add(outline);
+    public set_body(body :THREE.Mesh, outline :THREE.Object3D) :void {
+        // if (this.body) {
+        //     this.remove(this.body);
+        // }
+        this.body = body;
+        this.add(this.body);
+        // if (this.outline) {
+        //     this.body.remove(this.outline);
+        // }
+        this.outline = outline;
+        if (this.outline) {
+            this.body.add(this.outline);
         }
     }
 
     public rescale(factor :number) :void {
-        this.mesh.scale.multiplyScalar(factor);
-    }
-
-    public position() :THREE.Vector3 {
-        return this.mesh.position;
-    }
-
-    public scale() :THREE.Vector3 {
-        return this.mesh.scale;
-    }
-
-    public rotation(quaternion :THREE.Quaternion) :void {
-        this.mesh.rotation.setFromQuaternion(quaternion);
+        this.body.scale.multiplyScalar(factor);
+        if (this.label) {
+            //? this.label_reposition();
+        }
     }
 
     public user_data(user_data? :any) :any {
         if (user_data !== undefined) {
-            this.mesh.userData = user_data;
+            this.userData = user_data;
         }
-        return this.mesh.userData;
+        return this.userData;
     }
 
-    public show_name(show :Boolean, name_type :string) :void {
+    public label_show(show :Boolean, name_type :string) :void {
         // override in derived
     }
 }
@@ -309,8 +299,8 @@ export class Objects
         this._scale = 1.0;
     }
 
-    public meshes() :THREE.Object3D[] {
-        return this.objects.map((obj) => obj.mesh);
+    public bodies() :THREE.Object3D[] {
+        return this.objects.map((obj) => obj.body);
     }
 
     public reset() :void {
@@ -375,7 +365,7 @@ export class Objects
 
         var point_max = new THREE.Vector3(-Infinity, -Infinity, -Infinity);
         var point_min = new THREE.Vector3(Infinity, Infinity, Infinity);
-        this.objects.forEach((obj) => { var pos = obj.position(); point_max.max(pos); point_min.min(pos); });
+        this.objects.forEach((obj) => { var pos = obj.position; point_max.max(pos); point_min.min(pos); });
         this._center = (new THREE.Vector3()).addVectors(point_min, point_max).divideScalar(2);
         this._diameter = (new THREE.Vector3()).subVectors(point_min, point_max).length();
         // console.log('calculate_bounding_sphere2', JSON.stringify(this._center), this._diameter);

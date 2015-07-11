@@ -105,7 +105,7 @@ export class HoverControl extends Control
     public operate(data :AmvManipulator.MousePosition) :void {
         this.mouse.set((data.x / this.viewer.width()) * 2 - 1, - (data.y / this.viewer.height()) * 2 + 1);
         this.raycaster.setFromCamera(this.mouse, this.viewer.camera);
-        var intersects = this.raycaster.intersectObjects(this.viewer.widget.objects.meshes());
+        var intersects = this.raycaster.intersectObjects(this.viewer.widget.objects.bodies());
         var objects :number[] = intersects.map((elt) => elt.object.userData.index);
         if ($(objects).not(<any>this.last).length !== 0 || $(this.last).not(<any>objects).length !== 0) {
             this.viewer.trigger_on_element("hover:amv", [objects]);

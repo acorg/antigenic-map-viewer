@@ -56,8 +56,8 @@ export function widget_restore(widget :AmvLevel1.MapWidgetLevel1, state :Antigen
 
 function object_state(obj :AmvLevel1.Object) :AntigenicMapViewer.ObjectState
 {
-    var mesh = obj.mesh;
-    var material = mesh.material && (<THREE.MeshPhongMaterial>mesh.material);
+    var body = obj.body;
+    var material = body.material && (<THREE.MeshPhongMaterial>body.material);
     var fill_color = "transparent", fill_opacity = 1;
     if (material && ! (material.transparent && material.opacity === 0)) {
         fill_color = '#' + material.color.getHexString();
@@ -65,26 +65,26 @@ function object_state(obj :AmvLevel1.Object) :AntigenicMapViewer.ObjectState
             fill_opacity = material.opacity;
         }
     }
-    // console.log('mesh', mesh);
+    // console.log('mesh', body);
     var state :AntigenicMapViewer.ObjectState = {
-        position: mesh.position.toArray(),
-        scale: mesh.scale.y,
-        shape: shape_of_mesh(mesh),
+        position: obj.position.toArray(),
+        scale: body.scale.y,
+        shape: shape_of_mesh(body),
         fill_color: fill_color
     };
     if (fill_opacity !== 1) {
         state.fill_opacity = fill_opacity;
     }
-    if (mesh.userData !== undefined && mesh.userData !== null) {
-        state.user_data = mesh.userData;
+    if (obj.userData !== undefined && obj.userData !== null) {
+        state.user_data = obj.userData;
     }
-    if (mesh.scale.x !== mesh.scale.y) {
-        state.aspect = mesh.scale.x / mesh.scale.y;
+    if (body.scale.x !== body.scale.y) {
+        state.aspect = body.scale.x / body.scale.y;
     }
-    if ((<any>obj).style_rotation) {
-        state.rotation = (<any>obj).style_rotation;
+    if (body.rotation.z) {
+        state.rotation = body.rotation.z;
     }
-    var outline = obj.outline_mesh;
+    var outline = obj.outline;
     if (outline) {
         var outline_material = <THREE.LineBasicMaterial>(<THREE.Mesh>outline).material;
         if (outline_material && ! (outline_material.transparent && outline_material.opacity === 0)) {
@@ -122,12 +122,12 @@ function restore_objects(widget :AmvLevel1.MapWidgetLevel1, state :AntigenicMapV
         var obj = factory.make_object();
         var fill_color :any = obj_state.fill_opacity !== null && obj_state.fill_opacity !== undefined ? [obj_state.fill_color, obj_state.fill_opacity] : obj_state.fill_color;
         var outline = (obj_state.outline_width && obj_state.outline_color !== undefined && obj_state.outline_color !== null) ? factory.make_outline(obj_state.shape, obj_state.outline_width, obj_state.outline_color) : null;
-        obj.set_mesh(factory.make_mesh(obj_state.aspect, obj_state.shape, fill_color), outline);
+        obj.set_body(factory.make_mesh(obj_state.aspect, obj_state.shape, fill_color), outline);
         if (obj_state.rotation) {
-            (<any>obj).style_rotation = obj_state.rotation;
+            obj.body.rotation.z = obj_state.rotation;
         }
-        obj.position().fromArray(obj_state.position);
-        obj.scale().multiplyScalar(obj_state.scale);
+        obj.position.fromArray(obj_state.position);
+        obj.body.scale.multiplyScalar(obj_state.scale);
         obj.user_data(obj_state.user_data);
         widget.add(obj);
     }
