@@ -21,8 +21,8 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     public viewer :Viewer;
     public objects :Objects;
+    public scene :THREE.Scene;
 
-    private scene :THREE.Scene;
     private renderer :THREE.WebGLRenderer;
     private _size :number; // canvas size
     private event_handlers :JQuery[];
@@ -89,7 +89,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     public reset_objects() :void {
         if (this.objects) {
-            this.objects.reset();
+            this.objects.reset(this.viewer);
         }
     }
 
@@ -144,6 +144,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
                 var obj = this.objects.objects[index];
                 if (obj) {
                     obj.label_show(show, name_type);
+                    obj.label_position(this.viewer);
                 }
                 else {
                     console.warn('cannot show/hide name: invalid object index', index);
@@ -263,11 +264,9 @@ export class Object extends THREE.Object3D
         }
     }
 
-    public rescale(factor :number) :void {
+    public rescale(factor :number, viewer :Viewer) :void {
         this.body.scale.multiplyScalar(factor);
-        if (this.label) {
-            //? this.label_reposition();
-        }
+        this.label_position(viewer);
     }
 
     public user_data(user_data? :any) :any {
@@ -278,6 +277,10 @@ export class Object extends THREE.Object3D
     }
 
     public label_show(show :Boolean, name_type :string) :void {
+        // override in derived
+    }
+
+    public label_position(viewer :Viewer) {
         // override in derived
     }
 }
@@ -303,9 +306,9 @@ export class Objects
         return this.objects.map((obj) => obj.body);
     }
 
-    public reset() :void {
+    public reset(viewer :Viewer) :void {
         if (this._scale !== 1.0) {
-            this.scale(1.0 / this._scale);
+            this.scale(1.0 / this._scale, viewer);
         }
     }
 
@@ -338,12 +341,12 @@ export class Objects
         return this._center;
     }
 
-    public scale(factor :number) :void {
+    public scale(factor :number, viewer :Viewer) :void {
         var new_scale = this._scale * factor;
         var scale_limits = this.scale_limits();
         if (new_scale >= scale_limits.min && new_scale <= scale_limits.max) {
             this._scale = new_scale;
-            this.objects.map(o => o.rescale(factor));
+            this.objects.map(o => o.rescale(factor, viewer));
         }
     }
 

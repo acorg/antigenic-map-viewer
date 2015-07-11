@@ -107,7 +107,7 @@ export class Viewer extends AmvLevel1.Viewer
         if ((factor < 1 && viewport.size > 1) || (factor > 1 && viewport.size < 100)) {
             viewport.size *= factor;
             this.viewport(viewport);
-            this.widget.objects.scale(factor);
+            this.widget.objects.scale(factor, this);
         }
     }
 
@@ -128,7 +128,7 @@ export class Viewer extends AmvLevel1.Viewer
             m.elements[1] = transformation[0][1];
             m.elements[4] = transformation[1][0];
             m.elements[5] = transformation[1][1];
-            this._set_m4(this._get_m4().multiply(m));
+            this._set_m4(this.get_m4().multiply(m));
             // transform viewport center (we do transformation relative to the viewport center)
             var v = this.viewport();
             this.viewport({cx: v.cx * transformation[0][0] + v.cy * transformation[1][0], cy: v.cx * transformation[0][1] + v.cy * transformation[1][1]}, true);
@@ -136,7 +136,7 @@ export class Viewer extends AmvLevel1.Viewer
     }
 
     public transformation() :Transformation {
-        var m4 = this._get_m4();
+        var m4 = this.get_m4();
         var transformation :Transformation = [[m4.elements[0], m4.elements[1]], [m4.elements[4], m4.elements[5]]];
         return transformation;
     }
@@ -146,7 +146,7 @@ export class Viewer extends AmvLevel1.Viewer
         return new THREE.Vector3((camera.left + camera.right) / 2, (camera.bottom + camera.top) / 2, 0);
     }
 
-    private _get_m4() :THREE.Matrix4 {
+    public get_m4() :THREE.Matrix4 {
         return new THREE.Matrix4().compose(this._translation_for_m4(),
                                            new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up),
                                            new THREE.Vector3((<Objects>this.widget.objects).flip_state() ? -1 : 1, 1, 1));
@@ -323,10 +323,11 @@ export class Object extends AmvLevel1.Object
             }
             if (this.label) {
                 this.add(this.label);
+                this.label.visible = true;
             }
         }
         else if (this.label) {
-            this.remove(this.label);
+            this.label.visible = false;
         }
     }
 
@@ -334,11 +335,17 @@ export class Object extends AmvLevel1.Object
         var text_size = 0.05, text_color = 0
 
         try {
-            var body = this.body, geometry = body.geometry;
-            geometry.computeBoundingBox();
-            geometry.computeBoundingSphere();
-            //console.log(this.body.userData.index, 'bb', JSON.stringify(geometry.boundingBox), 'bs', JSON.stringify(geometry.boundingSphere));
-            var radius = geometry.boundingSphere.radius;
+            // var body_bounding_box = new THREE.Box3().setFromObject(this.body);
+            // body_bounding_box.applyMatrix4((<Viewer>viewer).get_m4());
+            // //var radius = Math.max(body_bounding_box.max.x - body_bounding_box.min.x, body_bounding_box.max.y - body_bounding_box.min.y) / 2;
+            // var height = body_bounding_box.size().y / 2;
+            // // console.log(this.userData.index, 'body_bounding_box', radius, JSON.stringify(body_bounding_box));
+
+            // var body = this.body, geometry = body.geometry;
+            //geometry.computeBoundingBox();
+            // geometry.computeBoundingSphere();
+            // console.log(this.userData.index, 'bs', geometry.boundingSphere.radius, 'scale', JSON.stringify(this.scale), 'bscale', JSON.stringify(body.scale));
+            // var radius = geometry.boundingSphere.radius;
 
             // var text = new THREE.TextGeometry("NAM-E", {size: text_size, font: 'helvetiker'}); //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
             // this.name_mesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: text_color}));
@@ -353,18 +360,21 @@ export class Object extends AmvLevel1.Object
             // this.name_mesh.position.applyEuler(new THREE.Euler(0, 0, - this.style_rotation));
             // this.name_mesh.rotation.z = this.style_rotation;
 
-            var text = new THREE.TextGeometry("NAM-E", {size: text_size, font: 'helvetiker'}); //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
-            var text_mesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: text_color}));
-
-            this.label = new THREE.Object3D();
-            this.label.position.set(/* - text_width * this.label.scale.x / 2 */ 0, - radius * body.scale.y / body.scale.x, 0);
+            var text_geometry = new THREE.TextGeometry("NAM-E-" + this.userData.index, {size: text_size, font: 'helvetiker'}); //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
+            this.label = new THREE.Mesh(text_geometry, new THREE.MeshBasicMaterial({color: text_color}));
             //!this.label.position.applyEuler(new THREE.Euler(0, 0, - this.style_rotation));
-            // this.label.rotation.z = - this.style_rotation;
-            this.label.add(text_mesh);
-
         }
         catch (e) {
             console.error('make_name_mesh', e);
+        }
+    }
+
+    public label_position(viewer :AmvLevel1.Viewer) {
+        if (this.label) {
+            var body_bounding_box = new THREE.Box3().setFromObject(this.body);
+            body_bounding_box.applyMatrix4((<Viewer>viewer).get_m4());
+            var height = body_bounding_box.size().y / 2;
+            this.label.position.set(/* - text_width * this.label.scale.x / 2 */ 0, - height, 0);
         }
     }
 }
@@ -401,8 +411,8 @@ export class Objects extends AmvLevel1.Objects
         return this._flip;
     }
 
-    public reset() :void {
-        super.reset();
+    public reset(viewer :AmvLevel1.Viewer) :void {
+        super.reset(viewer);
         this.flip_set(false);
     }
 

@@ -78,7 +78,7 @@ export class ZoomControl extends WorldControl
     public operate(data :AmvManipulator.WheelMovement) :void {
         var scale :number = (data.deltaY > 0) ? ZoomControl.scale : (data.deltaY < 0 ? 1.0 / ZoomControl.scale : 1.0);
         this.update(0.0, 0.0, scale, null);
-        this.viewer.widget.objects.scale(scale);
+        this.viewer.widget.objects.scale(scale, this.viewer);
     }
 }
 
@@ -90,7 +90,7 @@ export class ScaleControl extends AmvManipulator.Control
 
     public operate(data :AmvManipulator.WheelMovement) :void {
         var scale :number  = (data.deltaY < 0) ? ScaleControl.scale : (data.deltaY > 0 ? 1.0 / ScaleControl.scale : 1.0);
-        this.viewer.widget.objects.scale(scale);
+        this.viewer.widget.objects.scale(scale, this.viewer);
     }
 }
 
@@ -161,7 +161,7 @@ export class HoverControl extends AmvManipulator.Control
         this.mouse.set((data.x / this.viewer.width()) * 2 - 1, - (data.y / this.viewer.height()) * 2 + 1);
         this.raycaster.setFromCamera(this.mouse, this.viewer.camera);
         var intersects = this.raycaster.intersectObjects(this.viewer.widget.objects.bodies());
-        var objects :number[] = intersects.map((elt) => elt.object.userData.index);
+        var objects :number[] = intersects.map((elt) => elt.object.userData.index || elt.object.parent.userData.index);
         if ($(objects).not(<any>this.last).length !== 0 || $(this.last).not(<any>objects).length !== 0) {
             this.viewer.trigger_on_element("hover:amv", [objects]);
             this.last = objects;
