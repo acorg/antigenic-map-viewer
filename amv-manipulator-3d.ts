@@ -78,7 +78,7 @@ export class ZoomControl extends WorldControl
     public operate(data :AmvManipulator.WheelMovement) :void {
         var scale :number = (data.deltaY > 0) ? ZoomControl.scale : (data.deltaY < 0 ? 1.0 / ZoomControl.scale : 1.0);
         this.update(0.0, 0.0, scale, null);
-        this.viewer.widget.objects.scale(scale, this.viewer);
+        this.viewer.widget.objects.object_scale(scale);
     }
 }
 
@@ -90,7 +90,7 @@ export class ScaleControl extends AmvManipulator.Control
 
     public operate(data :AmvManipulator.WheelMovement) :void {
         var scale :number  = (data.deltaY < 0) ? ScaleControl.scale : (data.deltaY > 0 ? 1.0 / ScaleControl.scale : 1.0);
-        this.viewer.widget.objects.scale(scale, this.viewer);
+        this.viewer.widget.objects.object_scale(scale);
     }
 }
 

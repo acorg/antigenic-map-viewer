@@ -27,7 +27,8 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     private _size :number; // canvas size
     private event_handlers :JQuery[];
 
-    private viewer_created :JQueryDeferred<{}>;
+    private viewer_created :JQueryDeferred<{}> = $.Deferred();
+    public objects_created :JQueryDeferred<{}> = $.Deferred();
 
     constructor(container :JQuery, size :number) {
         this.scene = new THREE.Scene()
@@ -35,7 +36,6 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         this.size(size)
         this.renderer.setClearColor(0xFFFFFF)
         container.append(this.renderer.domElement)
-        this.viewer_created = $.Deferred();
         this.event_handlers = [];
     }
 
@@ -89,7 +89,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     public reset_objects() :void {
         if (this.objects) {
-            this.objects.reset(this.viewer);
+            this.objects.reset();
         }
     }
 
@@ -104,6 +104,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         if (size !== undefined && size !== null) {
             this._size = size;
             this.renderer.setSize(size, size);
+            this.trigger("widget-resized:amv", size);
         }
         return this._size;
     }
@@ -125,35 +126,37 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     public show_names(show :Boolean, list :string|number[], name_type :string = "full") :void {
         // list: "all", [indices]
-        if (this.objects.number_of_dimensions() === 2) {
-            var indices :number[] = [];
-            if (typeof list === "string") {
-                if (list === "all") {
-                    for (var i = 0; i < this.objects.objects.length; ++i) {
-                        indices.push(i);
+        $.when(this.objects_created).done(() => {
+            if (this.objects.number_of_dimensions() === 2) {
+                var indices :number[] = [];
+                if (typeof list === "string") {
+                    if (list === "all") {
+                        for (var i = 0; i < this.objects.objects.length; ++i) {
+                            indices.push(i);
+                        }
+                    }
+                    else {
+                        console.warn("unrecognized show_names list argument value", list);
                     }
                 }
                 else {
-                    console.warn("unrecognized show_names list argument value", list);
+                    indices = <number[]>list;
                 }
+                indices.forEach((index) => {
+                    var obj = this.objects.objects[index];
+                    if (obj) {
+                        obj.label_show(show, name_type);
+                        obj.label_position(this.viewer);
+                    }
+                    else {
+                        console.warn('cannot show/hide name: invalid object index', index);
+                    }
+                });
             }
             else {
-                indices = <number[]>list;
+                console.warn('showing names in 3D is not supported');
             }
-            indices.forEach((index) => {
-                var obj = this.objects.objects[index];
-                if (obj) {
-                    obj.label_show(show, name_type);
-                    obj.label_position(this.viewer);
-                }
-                else {
-                    console.warn('cannot show/hide name: invalid object index', index);
-                }
-            });
-        }
-        else {
-            console.warn('showing names in 3D is not supported');
-        }
+        });
     }
 }
 
@@ -192,6 +195,7 @@ export class Viewer implements AntigenicMapViewer.TriggeringEvent
     }
 
     public objects_updated() :void {
+        this.widget.objects_created.resolve();
     }
 
     public camera_update() :void {
@@ -264,8 +268,18 @@ export class Object extends THREE.Object3D
         }
     }
 
-    public rescale(factor :number, viewer :Viewer) :void {
-        this.body.scale.multiplyScalar(factor);
+    public rescale(object_factor :number, label_factor :number, viewer :Viewer) :void {
+        this.body.scale.multiplyScalar(object_factor);
+        this.label && this.label.scale.multiplyScalar(label_factor);
+        this.label_position(viewer);
+    }
+
+    public set_scale(object_scale :number, label_scale :number, viewer :Viewer) :void {
+        this.scale.set(object_scale, object_scale, object_scale);
+        if (this.label) {
+            var ls = label_scale / object_scale;
+            this.label.scale.set(ls, ls, 1);
+        }
         this.label_position(viewer);
     }
 
@@ -293,22 +307,24 @@ export class Objects
 
     private _center :THREE.Vector3;
     private _diameter :number;
-    private _scale :number;     // keep current scale to be able to reset
+    protected _object_scale :number;     // keep current scale to be able to reset
+    protected _label_scale :number;      // keep current scale to be able to reset
 
     protected _object_factory :ObjectFactory;
 
     constructor(protected widget :MapWidgetLevel1) {
         this.objects = [];
-        this._scale = 1.0;
+        this._object_scale = 1.0;
+        this._label_scale = 1.0;
     }
 
     public bodies() :THREE.Object3D[] {
         return this.objects.map((obj) => obj.body);
     }
 
-    public reset(viewer :Viewer) :void {
-        if (this._scale !== 1.0) {
-            this.scale(1.0 / this._scale, viewer);
+    public reset() :void {
+        if (this._object_scale !== 1.0) {
+            this.object_scale(1.0 / this._object_scale);
         }
     }
 
@@ -341,12 +357,12 @@ export class Objects
         return this._center;
     }
 
-    public scale(factor :number, viewer :Viewer) :void {
-        var new_scale = this._scale * factor;
+    public object_scale(factor :number) :void {
+        var new_scale = this._object_scale * factor;
         var scale_limits = this.scale_limits();
         if (new_scale >= scale_limits.min && new_scale <= scale_limits.max) {
-            this._scale = new_scale;
-            this.objects.map(o => o.rescale(factor, viewer));
+            this._object_scale = new_scale;
+            this.objects.map(o => o.rescale(factor, 1, this.widget.viewer));
         }
     }
 
@@ -456,7 +472,7 @@ export class ObjectFactory
         // throw "Override in derived";
     }
 
-    protected convert_color(source :any) :THREE.MeshBasicMaterialParameters {
+    protected static convert_color(source :any) :THREE.MeshBasicMaterialParameters {
         var material_color :THREE.MeshBasicMaterialParameters;
         if ($.type(source) === "string") {
             if (source === "transparent") {
@@ -469,8 +485,15 @@ export class ObjectFactory
         else if ($.type(source) === "array") {
             material_color = {transparent: true, opacity: source[1], color: (new THREE.Color(source[0])).getHex()};
         }
+        else if ($.type(source) === "number") {
+            material_color = {transparent: false, color: (new THREE.Color(source)).getHex(), opacity: 1};
+        }
         // console.log('convert_color', JSON.stringify(material_color));
         return material_color;
+    }
+
+    protected convert_color(source :any) :THREE.MeshBasicMaterialParameters {
+        return ObjectFactory.convert_color(source);
     }
 }
 

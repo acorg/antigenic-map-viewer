@@ -38,6 +38,7 @@ export class Viewer extends AmvLevel1.Viewer
 
     private grid :Grid;
     private viewport_initial :Viewport; // for reset
+    private _pixels_per_unit :number;   // map resolution on screen
 
     private rotate_control :AmvManipulator2d.RotateControl;
     private fliph_control :AmvManipulator2d.FlipControl;
@@ -55,6 +56,7 @@ export class Viewer extends AmvLevel1.Viewer
         widget.add(this.camera);
         this.grid = new Grid(this, 0);
         this.reset()
+        this.on("widget-resized:amv", (size :number) => this.update_resolution(size));
     }
 
     // collects current state of the viewer: transformation matrix and viewport
@@ -85,6 +87,7 @@ export class Viewer extends AmvLevel1.Viewer
             camera.updateProjectionMatrix();
             this.widget.reorient_objects();
             this.grid.reset(grid_full_reset);
+            this.update_resolution();
         }
         return {cx: (camera.left + camera.right) / 2, cy: (camera.bottom + camera.top) / 2, size: camera.right - camera.left};
     }
@@ -107,7 +110,6 @@ export class Viewer extends AmvLevel1.Viewer
         if ((factor < 1 && viewport.size > 1) || (factor > 1 && viewport.size < 100)) {
             viewport.size *= factor;
             this.viewport(viewport);
-            this.widget.objects.scale(factor, this);
         }
     }
 
@@ -119,6 +121,15 @@ export class Viewer extends AmvLevel1.Viewer
         camera.top += offset.y;
         camera.updateProjectionMatrix();
         this.grid.reset(grid_full_reset);
+    }
+
+    private update_resolution(widget_size? :number) :void {
+        if (!widget_size) {
+            widget_size = this.widget.size();
+        }
+        var camera = <THREE.OrthographicCamera>this.camera;
+        this._pixels_per_unit = widget_size / (camera.right - camera.left);
+        this.trigger("map-resolution-changed:amv", this._pixels_per_unit);
     }
 
     public transform(transformation :Transformation) :void {
@@ -319,7 +330,7 @@ export class Object extends AmvLevel1.Object
     public label_show(show :Boolean, name_type :string) :void {
         if (show) {
             if (!this.label) {
-                this.make_name_mesh();
+                this.label = ObjectFactory.make_text("NAM-E-" + this.userData.index, 0);
             }
             if (this.label) {
                 this.add(this.label);
@@ -331,49 +342,12 @@ export class Object extends AmvLevel1.Object
         }
     }
 
-    private make_name_mesh() :void {
-        var text_size = 0.05, text_color = 0
-
-        try {
-            // var body_bounding_box = new THREE.Box3().setFromObject(this.body);
-            // body_bounding_box.applyMatrix4((<Viewer>viewer).get_m4());
-            // //var radius = Math.max(body_bounding_box.max.x - body_bounding_box.min.x, body_bounding_box.max.y - body_bounding_box.min.y) / 2;
-            // var height = body_bounding_box.size().y / 2;
-            // // console.log(this.userData.index, 'body_bounding_box', radius, JSON.stringify(body_bounding_box));
-
-            // var body = this.body, geometry = body.geometry;
-            //geometry.computeBoundingBox();
-            // geometry.computeBoundingSphere();
-            // console.log(this.userData.index, 'bs', geometry.boundingSphere.radius, 'scale', JSON.stringify(this.scale), 'bscale', JSON.stringify(body.scale));
-            // var radius = geometry.boundingSphere.radius;
-
-            // var text = new THREE.TextGeometry("NAM-E", {size: text_size, font: 'helvetiker'}); //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
-            // this.name_mesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: text_color}));
-            // this.name_mesh.scale.set(body.scale.y / (body.scale.x * body.scale.x), 1 / body.scale.y, 1 / body.scale.z);
-
-            // text.computeBoundingBox();
-            // var text_height = text.boundingBox.max.y - text.boundingBox.min.y;
-            // var text_width = text.boundingBox.max.x - text.boundingBox.min.x;
-
-            // // this.name_mesh.position.set(- text_width / 2, - radius - text_height, DrawingOrderNS.step / 2);
-            // this.name_mesh.position.set(/* - text_width * this.name_mesh.scale.x / 2 */ 0, - radius * body.scale.y / body.scale.x, DrawingOrderNS.step / 2);
-            // this.name_mesh.position.applyEuler(new THREE.Euler(0, 0, - this.style_rotation));
-            // this.name_mesh.rotation.z = this.style_rotation;
-
-            var text_geometry = new THREE.TextGeometry("NAM-E-" + this.userData.index, {size: text_size, font: 'helvetiker'}); //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
-            this.label = new THREE.Mesh(text_geometry, new THREE.MeshBasicMaterial({color: text_color}));
-            //!this.label.position.applyEuler(new THREE.Euler(0, 0, - this.style_rotation));
-        }
-        catch (e) {
-            console.error('make_name_mesh', e);
-        }
-    }
-
     public label_position(viewer :AmvLevel1.Viewer) {
         if (this.label) {
             var body_bounding_box = new THREE.Box3().setFromObject(this.body);
+            console.log('bb', body_bounding_box.size().y);
             body_bounding_box.applyMatrix4((<Viewer>viewer).get_m4());
-            var height = body_bounding_box.size().y / 2;
+            var height = body_bounding_box.size().y / 2 / this.scale.y;
             this.label.position.set(/* - text_width * this.label.scale.x / 2 */ 0, - height, 0);
         }
     }
@@ -385,10 +359,14 @@ export class Objects extends AmvLevel1.Objects
 {
     private _flip :Boolean;
     private _viewport :Viewport;
+    private _pixels_per_unit :number; // old resolution
+    private _object_default_size :number = 5; // in pixels, multiplied by this._object_scale
+    private _label_default_size :number = 10; // in pixels, multiplied by this._object_scale
 
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
         this._flip = false;
+        widget.on("map-resolution-changed:amv", (pixels_per_unit) => this.resize_with_labels(pixels_per_unit));
     }
 
     public number_of_dimensions() :number {
@@ -411,8 +389,8 @@ export class Objects extends AmvLevel1.Objects
         return this._flip;
     }
 
-    public reset(viewer :AmvLevel1.Viewer) :void {
-        super.reset(viewer);
+    public reset() :void {
+        super.reset();
         this.flip_set(false);
     }
 
@@ -433,30 +411,11 @@ export class Objects extends AmvLevel1.Objects
         return {min: units_per_pixel * 5, max:  this.widget.size() * units_per_pixel / 3};
     }
 
-//!    // private add_label(label :string, obj :THREE.Object3D, index :number) :THREE.Object3D {
-//!    //     try {
-//!    //         //console.log('obj scale', index, JSON.stringify(obj.scale));
-//!    //         var obj_geometry = (<THREE.Mesh>obj).geometry;
-//!    //         obj_geometry.computeBoundingSphere();
-//!    //         var obj_radius = obj_geometry.boundingSphere.radius;
-//!
-//!    //         var text = new THREE.TextGeometry(label, {size: 0.05});
-//!    //         var textMesh = new THREE.Mesh(text, new THREE.MeshBasicMaterial({color: 0}));
-//!    //         textMesh.scale.set(obj.scale.y / (obj.scale.x * obj.scale.x), 1 / obj.scale.y, 1 / obj.scale.z);
-//!
-//!    //         text.computeBoundingBox();
-//!    //         var text_height = text.boundingBox.max.y - text.boundingBox.min.y;
-//!    //         var text_width = text.boundingBox.max.x - text.boundingBox.min.x;
-//!
-//!    //         textMesh.position.set(- text_width / 2, - obj_radius - text_height, DrawingOrderNS.step / 2);
-//!    //         obj.add(textMesh);
-//!    //         // Example text options : {'font' : 'helvetiker','weight' : 'normal', 'style' : 'normal','size' : 100,'curveSegments' : 300};        return obj;
-//!    //     }
-//!    //     catch (err) {
-//!    //         console.error(err);
-//!    //     }
-//!    //     return obj;
-//!    // }
+    private resize_with_labels(pixels_per_unit :number) :void {
+        console.log('resize_with_labels', pixels_per_unit, this._object_default_size / pixels_per_unit);
+        this.objects.map(o => o.set_scale(this._object_default_size / pixels_per_unit, this._label_default_size / pixels_per_unit, this.widget.viewer));
+        this._pixels_per_unit = pixels_per_unit;
+    }
 
     public object_factory(number_of_objects? :number) :AmvLevel1.ObjectFactory {
         if (!this._object_factory) {
@@ -470,7 +429,7 @@ export class Objects extends AmvLevel1.Objects
 
 export class ObjectFactory extends AmvLevel1.ObjectFactory
 {
-    public static geometry_size :number = 0.18;
+    public static geometry_size :number = 1.0;
     private ball_segments :number; // depends on the number of objects
     private outline_width_scale :number;
     private outline_materials :any; // color: THREE.Material
@@ -490,6 +449,13 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
     public make_outline(shape :string, outline_width :number, outline_color :any) :THREE.Object3D {
         var outline_material = this.outline_material(this.convert_color(outline_color), outline_width);
         return new THREE.Line(this.geometries[`${shape}-outline`], <THREE.ShaderMaterial>outline_material);
+    }
+
+    public static make_text(text :string, color :any) :THREE.Mesh {
+        var text_size = 1.0;
+        var geometry = new THREE.TextGeometry(text, {size: text_size, font: 'helvetiker'}); //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
+        var mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial(AmvLevel1.ObjectFactory.convert_color(color)));
+        return mesh;
     }
 
     // adds to this.geometries

@@ -14,7 +14,7 @@ import AmvState = require("amv-state");
 
 export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, AntigenicMapViewer.TriggeringEvent
 {
-    public initialization_completed :JQueryDeferred<{}>;
+    public initialization_completed :JQueryDeferred<{}> = $.Deferred();
 
     private wrapper :JQuery;
     public map :AmvLevel1.MapWidgetLevel1;
@@ -33,7 +33,6 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     constructor(container :JQuery, size :number) {
         this.user_object_label_type = "full";
         this.names_shown = false;
-        this.initialization_completed = $.Deferred();
         this.wrapper = $('<div class="amv-widget-wrapper">\
                             <div class="amv-level2-title">\
                               <div class="amv-level2-title-text"></div>\
@@ -63,6 +62,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
             this.map.on("show-names:amv", (show :Boolean) :void => { this.map.show_names(show, "all"); this.names_shown = show; });
             // change label type via popup menu
             this.map.on("label-type:amv", (data :any) :void => { this.user_object_label_type = data.label_type; });
+            this.map.trigger("show-names:amv", true);
         });
 
         // buttons
