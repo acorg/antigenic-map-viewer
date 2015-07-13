@@ -189,6 +189,7 @@ export class Viewer extends AmvLevel1.Viewer
         else {
             this.grid.reset(false);
         }
+        $.when(this.widget.initialization_completed).done(() => this.update_resolution());
     }
 
     // Returns node triggering events
@@ -223,6 +224,9 @@ export class Viewer extends AmvLevel1.Viewer
             break;
         case 113:               // p
             this.viewport_rotate(Math.PI / 2);
+            break;
+        case 45:               // -
+            this.widget.objects.object_scale(1.0);
             break;
         default:
             console.log('keypress', key);
@@ -345,9 +349,11 @@ export class Object extends AmvLevel1.Object
     public label_position(viewer :AmvLevel1.Viewer) {
         if (this.label) {
             var body_bounding_box = new THREE.Box3().setFromObject(this.body);
-            console.log('bb', body_bounding_box.size().y);
-            body_bounding_box.applyMatrix4((<Viewer>viewer).get_m4());
+            //body_bounding_box.applyMatrix4((<Viewer>viewer).get_m4());
             var height = body_bounding_box.size().y / 2 / this.scale.y;
+            if (this.userData.index === 1) {
+                console.log('label_position', JSON.stringify(body_bounding_box.size()), this.body.scale.y / this.body.scale.x);
+            }
             this.label.position.set(/* - text_width * this.label.scale.x / 2 */ 0, - height, 0);
         }
     }
@@ -412,7 +418,7 @@ export class Objects extends AmvLevel1.Objects
     }
 
     private resize_with_labels(pixels_per_unit :number) :void {
-        console.log('resize_with_labels', pixels_per_unit, this._object_default_size / pixels_per_unit);
+        // console.log('resize_with_labels', pixels_per_unit, this._object_default_size / pixels_per_unit);
         this.objects.map(o => o.set_scale(this._object_default_size / pixels_per_unit, this._label_default_size / pixels_per_unit, this.widget.viewer));
         this._pixels_per_unit = pixels_per_unit;
     }

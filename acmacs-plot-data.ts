@@ -27,8 +27,7 @@ export class PlotData
 
     public setup_map(widget :AmvLevel1.MapWidgetLevel1) :void {
         var number_of_dimensions = this.number_of_dimensions();
-        widget.initialize_for_dimensions(number_of_dimensions);
-        $.when(widget.initialization_completed).done(() => {
+        $.when(widget.initialize_for_dimensions(number_of_dimensions)).done(() => {
             this.add_objects(widget);
             if (number_of_dimensions === 2) {
                 (<Amv2d.Objects>widget.objects).viewport(this.viewport());

@@ -17,7 +17,7 @@ import AmvManipulator = require("amv-manipulator");
 
 export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 {
-    public initialization_completed :JQueryPromise<any>;
+    // public initialization_completed :JQueryPromise<any>;
 
     public viewer :Viewer;
     public objects :Objects;
@@ -29,6 +29,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     private viewer_created :JQueryDeferred<{}> = $.Deferred();
     public objects_created :JQueryDeferred<{}> = $.Deferred();
+    public initialization_completed :JQueryDeferred<{}> = $.Deferred();
 
     constructor(container :JQuery, size :number) {
         this.scene = new THREE.Scene()
@@ -45,13 +46,14 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         }
     }
 
-    public initialize_for_dimensions(number_of_dimensions :number) :void {
-        this.initialization_completed = AmvUtils.require_deferred(['amv-' + number_of_dimensions + 'd']);
-        $.when(this.initialization_completed).done((Amv :typeof Amv3d) => {
+    public initialize_for_dimensions(number_of_dimensions :number) :JQueryPromise<any> {
+        var amv_loaded = AmvUtils.require_deferred(['amv-' + number_of_dimensions + 'd']);
+        $.when(amv_loaded).done((Amv :typeof Amv3d) => {
             this.viewer = new Amv.Viewer(this);
             this.viewer_created.resolve();
             this.objects = new Amv.Objects(this);
         });
+        return amv_loaded;
     }
 
     public object_factory(number_of_objects? :number) :ObjectFactory {
@@ -63,8 +65,9 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         var really_render = () => {
             requestAnimationFrame(() => really_render());
             this.renderer.render(this.scene, this.viewer.camera);
-            if (++rendering_count === 2) {
+            if (++rendering_count === 3) {
                 console.log('map widget rendered'); // DO NOT REMOVE!!: message for slimerjs to generate PNG
+                this.initialization_completed.resolve();
             }
         };
         $.when(this.viewer_created).done(really_render);
