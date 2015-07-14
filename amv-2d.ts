@@ -45,6 +45,7 @@ export class Viewer extends AmvLevel1.Viewer
     private flipv_control :AmvManipulator2d.FlipControl;
     private zoom_control :AmvManipulator2d.ZoomControl;
     private scale_control :AmvManipulator2d.ScaleControl;
+    private label_scale_control :AmvManipulator2d.LabelScaleControl;
     private pan_control :AmvManipulator2d.PanControl;
     private key_control :AmvManipulator2d.KeyControl;
     private hover_control :AmvManipulator2d.HoverControl;
@@ -132,7 +133,7 @@ export class Viewer extends AmvLevel1.Viewer
         this.trigger("map-resolution-changed:amv", this._pixels_per_unit);
     }
 
-    public resolution() :number {
+    public resolution() :number { // pixels per unit
         return this._pixels_per_unit;
     }
 
@@ -200,7 +201,7 @@ export class Viewer extends AmvLevel1.Viewer
     public bind_manipulators(widget :AmvLevel1.MapWidgetLevel1) :void {
         $.when(AmvUtils.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
             this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv",
-                                                    "wheel:alt:amv", "wheel:shift:amv", "drag:shift:amv", "key::amv",
+                                                    "wheel:alt:amv", "wheel:shift:amv", "wheel:shift-alt:amv", "drag:shift:amv", "key::amv",
                                                     "move::amv", //"drag::amv", "wheel:shift-alt:amv"
                                                    ]);
 
@@ -209,6 +210,7 @@ export class Viewer extends AmvLevel1.Viewer
             this.flipv_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
             this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv");
             this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv");
+            this.label_scale_control = new AmvManipulator2d.LabelScaleControl(this, "wheel:shift-alt:amv");
             this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
             this.key_control = new AmvManipulator2d.KeyControl(this, "key::amv");
             this.hover_control = new AmvManipulator2d.HoverControl(this, "move::amv"); // triggers "hover:amv" on this.element
@@ -246,6 +248,7 @@ export class Viewer extends AmvLevel1.Viewer
                                 <ul>\
                                   <li>Zoom - <span class="mouse-action">${zoom-trigger}</span></li>\
                                   <li>Point size - <span class="mouse-action">${scale-trigger}</span></li>\
+                                  <li>Label size - <span class="mouse-action">${label-scale-trigger}</span></li>\
                                   <li>Rotate - <span class="mouse-action">${rotate-trigger}</span></li>\
                                   <li>Flip horizontally - <span class="mouse-action">${fliph-trigger}</span></li>\
                                   <li>Flip vertically - <span class="mouse-action">${flipv-trigger}</span></li>\
@@ -260,6 +263,7 @@ export class Viewer extends AmvLevel1.Viewer
               .replace("${fliph-trigger}", this.fliph_control.trigger_description())
               .replace("${flipv-trigger}", this.flipv_control.trigger_description())
               .replace("${scale-trigger}", this.scale_control.trigger_description())
+              .replace("${label-scale-trigger}", this.label_scale_control.trigger_description())
               .replace("${zoom-trigger}", this.zoom_control.trigger_description())
               .replace("${pan-trigger}", this.pan_control.trigger_description())
         ;
@@ -330,10 +334,10 @@ export class Object extends AmvLevel1.Object
         this.position.setZ(DrawingOrderNS.base + drawing_order * DrawingOrderNS.step);
     }
 
-    public label_show(show :Boolean, name_type :string) :void {
+    public label_show(show :Boolean) :void {
         if (show) {
             if (!this.label) {
-                this.label = ObjectFactory.make_text("NAM-E-" + this.userData.index, 0);
+                this.label = ObjectFactory.make_text("" + this.userData.index, 0);
             }
             if (this.label) {
                 this.add(this.label);
@@ -345,18 +349,46 @@ export class Object extends AmvLevel1.Object
         }
     }
 
-    public label_position(viewer :AmvLevel1.Viewer) {
+    public label_text(text :string) :void {
+        if (this.label) {
+            this.label.geometry = ObjectFactory.make_text_geometry(text);
+        }
+    }
+
+    public label_size(size :number, viewer :AmvLevel1.Viewer) :void {
+        if (!size) {
+            size = Objects.label_default_size; // / (<Viewer>viewer).resolution();
+        }
+        this.label && this.label.scale.set(size, size, 1);
+    }
+
+    public label_scale(factor :number) :void {
+        this.label && this.label.scale.multiplyScalar(factor);
+    }
+
+    public label_color(color :any) :void {
+        (<THREE.MeshBasicMaterial>this.label.material).color = new THREE.Color(color);
+    }
+
+    public label_position(viewer :AmvLevel1.Viewer) :void {
         if (this.label) {
             var body_size = this.body.scale.clone().applyEuler(this.body.rotation);
+            var body_radius =  body_size.y / 2;
+            if (this.shape() === "circle" && this.body.scale.x !== this.body.scale.y && this.body.rotation.z !== 0) {
+                var aspect = this.body.scale.y / this.body.scale.x;
+                body_radius *= (aspect > 1) ? 1 / aspect : aspect;
+            }
+            var outline_width = 0;
+            if (this.outline) {
+                outline_width = (<THREE.LineBasicMaterial>(<THREE.Mesh>this.outline).material).linewidth;
+            }
+            var label_offset = 5 / Objects.object_default_size;
 
-            var lg = (<THREE.Mesh>this.label).geometry;
+            var lg = this.label.geometry;
             lg.computeBoundingBox();
             var label_size = new THREE.Vector3().multiplyVectors(this.label.scale, lg.boundingBox.size());
-            // if (this.userData.index === 1) {
-            //     //console.log(this.userData.index, 'label_position', JSON.stringify(label_bounding_box.size()), JSON.stringify(new THREE.Box3().setFromObject(this.label).size()), JSON.stringify(lg.boundingBox), this.label);
-            //     // console.log('' + this.userData.index, 'label_position', lg.boundingBox.size().x, JSON.stringify(lg.boundingBox.size()), body_size.y);
-            // }
-            this.label.position.set(- label_size.x / 2, - body_size.y / 2 - label_size.y, 0);
+
+            this.label.position.set(- label_size.x / 2, - body_radius - outline_width / Objects.object_default_size - label_size.y - label_offset, 0);
         }
     }
 }
@@ -367,13 +399,13 @@ export class Objects extends AmvLevel1.Objects
 {
     private _flip :Boolean;
     private _viewport :Viewport;
-    private _object_default_size :number = 5; // in pixels, multiplied by this._object_scale
-    private _label_default_size :number = 10; // in pixels, multiplied by this._object_scale
+    public static object_default_size :number = 5; // in pixels, multiplied by this._object_scale
+    public static label_default_size :number = 2; // in pixels, multiplied by this._object_scale
 
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
         this._flip = false;
-        widget.on("map-resolution-changed:amv", (pixels_per_unit) => this.resize_with_labels(pixels_per_unit));
+        widget.on("map-resolution-changed:amv", (pixels_per_unit) => this.resize(pixels_per_unit));
     }
 
     public number_of_dimensions() :number {
@@ -418,10 +450,15 @@ export class Objects extends AmvLevel1.Objects
         return {min: units_per_pixel * 20, max: this.widget.size() * units_per_pixel};
     }
 
-    private resize_with_labels(pixels_per_unit :number) :void {
-        // console.log('resize_with_labels', pixels_per_unit, this._object_default_size / pixels_per_unit);
-        this.objects.map(o => o.set_scale(this._object_default_size / pixels_per_unit, this._label_default_size / pixels_per_unit, this.widget.viewer));
+    private resize(pixels_per_unit :number) :void {
+        // console.log('resize_with_labels', pixels_per_unit, Objects.object_default_size / pixels_per_unit);
+        this.objects.map(o => o.set_scale(Objects.object_default_size / pixels_per_unit, this.widget.viewer));
     }
+
+    // private resize_with_labels(pixels_per_unit :number) :void {
+    //     // console.log('resize_with_labels', pixels_per_unit, Objects.object_default_size / pixels_per_unit);
+    //     this.objects.map(o => o.set_scale(Objects.object_default_size / pixels_per_unit, Objects.label_default_size / pixels_per_unit, this.widget.viewer));
+    // }
 
     public object_factory(number_of_objects? :number) :AmvLevel1.ObjectFactory {
         if (!this._object_factory) {
@@ -458,10 +495,12 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
     }
 
     public static make_text(text :string, color :any) :THREE.Mesh {
+        return new THREE.Mesh(this.make_text_geometry(text), new THREE.MeshBasicMaterial(AmvLevel1.ObjectFactory.convert_color(color)));
+    }
+
+    public static make_text_geometry(text :string) :THREE.TextGeometry {
         var text_size = 1.0;
-        var geometry = new THREE.TextGeometry(text, {size: text_size, font: 'helvetiker'}); //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
-        var mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial(AmvLevel1.ObjectFactory.convert_color(color)));
-        return mesh;
+        return new THREE.TextGeometry(text, {size: text_size, font: 'helvetiker'}); //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
     }
 
     // adds to this.geometries

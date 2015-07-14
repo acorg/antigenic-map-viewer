@@ -148,8 +148,14 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
                 indices.forEach((index) => {
                     var obj = this.objects.objects[index];
                     if (obj) {
-                        obj.label_show(show, name_type);
-                        obj.label_position(this.viewer);
+                        obj.label_show(show);
+                        if (show) {
+                            obj.label_size(null, this.viewer);
+                            var text = (obj.userData.names && (obj.userData.names[name_type] || obj.userData.names.full)) || ('' + obj.userData.index);
+                            // obj.label_color("blue");
+                            obj.label_text(text);
+                            obj.label_position(this.viewer);
+                        }
                     }
                     else {
                         console.warn('cannot show/hide name: invalid object index', index);
@@ -254,7 +260,7 @@ export class Object extends THREE.Object3D
 {
     public body :THREE.Mesh;
     public outline :THREE.Object3D;
-    public label :THREE.Object3D;
+    public label :THREE.Mesh;
 
     public set_body(body :THREE.Mesh, outline :THREE.Object3D) :void {
         // if (this.body) {
@@ -277,13 +283,27 @@ export class Object extends THREE.Object3D
         this.label_position(viewer);
     }
 
-    public set_scale(object_scale :number, label_scale :number, viewer :Viewer) :void {
+    public set_scale(object_scale :number, viewer :Viewer) :void {
         this.scale.set(object_scale, object_scale, object_scale);
-        if (this.label) {
-            var ls = label_scale / object_scale;
-            this.label.scale.set(ls, ls, 1);
-        }
+        // if (this.label) {
+        //     var ls = label_scale / object_scale;
+        //     // this.label.scale.set(ls, ls, 1);
+        // }
         this.label_position(viewer);
+    }
+
+    public shape() :string {
+        var shape = ((this.body.geometry && this.body.geometry.type) || "circle").toLowerCase().replace('geometry', '');
+        if (shape === "shape") {
+            // 2d box or triangle
+            if (this.body.geometry.vertices) {
+                if (this.body.geometry.vertices.length === 3)
+                    shape = "triangle";
+                else
+                    shape = "box";
+            }
+        }
+        return shape;
     }
 
     public user_data(user_data? :any) :any {
@@ -293,13 +313,12 @@ export class Object extends THREE.Object3D
         return this.userData;
     }
 
-    public label_show(show :Boolean, name_type :string) :void {
-        // override in derived
-    }
-
-    public label_position(viewer :Viewer) {
-        // override in derived
-    }
+    public label_show(show :Boolean) :void {} // override in derived
+    public label_text(text :string) :void {} // override in derived
+    public label_position(viewer :Viewer) {} // override in derived
+    public label_size(size :number, viewer :Viewer) :void {}
+    public label_scale(factor :number) :void {}
+    public label_color(color :any) :void {}
 }
 
 // ----------------------------------------------------------------------
@@ -367,6 +386,10 @@ export class Objects
             this._object_scale = new_scale;
             this.objects.map(o => o.rescale(factor, 1, this.widget.viewer));
         }
+    }
+
+    public label_scale(factor :number) :void {
+        this.objects.map(o => { o.label_scale(factor); o.label_position(this.widget.viewer); });
     }
 
     public user_data(index :number) :any {

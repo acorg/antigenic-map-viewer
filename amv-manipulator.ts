@@ -161,6 +161,7 @@ export class Manipulator implements Object
     private make_generator_wheel(modifier_desc :string) :void {
         var modifier_keys = ModifierKeys.make_from_string(modifier_desc);
         var trigger : (x :number, y :number) => void = (x :number, y :number) => {
+            // console.log('mouse trigger', "wheel:" + modifier_desc + ":amv");
             this.element.trigger("wheel:" + modifier_desc + ":amv", [{deltaX: x, deltaY: y * Manipulator.wheel_sensitivity}]);
         };
         var callback : (e :JQueryMouseWheelEventObject) => void;

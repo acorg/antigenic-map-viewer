@@ -69,7 +69,7 @@ function object_state(obj :AmvLevel1.Object) :AntigenicMapViewer.ObjectState
     var state :AntigenicMapViewer.ObjectState = {
         position: obj.position.toArray(),
         scale: body.scale.y,
-        shape: shape_of_mesh(body),
+        shape: obj.shape(),
         fill_color: fill_color
     };
     if (fill_opacity !== 1) {
@@ -84,32 +84,15 @@ function object_state(obj :AmvLevel1.Object) :AntigenicMapViewer.ObjectState
     if (body.rotation.z) {
         state.rotation = body.rotation.z;
     }
-    var outline = obj.outline;
+    var outline = <THREE.Mesh>obj.outline;
     if (outline) {
-        var outline_material = <THREE.LineBasicMaterial>(<THREE.Mesh>outline).material;
+        var outline_material = <THREE.LineBasicMaterial>outline.material;
         if (outline_material && ! (outline_material.transparent && outline_material.opacity === 0)) {
             state.outline_color = '#' + outline_material.color.getHexString();
             state.outline_width = outline_material.linewidth;
         }
     }
     return state;
-}
-
-// ----------------------------------------------------------------------
-
-function shape_of_mesh(mesh :THREE.Mesh) :string
-{
-    var shape = ((mesh.geometry && mesh.geometry.type) || "circle").toLowerCase().replace('geometry', '');
-    if (shape === "shape") {
-        // 2d box or triangle
-        if (mesh.geometry.vertices) {
-            if (mesh.geometry.vertices.length === 3)
-                shape = "triangle";
-            else
-                shape = "box";
-        }
-    }
-    return shape;
 }
 
 // ----------------------------------------------------------------------
