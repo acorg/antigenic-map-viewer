@@ -14,13 +14,13 @@ export class Application
 
     public run() :void {
         //var json_file = "test-3d.json";
-        var json_file = "../test-2d-67.json";
-        require([`json!${json_file}`, "amv-level2", "css!test", "acmacs-toolkit", "acmacs-plot-data", "amv-utils"], (test_data_2d :AntigenicMapViewer.PlotDataInterface, amv :AntigenicMapViewer.MapWidget) => {
-        //require(["amv-level2", "css!test", "acmacs-toolkit", "acmacs-plot-data", "amv-utils"], (amv :AntigenicMapViewer.MapWidgetLevel2Maker) => {
+        // var json_file = "../test-2d-67.json";
+        // require([`json!${json_file}`, "amv-level2", "css!test", "acmacs-toolkit", "acmacs-plot-data", "amv-utils"], (test_data_2d :AntigenicMapViewer.PlotDataInterface, amv :AntigenicMapViewer.MapWidget) => {
+        require(["amv-level2", "css!test", "acmacs-toolkit", "acmacs-plot-data", "amv-utils"], (amv :AntigenicMapViewer.MapWidget) => {
             console.log('amv-test 2d', new Date());
 
             // make layout 2d
-            test_data_2d.layout = test_data_2d.layout.map((c) => [c[0], c[1]]);
+            // test_data_2d.layout = test_data_2d.layout.map((c) => [c[0], c[1]]);
 
             var test_data_2d_x = {
                 version: 1,
@@ -31,7 +31,7 @@ export class Application
                 styles: {
                     points: [0, 1, 2, 3, 4, 5, 6],
                     styles: [{shape: "circle", size: 15.0, outline_color: "#000", fill_color: "#F00", outline_width: 5},
-                             {shape: "circle", size: 15.0, outline_color: "#000", fill_color: "#FA0", aspect: 0.75, rotation: 0.5, outline_width: 1},
+                             {shape: "circle", size: 15.0, outline_color: "#000", fill_color: "#FA0", aspect: 0.75, rotation: Math.PI / 4, outline_width: 1},
                              {shape: "box", size: 10.0, outline_color: "#F00", fill_color: "#AAF", aspect: 1 / 0.75, rotation: 0.5, outline_width: 5},
                              {shape: "box", size: 10.0, outline_color: "#0F0", fill_color: "#AFA", aspect: 1 / 0.75, outline_width: 1},
                              {shape: "box", size: 20.0, outline_color: "#000", fill_color: "#AAF", aspect: 1, outline_width: 1},

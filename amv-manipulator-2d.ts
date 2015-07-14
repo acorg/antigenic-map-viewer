@@ -72,8 +72,8 @@ export class ZoomControl extends Control
 export class PanControl extends Control
 {
     public operate(data :AmvManipulator.MouseMovement) :void {
-        var units_per_pixel = this.viewer2d().units_per_pixel();
-        this.viewer2d().viewport_move({x: - data.x * units_per_pixel, y: data.y * units_per_pixel});
+        var pixels_per_unit = this.viewer2d().resolution();
+        this.viewer2d().viewport_move({x: - data.x / pixels_per_unit, y: data.y / pixels_per_unit});
     }
 }
 

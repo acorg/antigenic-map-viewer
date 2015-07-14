@@ -132,6 +132,10 @@ export class Viewer extends AmvLevel1.Viewer
         this.trigger("map-resolution-changed:amv", this._pixels_per_unit);
     }
 
+    public resolution() :number {
+        return this._pixels_per_unit;
+    }
+
     public transform(transformation :Transformation) :void {
         if (transformation) {
             var m = new THREE.Matrix4();
@@ -236,11 +240,6 @@ export class Viewer extends AmvLevel1.Viewer
 
     public orthographic_camera() :THREE.OrthographicCamera {
         return <THREE.OrthographicCamera>this.camera;
-    }
-
-    public units_per_pixel() :number {
-        var camera = <THREE.OrthographicCamera>this.camera;
-        return (camera.right - camera.left) / this.widget.size();
     }
 
     private static s_help_text = '<p class="title">Help</p>\
@@ -348,13 +347,16 @@ export class Object extends AmvLevel1.Object
 
     public label_position(viewer :AmvLevel1.Viewer) {
         if (this.label) {
-            var body_bounding_box = new THREE.Box3().setFromObject(this.body);
-            //body_bounding_box.applyMatrix4((<Viewer>viewer).get_m4());
-            var height = body_bounding_box.size().y / 2 / this.scale.y;
-            if (this.userData.index === 1) {
-                console.log('label_position', JSON.stringify(body_bounding_box.size()), this.body.scale.y / this.body.scale.x);
-            }
-            this.label.position.set(/* - text_width * this.label.scale.x / 2 */ 0, - height, 0);
+            var body_size = this.body.scale.clone().applyEuler(this.body.rotation);
+
+            var lg = (<THREE.Mesh>this.label).geometry;
+            lg.computeBoundingBox();
+            var label_size = new THREE.Vector3().multiplyVectors(this.label.scale, lg.boundingBox.size());
+            // if (this.userData.index === 1) {
+            //     //console.log(this.userData.index, 'label_position', JSON.stringify(label_bounding_box.size()), JSON.stringify(new THREE.Box3().setFromObject(this.label).size()), JSON.stringify(lg.boundingBox), this.label);
+            //     // console.log('' + this.userData.index, 'label_position', lg.boundingBox.size().x, JSON.stringify(lg.boundingBox.size()), body_size.y);
+            // }
+            this.label.position.set(- label_size.x / 2, - body_size.y / 2 - label_size.y, 0);
         }
     }
 }
@@ -365,7 +367,6 @@ export class Objects extends AmvLevel1.Objects
 {
     private _flip :Boolean;
     private _viewport :Viewport;
-    private _pixels_per_unit :number; // old resolution
     private _object_default_size :number = 5; // in pixels, multiplied by this._object_scale
     private _label_default_size :number = 10; // in pixels, multiplied by this._object_scale
 
@@ -413,14 +414,13 @@ export class Objects extends AmvLevel1.Objects
     }
 
     protected scale_limits() :{min :number, max :number} {
-        var units_per_pixel = (<Viewer>this.widget.viewer).units_per_pixel();
-        return {min: units_per_pixel * 5, max:  this.widget.size() * units_per_pixel / 3};
+        var units_per_pixel = 1 / (<Viewer>this.widget.viewer).resolution();
+        return {min: units_per_pixel * 20, max: this.widget.size() * units_per_pixel};
     }
 
     private resize_with_labels(pixels_per_unit :number) :void {
         // console.log('resize_with_labels', pixels_per_unit, this._object_default_size / pixels_per_unit);
         this.objects.map(o => o.set_scale(this._object_default_size / pixels_per_unit, this._label_default_size / pixels_per_unit, this.widget.viewer));
-        this._pixels_per_unit = pixels_per_unit;
     }
 
     public object_factory(number_of_objects? :number) :AmvLevel1.ObjectFactory {

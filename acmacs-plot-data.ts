@@ -263,8 +263,8 @@ export class ObjectStyle
         var mesh :THREE.Mesh = null;
         // console.log('make', this.shape, this.shown, JSON.stringify(this.plot_style));
         // if (this.shown) {
-            mesh = this.factory.make_mesh(this.plot_style.aspect, this.plot_style.shape || "circle", this.plot_style.fill_color);
-            mesh.scale.multiplyScalar(this.plot_style.size)
+        mesh = this.factory.make_mesh(this.plot_style.aspect, this.plot_style.shape || "circle", this.plot_style.fill_color);
+        mesh.scale.multiplyScalar(this.plot_style.size)
         // }
         return mesh
     }
