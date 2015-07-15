@@ -515,7 +515,7 @@ export class ObjectFactory
         // throw "Override in derived";
     }
 
-    protected static convert_color(source :any) :THREE.MeshBasicMaterialParameters {
+    public static convert_color(source :any) :THREE.MeshBasicMaterialParameters {
         var material_color :THREE.MeshBasicMaterialParameters;
         if ($.type(source) === "string") {
             if (source === "transparent") {
