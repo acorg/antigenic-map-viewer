@@ -132,12 +132,13 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         // list: "all", [indices]
         $.when(this.objects_created).done(() => {
             if (this.objects.number_of_dimensions() === 2) {
+                var start = Date.now();
                 var indices = this._elicit_indices(list);
                 indices.forEach((index) => {
                     var obj = this.objects.objects[index];
                     if (obj) {
+                        var label = obj.label_show(show);
                         if (show) {
-                            var label = obj.label_show(show);
                             label.set_size();
                             var text = (obj.userData.names && (obj.userData.names[name_type] || obj.userData.names.full)) || ('' + obj.userData.index);
                             // obj.label_color("blue");
@@ -149,6 +150,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
                         console.warn('cannot show/hide name: invalid object index', index);
                     }
                 });
+                console.log('' + indices.length, 'labels shown in', Date.now() - start);
             }
             else {
                 console.warn('showing names in 3D is not supported');
