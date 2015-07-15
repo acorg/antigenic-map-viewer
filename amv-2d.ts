@@ -77,7 +77,7 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera_update();
     }
 
-    public viewport(viewport? :Viewport, grid_full_reset :Boolean = false) :Viewport {
+    public viewport(viewport? :Viewport, grid_full_reset :boolean = false) :Viewport {
         var camera = <THREE.OrthographicCamera>this.camera;
         if (viewport) {
             var hsize = (viewport.size ? viewport.size : (camera.right - camera.left)) / 2;
@@ -114,7 +114,7 @@ export class Viewer extends AmvLevel1.Viewer
         }
     }
 
-    public viewport_move(offset :AmvManipulator.MouseMovement|THREE.Vector3, grid_full_reset :Boolean = false) :void {
+    public viewport_move(offset :AmvManipulator.MouseMovement|THREE.Vector3, grid_full_reset :boolean = false) :void {
         var camera = <THREE.OrthographicCamera>this.camera;
         camera.left += offset.x;
         camera.right += offset.x;
@@ -288,7 +288,7 @@ class Grid
         this.grid.lookAt(this.viewer.camera.position);
     }
 
-    public reset(reset_base_vertice :Boolean) :void {
+    public reset(reset_base_vertice :boolean) :void {
         if (this.lines) {
             this.grid.remove(this.lines)
         }
@@ -308,7 +308,7 @@ class Grid
         this.grid.add(this.lines)
     }
 
-    private offset_base(reset_base_vertice :Boolean) :{left :number, bottom :number} {
+    private offset_base(reset_base_vertice :boolean) :{left :number, bottom :number} {
         var offset_base = {left: 0, bottom: 0};
         var camera = this.viewer.orthographic_camera();
         if (!this.base_vertice || reset_base_vertice) {
@@ -328,68 +328,71 @@ class Grid
 
 // ----------------------------------------------------------------------
 
+class LabelMesh extends THREE.Mesh implements AmvLevel1.ObjectLabel
+{
+    public show(show :boolean) :void {
+        this.visible = show;
+    }
+
+    public set_scale(scale :number) :void {
+        this.scale.multiplyScalar(scale);
+    }
+
+    public set_text(text :string) :void {
+        this.geometry = ObjectFactory.make_text_geometry(text);
+    }
+
+    public set_position(viewer :Viewer, object :AmvLevel1.Object) :void {
+        var body = object.body;
+        var body_size = body.scale.clone().applyEuler(body.rotation);
+        var body_radius =  body_size.y / 2;
+        if (object.shape() === "circle" && body.scale.x !== body.scale.y && body.rotation.z !== 0) {
+            var aspect = body.scale.y / body.scale.x;
+            body_radius *= (aspect > 1) ? 1 / aspect : aspect;
+        }
+        var outline_width = 0;
+        if (object.outline) {
+            outline_width = (<THREE.LineBasicMaterial>(<THREE.Mesh>object.outline).material).linewidth;
+        }
+        var label_offset = 5 / Objects.object_default_size;
+
+        var lg = this.geometry;
+        lg.computeBoundingBox();
+        var label_size = new THREE.Vector3().multiplyVectors(this.scale, lg.boundingBox.size());
+
+        this.position.set(- label_size.x / 2, - body_radius - outline_width / Objects.object_default_size - label_size.y - label_offset, 0);
+    }
+
+    public set_size(size? :number) :void {
+        if (!size) {
+            size = Objects.label_default_size;
+        }
+        this.scale.set(size, size, 1);
+    }
+
+    public set_color(color :number|string) :void {
+        (<THREE.MeshBasicMaterial>this.material).color = new THREE.Color(<any>color);
+    }
+}
+
+// ----------------------------------------------------------------------
+
 export class Object extends AmvLevel1.Object
 {
     public set_drawing_order(drawing_order :number) {
         this.position.setZ(DrawingOrderNS.base + drawing_order * DrawingOrderNS.step);
     }
 
-    public label_show(show :Boolean) :void {
-        if (show) {
-            if (!this.label) {
-                this.label = ObjectFactory.make_text("" + this.userData.index, 0);
-            }
-            if (this.label) {
-                this.add(this.label);
-                this.label.visible = true;
-            }
+    public label_show(show :boolean) :AmvLevel1.ObjectLabel {
+        if (show && !this.label) {
+            var label = ObjectFactory.make_label();
+            this.label = label;
+            this.add(label);
         }
-        else if (this.label) {
-            this.label.visible = false;
-        }
-    }
-
-    public label_text(text :string) :void {
         if (this.label) {
-            this.label.geometry = ObjectFactory.make_text_geometry(text);
+            this.label.show(show);
         }
-    }
-
-    public label_size(size :number, viewer :AmvLevel1.Viewer) :void {
-        if (!size) {
-            size = Objects.label_default_size; // / (<Viewer>viewer).resolution();
-        }
-        this.label && this.label.scale.set(size, size, 1);
-    }
-
-    public label_scale(factor :number) :void {
-        this.label && this.label.scale.multiplyScalar(factor);
-    }
-
-    public label_color(color :any) :void {
-        (<THREE.MeshBasicMaterial>this.label.material).color = new THREE.Color(color);
-    }
-
-    public label_position(viewer :AmvLevel1.Viewer) :void {
-        if (this.label) {
-            var body_size = this.body.scale.clone().applyEuler(this.body.rotation);
-            var body_radius =  body_size.y / 2;
-            if (this.shape() === "circle" && this.body.scale.x !== this.body.scale.y && this.body.rotation.z !== 0) {
-                var aspect = this.body.scale.y / this.body.scale.x;
-                body_radius *= (aspect > 1) ? 1 / aspect : aspect;
-            }
-            var outline_width = 0;
-            if (this.outline) {
-                outline_width = (<THREE.LineBasicMaterial>(<THREE.Mesh>this.outline).material).linewidth;
-            }
-            var label_offset = 5 / Objects.object_default_size;
-
-            var lg = this.label.geometry;
-            lg.computeBoundingBox();
-            var label_size = new THREE.Vector3().multiplyVectors(this.label.scale, lg.boundingBox.size());
-
-            this.label.position.set(- label_size.x / 2, - body_radius - outline_width / Objects.object_default_size - label_size.y - label_offset, 0);
-        }
+        return this.label;
     }
 }
 
@@ -397,7 +400,7 @@ export class Object extends AmvLevel1.Object
 
 export class Objects extends AmvLevel1.Objects
 {
-    private _flip :Boolean;
+    private _flip :boolean;
     private _viewport :Viewport;
     public static object_default_size :number = 5; // in pixels, multiplied by this._object_scale
     public static label_default_size :number = 2; // in pixels, multiplied by this._object_scale
@@ -418,13 +421,13 @@ export class Objects extends AmvLevel1.Objects
         this._flip = !this._flip;
     }
 
-    public flip_set(flip :Boolean) :void {
+    public flip_set(flip :boolean) :void {
         if (flip !== this._flip) {
             this.flip();
         }
     }
 
-    public flip_state() :Boolean {
+    public flip_state() :boolean {
         return this._flip;
     }
 
@@ -494,8 +497,8 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
         return new THREE.Line(this.geometries[`${shape}-outline`], <THREE.ShaderMaterial>outline_material);
     }
 
-    public static make_text(text :string, color :any) :THREE.Mesh {
-        return new THREE.Mesh(this.make_text_geometry(text), new THREE.MeshBasicMaterial(AmvLevel1.ObjectFactory.convert_color(color)));
+    public static make_label() :LabelMesh {
+        return new LabelMesh(this.make_text_geometry(""), new THREE.MeshBasicMaterial(AmvLevel1.ObjectFactory.convert_color("black")));
     }
 
     public static make_text_geometry(text :string) :THREE.TextGeometry {

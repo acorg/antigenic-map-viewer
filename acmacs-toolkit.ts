@@ -17,7 +17,7 @@ export interface PopupMenuDescItem
 {
     label? :string;             // no label --> divider
     icon? :string;
-    title? :Boolean;             // cannot be selected
+    title? :boolean;             // cannot be selected
     event? :string;               // event to trigger
     eventNode? :JQuery | TriggeringEvent;           // node to trigger event on
     eventData? :any;

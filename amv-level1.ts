@@ -127,34 +127,21 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     // --------------------------------------------------
     // showing/hiding object names
 
-    public show_names(show :Boolean, list :string|number[], name_type :string = "full") :void {
+    public show_object_labels(show :boolean, list :string|number[], name_type :string = "full") :void {
         // list: "all", [indices]
         $.when(this.objects_created).done(() => {
             if (this.objects.number_of_dimensions() === 2) {
-                var indices :number[] = [];
-                if (typeof list === "string") {
-                    if (list === "all") {
-                        for (var i = 0; i < this.objects.objects.length; ++i) {
-                            indices.push(i);
-                        }
-                    }
-                    else {
-                        console.warn("unrecognized show_names list argument value", list);
-                    }
-                }
-                else {
-                    indices = <number[]>list;
-                }
+                var indices = this._elicit_indices(list);
                 indices.forEach((index) => {
                     var obj = this.objects.objects[index];
                     if (obj) {
-                        obj.label_show(show);
                         if (show) {
-                            obj.label_size(null, this.viewer);
+                            var label = obj.label_show(show);
+                            label.set_size();
                             var text = (obj.userData.names && (obj.userData.names[name_type] || obj.userData.names.full)) || ('' + obj.userData.index);
                             // obj.label_color("blue");
-                            obj.label_text(text);
-                            obj.label_position(this.viewer);
+                            label.set_text(text);
+                            label.set_position(this.viewer, obj);
                         }
                     }
                     else {
@@ -167,6 +154,25 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
             }
         });
     }
+
+    private _elicit_indices(list :string|number[]) :number[] {
+        var indices :number[] = [];
+        if (typeof list === "string") {
+            if (list === "all") {
+                for (var i = 0; i < this.objects.objects.length; ++i) {
+                    indices.push(i);
+                }
+            }
+            else {
+                console.warn("unrecognized show_object_labels list argument value", list);
+            }
+        }
+        else {
+            indices = <number[]>list;
+        }
+        return indices;
+    }
+
 }
 
 // ----------------------------------------------------------------------
@@ -250,8 +256,20 @@ export interface ObjectUserData
     };
     state :{
         display_name? :string;
-        name_shown :Boolean;
+        name_shown :boolean;
     };
+}
+
+// ----------------------------------------------------------------------
+
+export interface ObjectLabel
+{
+    show: (show :boolean) => void;
+    set_scale: (scale :number) => void;
+    set_text: (text :string) => void;
+    set_size: (size? :number) => void;
+    set_color: (color :number|string) => void;
+    set_position: (viewer :Viewer, object :Object) => void;
 }
 
 // ----------------------------------------------------------------------
@@ -260,7 +278,7 @@ export class Object extends THREE.Object3D
 {
     public body :THREE.Mesh;
     public outline :THREE.Object3D;
-    public label :THREE.Mesh;
+    public label :ObjectLabel;
 
     public set_body(body :THREE.Mesh, outline :THREE.Object3D) :void {
         // if (this.body) {
@@ -277,19 +295,23 @@ export class Object extends THREE.Object3D
         }
     }
 
+    public label_show(show :boolean) :ObjectLabel { return null; }
+
     public rescale(object_factor :number, label_factor :number, viewer :Viewer) :void {
         this.body.scale.multiplyScalar(object_factor);
-        this.label && this.label.scale.multiplyScalar(label_factor);
-        this.label_position(viewer);
+        if (this.label) {
+            this.label.set_scale(label_factor);
+            this.label.set_position(viewer, this);
+        }
     }
 
     public set_scale(object_scale :number, viewer :Viewer) :void {
         this.scale.set(object_scale, object_scale, object_scale);
-        // if (this.label) {
+        if (this.label) {
         //     var ls = label_scale / object_scale;
         //     // this.label.scale.set(ls, ls, 1);
-        // }
-        this.label_position(viewer);
+            this.label.set_position(viewer, this);
+        }
     }
 
     public shape() :string {
@@ -312,13 +334,6 @@ export class Object extends THREE.Object3D
         }
         return this.userData;
     }
-
-    public label_show(show :Boolean) :void {} // override in derived
-    public label_text(text :string) :void {} // override in derived
-    public label_position(viewer :Viewer) {} // override in derived
-    public label_size(size :number, viewer :Viewer) :void {}
-    public label_scale(factor :number) :void {}
-    public label_color(color :any) :void {}
 }
 
 // ----------------------------------------------------------------------
@@ -389,7 +404,7 @@ export class Objects
     }
 
     public label_scale(factor :number) :void {
-        this.objects.map(o => { o.label_scale(factor); o.label_position(this.widget.viewer); });
+        this.objects.map(o => { if (o.label) { o.label.set_scale(factor); o.label.set_position(this.widget.viewer, o); } });
     }
 
     public user_data(index :number) :any {

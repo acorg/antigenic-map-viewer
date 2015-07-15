@@ -253,7 +253,7 @@ export class PlotData
 
 export class ObjectStyle
 {
-    private shown :Boolean;
+    private shown :boolean;
 
     constructor(private plot_style :AntigenicMapViewer.PlotDataStyle, private factory :AmvLevel1.ObjectFactory) {
         this.shown = this.plot_style.shown === undefined || this.plot_style.shown

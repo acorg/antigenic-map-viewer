@@ -22,7 +22,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     private popup_hovered :AcmacsToolkit.PopupMessage;
     private help_popup :AcmacsToolkit.PopupMessage;
     private popup_menu_items_extra :AcmacsToolkit.PopupMenuDescItem[];
-    private names_shown :Boolean;
+    private object_labels_shown :boolean;
 
     private static popup_hovered_message_prefix = "<ul><li>";
     private static popup_hovered_message_suffix = "</li></ul>";
@@ -32,7 +32,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
 
     constructor(container :JQuery, size :number) {
         this.user_object_label_type = "full";
-        this.names_shown = false;
+        this.object_labels_shown = false;
         this.wrapper = $('<div class="amv-widget-wrapper">\
                             <div class="amv-level2-title">\
                               <div class="amv-level2-title-text"></div>\
@@ -59,7 +59,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
             this.help_popup = (new AcmacsToolkit.PopupMessage(this.wrapper, 'amv2-help-popup')).hide_on_click();
 
             // show/hide names via popup menu
-            this.map.on("show-names:amv", (show :Boolean) :void => { this.map.show_names(show, "all"); this.names_shown = show; });
+            this.map.on("show-names:amv", (show :boolean) :void => { this.map.show_object_labels(show, "all"); this.object_labels_shown = show; });
             // change label type via popup menu
             this.map.on("label-type:amv", (data :any) :void => { this.user_object_label_type = data.label_type; });
             this.map.trigger("show-names:amv", true);
@@ -152,7 +152,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
             label: lt, icon: lt.toLowerCase() === this.user_object_label_type ? "ui-icon-check" : null, event: "label-type:amv", eventNode: this.map, eventData: {label_type: lt.toLowerCase()}})) || [];
         var m :AcmacsToolkit.PopupMenuDescItem[] = [
             {label: "Reset", event: "reset:amv", eventNode: this.map},
-            {label: this.names_shown ? "Hide names" : "Show names", event: "show-names:amv", eventNode: this.map, eventData: !this.names_shown},
+            {label: this.object_labels_shown ? "Hide names" : "Show names", event: "show-names:amv", eventNode: this.map, eventData: !this.object_labels_shown},
         ];
         return m.concat(this.popup_menu_items_extra || [], [{}, {label: "Label type", title: true}], label_menu);
     }

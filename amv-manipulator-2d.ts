@@ -29,7 +29,7 @@ export class RotateControl extends Control
 
 export class FlipControl extends Control
 {
-    constructor(viewer :AmvLevel1.Viewer, private horizontally :Boolean, event :string) {
+    constructor(viewer :AmvLevel1.Viewer, private horizontally :boolean, event :string) {
         super(viewer, event);
     }
 

@@ -38,7 +38,7 @@ declare module AntigenicMapViewer {
         rotation? :number;
         shape :string;
         size :number;
-        shown? :Boolean;
+        shown? :boolean;
     }
 
     interface PlotDataTitle
@@ -64,7 +64,7 @@ declare module AntigenicMapViewer {
     {
         label? :string;             // no label --> divider
         icon? :string;
-        title? :Boolean;             // cannot be selected
+        title? :boolean;             // cannot be selected
         event? :string;               // event to trigger
         eventNode? :JQuery | TriggeringEvent;           // node to trigger event on (default is popup menu parent)
         eventData? :any;

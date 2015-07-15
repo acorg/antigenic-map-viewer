@@ -47,7 +47,7 @@ interface JQueryMouseWheelEventObject extends JQueryEventObject
 
 class ModifierKeys
 {
-    constructor(public shift :Boolean, public ctrl :Boolean, public alt :Boolean, public meta :Boolean) {}
+    constructor(public shift :boolean, public ctrl :boolean, public alt :boolean, public meta :boolean) {}
 
     public static make_from_string(desc :string) :ModifierKeys {
         var shift = false, ctrl = false, alt = false, meta = false;
@@ -74,7 +74,7 @@ class ModifierKeys
     }
 
     // Returns true if event has necessary modifier set
-    public filter(e :JQueryInputEventObject) :Boolean {
+    public filter(e :JQueryInputEventObject) :boolean {
         return e.shiftKey == this.shift && e.ctrlKey == this.ctrl && e.altKey == this.alt && e.metaKey == this.meta;
     }
 
@@ -99,7 +99,7 @@ export class Manipulator implements Object
     private static wheel_sensitivity = 1.0
     private static mouse_movement_sensitivity = 1.0
 
-    private _move_abs_generator :Boolean;
+    private _move_abs_generator :boolean;
 
     constructor(private element :JQuery) {
     }
@@ -115,7 +115,7 @@ export class Manipulator implements Object
     private make_generator_move(modifier_desc :string) :void {
         this.make_generator_move_abs();
         var modifier_keys = ModifierKeys.make_from_string(modifier_desc);
-        this.element.on("move-abs:amv", (_ :Event, c :MousePosition, dragging :Boolean, e :JQueryEventObject) => {
+        this.element.on("move-abs:amv", (_ :Event, c :MousePosition, dragging :boolean, e :JQueryEventObject) => {
             if (!dragging && modifier_keys.filter(e)) {
                 this.element.trigger("move:" + modifier_desc + ":amv", [c]);
             }
@@ -127,7 +127,7 @@ export class Manipulator implements Object
         var modifier_keys = ModifierKeys.make_from_string(modifier_desc);
         var previous :MousePosition = null;
         this.element.on("mouseup", function () { previous = null; }); // reset on mouse release
-        this.element.on("move-abs:amv", (_ :Event, c :MousePosition, dragging :Boolean, e :JQueryEventObject) => {
+        this.element.on("move-abs:amv", (_ :Event, c :MousePosition, dragging :boolean, e :JQueryEventObject) => {
             if (dragging && modifier_keys.filter(e)) {
                 if (previous !== null) {
                     this.element.trigger("drag:" + modifier_desc + ":amv", [{x: c.x - previous.x, y: c.y - previous.y}]);
