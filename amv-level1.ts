@@ -25,7 +25,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     private renderer :THREE.WebGLRenderer;
     private _size :number; // canvas size
-    private event_handlers :JQuery[];
+    private event_handlers :JQuery[] = [];
 
     private viewer_created :JQueryDeferred<{}> = $.Deferred();
     public objects_created :JQueryDeferred<{}> = $.Deferred();
@@ -38,13 +38,11 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         this.size(size)
         this.renderer.setClearColor(0xFFFFFF)
         container.append(this.renderer.domElement)
-        this.event_handlers = [];
     }
 
     public destroy() :void {
-        for (var i = 0; i < this.event_handlers.length; ++i) {
-            this.event_handlers[i].off();
-        }
+        this.event_handlers.forEach((eh) => eh.off());
+        this.objects && this.objects.destroy();
     }
 
     public initialize_for_dimensions(number_of_dimensions :number) :JQueryPromise<any> {
@@ -137,7 +135,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
                 indices.forEach((index) => {
                     var obj = this.objects.objects[index];
                     if (obj) {
-                        var label = obj.label_show(show);
+                        var label = obj.label_show(show, this);
                         if (show) {
                             label.set_size();
                             var text = (obj.userData.names && (obj.userData.names[name_type] || obj.userData.names.full)) || ('' + obj.userData.index);
@@ -273,6 +271,7 @@ export interface ObjectLabel
     set_size: (size? :number) => void;
     set_color: (color :number|string) => void;
     set_position: (object_position :THREE.Vector3, object_scale :THREE.Vector3, body_size :THREE.Vector3) => void;
+    destroy: () => void;
 }
 
 // ----------------------------------------------------------------------
@@ -282,6 +281,9 @@ export class Object extends THREE.Object3D
     public body :THREE.Mesh;
     public outline :THREE.Object3D;
     public label :ObjectLabel;
+
+    public destroy() {
+    }
 
     public set_body(body :THREE.Mesh, outline :THREE.Object3D) :void {
         // if (this.body) {
@@ -298,7 +300,7 @@ export class Object extends THREE.Object3D
         }
     }
 
-    public label_show(show :boolean) :ObjectLabel { return null; }
+    public label_show(show :boolean, widget :MapWidgetLevel1) :ObjectLabel { return null; }
     public label_adjust_position() :void {}
 
     public rescale(object_factor :number, label_factor :number, viewer :Viewer) :void {
@@ -357,6 +359,10 @@ export class Objects
         this.objects = [];
         this._object_scale = 1.0;
         this._label_scale = 1.0;
+    }
+
+    public destroy() {
+        this.objects.forEach((o) => o.destroy());
     }
 
     public bodies() :THREE.Object3D[] {

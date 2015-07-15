@@ -335,6 +335,9 @@ class LabelMesh extends THREE.Mesh implements AmvLevel1.ObjectLabel
         parent.add(this);
     }
 
+    public destroy() {
+    }
+
     public show(show :boolean) :void {
         this.visible = show;
     }
@@ -389,6 +392,9 @@ class LabelSprite extends THREE.Sprite implements AmvLevel1.ObjectLabel
         this.scale.multiplyScalar(0.2);
     }
 
+    public destroy() {
+    }
+
     public show(show :boolean) :void {
         // this.visible = show;
     }
@@ -435,16 +441,73 @@ class LabelSprite extends THREE.Sprite implements AmvLevel1.ObjectLabel
 
 // ----------------------------------------------------------------------
 
+class LabelDiv implements AmvLevel1.ObjectLabel
+{
+    private div :JQuery;
+
+    constructor(widget :AmvLevel1.MapWidgetLevel1) {
+        this.div = $('<div></div>').css({position: 'absolute', backgroundColor: "transparent", top: 100, left: 100});
+        // $('body').append(this.div);
+        $(widget.domElement()).parent().append(this.div);
+        // //this.div.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
+        // // this.div.style.width = "" + 100;
+        // // this.div.style.height = "" + 100;
+        // this.div.style.backgroundColor = "transparent";
+        // // this.div.innerHTML = "This.DivWMW";
+        // this.div.style.top = 200 + 'px';
+        // this.div.style.left = 200 + 'px';
+        // widget.domElement().appendChild(this.div);
+        // document.body.appendChild(this.div);
+    }
+
+    public destroy() {
+    }
+
+    public show(show :boolean) :void {
+        // this.visible = show;
+    }
+
+    public set_scale(scale :number) :void {
+        // this.scale.multiplyScalar(scale);
+    }
+
+    public set_text(text :string) :void {
+        this.div.html(text);
+    }
+
+    public set_position(object_position :THREE.Vector3, object_scale :THREE.Vector3, body_size :THREE.Vector3) :void {
+        // http://stackoverflow.com/questions/27409074/three-js-converting-3d-position-to-2d-screen-position-r69
+    }
+
+    public set_size(size? :number) :void {
+        if (!size) {
+            size = Objects.label_default_size;
+        }
+        // this.scale.set(size, size, 1);
+    }
+
+    public set_color(color :number|string) :void {
+    }
+}
+
+// ----------------------------------------------------------------------
+
 export class Object extends AmvLevel1.Object
 {
+    public destroy() {
+        this.label && this.label.destroy();
+        super.destroy();
+    }
+
     public set_drawing_order(drawing_order :number) {
         this.position.setZ(DrawingOrderNS.base + drawing_order * DrawingOrderNS.step);
     }
 
-    public label_show(show :boolean) :AmvLevel1.ObjectLabel {
+    public label_show(show :boolean, widget :AmvLevel1.MapWidgetLevel1) :AmvLevel1.ObjectLabel {
         if (show && !this.label) {
-            this.label = new LabelMesh(this);
+            //this.label = new LabelMesh(this);
             //this.label = new LabelSprite();
+            this.label = new LabelDiv(widget);
         }
         if (this.label) {
             this.label.show(show);
@@ -480,11 +543,16 @@ export class Objects extends AmvLevel1.Objects
     private _viewport :Viewport;
     public static object_default_size :number = 5; // in pixels, multiplied by this._object_scale
     public static label_default_size :number = 2; // in pixels, multiplied by this._object_scale
+    private event_handlers :JQuery[] = [];
 
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
         this._flip = false;
-        widget.on("map-resolution-changed:amv", (pixels_per_unit) => this.resize(pixels_per_unit));
+        this.event_handlers.push(widget.on("map-resolution-changed:amv", (pixels_per_unit) => this.resize(pixels_per_unit)));
+    }
+
+    public destroy() {
+        this.event_handlers.forEach((eh) => eh.off());
     }
 
     public number_of_dimensions() :number {
