@@ -32,7 +32,8 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     public initialization_completed :JQueryDeferred<{}> = $.Deferred();
 
     constructor(container :JQuery, size :number) {
-        this.scene = new THREE.Scene()
+        this.scene = new THREE.Scene();
+        (<any>window).scene = this.scene;
         this.renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true, alpha: true}) // , precision: "highp"
         this.size(size)
         this.renderer.setClearColor(0xFFFFFF)
@@ -141,7 +142,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
                             var text = (obj.userData.names && (obj.userData.names[name_type] || obj.userData.names.full)) || ('' + obj.userData.index);
                             // obj.label_color("blue");
                             label.set_text(text);
-                            label.set_position(this.viewer, obj);
+                            obj.label_adjust_position();
                         }
                     }
                     else {
@@ -269,7 +270,7 @@ export interface ObjectLabel
     set_text: (text :string) => void;
     set_size: (size? :number) => void;
     set_color: (color :number|string) => void;
-    set_position: (viewer :Viewer, object :Object) => void;
+    set_position: (object_position :THREE.Vector3, object_scale :THREE.Vector3, body_size :THREE.Vector3) => void;
 }
 
 // ----------------------------------------------------------------------
@@ -296,12 +297,13 @@ export class Object extends THREE.Object3D
     }
 
     public label_show(show :boolean) :ObjectLabel { return null; }
+    public label_adjust_position() :void {}
 
     public rescale(object_factor :number, label_factor :number, viewer :Viewer) :void {
         this.body.scale.multiplyScalar(object_factor);
         if (this.label) {
             this.label.set_scale(label_factor);
-            this.label.set_position(viewer, this);
+            this.label_adjust_position();
         }
     }
 
@@ -310,7 +312,7 @@ export class Object extends THREE.Object3D
         if (this.label) {
         //     var ls = label_scale / object_scale;
         //     // this.label.scale.set(ls, ls, 1);
-            this.label.set_position(viewer, this);
+            this.label_adjust_position();
         }
     }
 
@@ -404,7 +406,7 @@ export class Objects
     }
 
     public label_scale(factor :number) :void {
-        this.objects.map(o => { if (o.label) { o.label.set_scale(factor); o.label.set_position(this.widget.viewer, o); } });
+        this.objects.map(o => { if (o.label) { o.label.set_scale(factor); o.label_adjust_position(); } });
     }
 
     public user_data(index :number) :any {

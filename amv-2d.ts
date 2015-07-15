@@ -342,25 +342,12 @@ class LabelMesh extends THREE.Mesh implements AmvLevel1.ObjectLabel
         this.geometry = ObjectFactory.make_text_geometry(text);
     }
 
-    public set_position(viewer :Viewer, object :AmvLevel1.Object) :void {
-        var body = object.body;
-        var body_size = body.scale.clone().applyEuler(body.rotation);
-        var body_radius =  body_size.y / 2;
-        if (object.shape() === "circle" && body.scale.x !== body.scale.y && body.rotation.z !== 0) {
-            var aspect = body.scale.y / body.scale.x;
-            body_radius *= (aspect > 1) ? 1 / aspect : aspect;
-        }
-        var outline_width = 0;
-        if (object.outline) {
-            outline_width = (<THREE.LineBasicMaterial>(<THREE.Mesh>object.outline).material).linewidth;
-        }
-        var label_offset = 5 / Objects.object_default_size;
-
+    public set_position(object_position :THREE.Vector3, object_scale :THREE.Vector3, body_size :THREE.Vector3) :void {
         var lg = this.geometry;
         lg.computeBoundingBox();
         var label_size = new THREE.Vector3().multiplyVectors(this.scale, lg.boundingBox.size());
 
-        this.position.set(- label_size.x / 2, - body_radius - outline_width / Objects.object_default_size - label_size.y - label_offset, 0);
+        this.position.set(- label_size.x / 2, - body_size.y - label_size.y, 0);
     }
 
     public set_size(size? :number) :void {
@@ -377,6 +364,57 @@ class LabelMesh extends THREE.Mesh implements AmvLevel1.ObjectLabel
 
 // ----------------------------------------------------------------------
 
+class LabelSprite extends THREE.Sprite implements AmvLevel1.ObjectLabel
+{
+    constructor(material :THREE.SpriteMaterial, private canvas :HTMLCanvasElement) {
+        super(material);
+    }
+
+    public show(show :boolean) :void {
+        // this.visible = show;
+    }
+
+    public set_scale(scale :number) :void {
+        // this.scale.multiplyScalar(scale);
+    }
+
+    public set_text(text :string) :void {
+        var font_size = 48;
+        var context = <CanvasRenderingContext2D>this.canvas.getContext('2d');
+
+        this.canvas.width = this.canvas.height = Math.pow(2, Math.floor(Math.log(font_size * text.length * 0.7) / Math.log(2)) + 1);
+        console.log('ca', this.canvas.width);
+        context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // context.fillStyle = "#BBBBBB";
+        // context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        context.fillStyle = "black";
+        context.font = '' + font_size + 'px Arial';
+        context.fillText(text, 0, font_size);
+
+        var scale = 0.05 * text.length;
+        this.scale.set(scale, scale, 1);
+    }
+
+    public set_position(object_position :THREE.Vector3, object_scale :THREE.Vector3, body_size :THREE.Vector3) :void {
+        // console.log('canv', this.canvas.height, this.scale.y, this.canvas.height * this.scale.y / 2);
+        this.position.set(object_position.x, object_position.y - body_size.y * object_scale.y - this.scale.y / 2, object_position.z);
+    }
+
+    public set_size(size? :number) :void {
+        if (!size) {
+            size = Objects.label_default_size;
+        }
+        // this.scale.set(size, size, 1);
+    }
+
+    public set_color(color :number|string) :void {
+    }
+}
+
+// ----------------------------------------------------------------------
+
 export class Object extends AmvLevel1.Object
 {
     public set_drawing_order(drawing_order :number) {
@@ -385,14 +423,32 @@ export class Object extends AmvLevel1.Object
 
     public label_show(show :boolean) :AmvLevel1.ObjectLabel {
         if (show && !this.label) {
-            var label = ObjectFactory.make_label();
-            this.label = label;
-            this.add(label);
+            this.label = ObjectFactory.make_label_mesh(this);
+            // this.label = ObjectFactory.make_label_sprite(this);
         }
         if (this.label) {
             this.label.show(show);
         }
         return this.label;
+    }
+
+    public label_adjust_position() :void {
+        if (this.label) {
+            var body = this.body;
+            var body_size = body.scale.clone().applyEuler(body.rotation);
+            var body_radius =  body_size.y / 2;
+            if (this.shape() === "circle" && body.scale.x !== body.scale.y && body.rotation.z !== 0) {
+                var aspect = body.scale.y / body.scale.x;
+                body_radius *= (aspect > 1) ? 1 / aspect : aspect;
+            }
+            var outline_width = 0;
+            if (this.outline) {
+                outline_width = (<THREE.LineBasicMaterial>(<THREE.Mesh>this.outline).material).linewidth;
+            }
+            var label_offset = 5 / Objects.object_default_size;
+
+            this.label.set_position(this.position, this.scale, new THREE.Vector3(0, body_radius + outline_width / Objects.object_default_size + label_offset, 0));
+        }
     }
 }
 
@@ -497,8 +553,32 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
         return new THREE.Line(this.geometries[`${shape}-outline`], <THREE.ShaderMaterial>outline_material);
     }
 
-    public static make_label() :LabelMesh {
-        return new LabelMesh(this.make_text_geometry(""), new THREE.MeshBasicMaterial(AmvLevel1.ObjectFactory.convert_color("black")));
+    public static make_label_mesh(parent :Object) :LabelMesh {
+        var label = new LabelMesh(this.make_text_geometry(""), new THREE.MeshBasicMaterial(AmvLevel1.ObjectFactory.convert_color("black")));
+        parent.add(label);
+        return label;
+    }
+
+    public static make_label_sprite(parent :Object) :LabelSprite {
+        var canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 2;
+        // var context :any = canvas.getContext('2d');
+
+        // context.fillStyle = "#BBBBBB";
+        // context.fillRect(0, 0, canvas.width, canvas.height);
+
+        // context.fillStyle = "black";
+        // context.font = '48px Arial';
+        // context.fillText("WMW", 0, 50);
+
+        var texture = new THREE.Texture(canvas); //, undefined, undefined, undefined, undefined, THREE.NearestFilter);
+        texture.needsUpdate = true;
+        var sprite = new LabelSprite(new THREE.SpriteMaterial({map: texture, transparent: true, useScreenCoordinates: false}), canvas);
+        //parent.add(sprite);
+        (<any>window).scene.add(sprite);
+        // sprite.position.set(0, 0, 0);
+        sprite.scale.multiplyScalar(0.2);
+        return sprite;
     }
 
     public static make_text_geometry(text :string) :THREE.TextGeometry {
