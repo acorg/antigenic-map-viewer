@@ -30,7 +30,7 @@ export class Application
                               {label: "C"}, {label: "D"}, {label: "E"}, {label: "F"}, {label: "G"}],
                 styles: {
                     points: [0, 1, 2, 3, 4, 5, 6],
-                    styles: [{shape: "circle", size: 15.0, outline_color: "#000", fill_color: "#F00", outline_width: 5},
+                    styles: [{shape: "circle", size: 15.0, outline_color: "#000", fill_color: "#F00", outline_width: 5, label_color: "red", label_position_x: 1, label_position_y: 0, label_size: 3},
                              {shape: "circle", size: 15.0, outline_color: "#000", fill_color: "#FA0", aspect: 0.75, rotation: Math.PI / 4, outline_width: 1},
                              {shape: "box", size: 10.0, outline_color: "#F00", fill_color: "#AAF", aspect: 1 / 0.75, rotation: 0.5, outline_width: 5},
                              {shape: "box", size: 10.0, outline_color: "#0F0", fill_color: "#AFA", aspect: 1 / 0.75, outline_width: 1},

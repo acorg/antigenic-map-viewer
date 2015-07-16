@@ -137,7 +137,6 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
                     if (obj) {
                         var label = obj.label_show(show, this);
                         if (show) {
-                            label.set_size();
                             var text = (obj.userData.names && (obj.userData.names[name_type] || obj.userData.names.full)) || ('' + obj.userData.index);
                             // obj.label_color("blue");
                             label.set_text(text);
@@ -266,11 +265,13 @@ export interface ObjectUserData
 export interface ObjectLabel
 {
     show: (show :boolean) => void;
+    shown: () => boolean;
     set_scale: (scale :number) => void;
     set_text: (text :string) => void;
-    set_size: (size? :number) => void;
+    set_size: (size :number) => void;
     set_color: (color :number|string) => void;
-    set_position: (viewer :Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) => void;
+    set_position: (x :number, y :number) => void;
+    adjust_position: (viewer :Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) => void;
     destroy: () => void;
 }
 
@@ -285,7 +286,7 @@ export class Object extends THREE.Object3D
     public destroy() {
     }
 
-    public set_body(body :THREE.Mesh, outline :THREE.Object3D) :void {
+    public set_body(body :THREE.Mesh, outline :THREE.Object3D, label :ObjectLabel) :void {
         // if (this.body) {
         //     this.remove(this.body);
         // }
@@ -298,6 +299,7 @@ export class Object extends THREE.Object3D
         if (this.outline) {
             this.body.add(this.outline);
         }
+        this.label = label;
     }
 
     public label_show(show :boolean, widget :MapWidgetLevel1) :ObjectLabel { return null; }
@@ -481,6 +483,10 @@ export class ObjectFactory
     }
 
     public make_outline(shape :string, outline_width :number, outline_color :any) :THREE.Object3D {
+        return null;
+    }
+
+    public make_label(widget :MapWidgetLevel1) :ObjectLabel {
         return null;
     }
 

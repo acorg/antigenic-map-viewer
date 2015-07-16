@@ -47,7 +47,7 @@ export class PlotData
             var obj = factory.make_object();
             var style = styles[this.style_no(i)];
             var coordinates = this.layout(i);
-            obj.set_body(style.make_body(), style.make_outline());
+            obj.set_body(style.make_body(), style.make_outline(), style.make_label(widget));
             obj.userData = this.user_data(i);
             if (number_of_dimensions === 2) {
                 // flip layout
@@ -271,6 +271,22 @@ export class ObjectStyle
 
     public make_outline() :THREE.Object3D {
         return this.factory.make_outline(this.plot_style.shape || "circle", this.plot_style.outline_width, this.plot_style.outline_color);
+    }
+
+    public make_label(widget :AmvLevel1.MapWidgetLevel1) :AmvLevel1.ObjectLabel {
+        var label = this.factory.make_label(widget);
+        if (label) {
+            label.show(this.plot_style.label_shown || this.plot_style.label_shown === null || this.plot_style.label_shown === undefined);
+            label.set_size(this.plot_style.label_size || 1);
+            if (this.plot_style.label !== null && this.plot_style.label !== undefined && this.plot_style.label !== "") {
+                label.set_text(this.plot_style.label);
+            }
+            label.set_color(this.plot_style.label_color || 0);
+            if (this.plot_style.label_position_x !== null && this.plot_style.label_position_x !== undefined && this.plot_style.label_position_y !== null && this.plot_style.label_position_y !== undefined) {
+                label.set_position(this.plot_style.label_position_x, this.plot_style.label_position_y);
+            }
+        }
+        return label;
     }
 
     public rotation() :number {

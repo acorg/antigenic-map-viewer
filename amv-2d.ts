@@ -342,6 +342,10 @@ class LabelMesh extends THREE.Mesh implements AmvLevel1.ObjectLabel
         this.visible = show;
     }
 
+    public shown() :boolean {
+        return this.visible;
+    }
+
     public set_scale(scale :number) :void {
         this.scale.multiplyScalar(scale);
     }
@@ -350,7 +354,10 @@ class LabelMesh extends THREE.Mesh implements AmvLevel1.ObjectLabel
         this.geometry = this.make_text_geometry(text);
     }
 
-    public set_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
+    public set_position(x :number, y :number) :void {
+    }
+
+    public adjust_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
         var lg = this.geometry;
         lg.computeBoundingBox();
         var label_size = new THREE.Vector3().multiplyVectors(this.scale, lg.boundingBox.size());
@@ -358,7 +365,7 @@ class LabelMesh extends THREE.Mesh implements AmvLevel1.ObjectLabel
         this.position.set(- label_size.x / 2, - body_radius - label_size.y, 0);
     }
 
-    public set_size(size? :number) :void {
+    public set_size(size :number) :void {
         if (!size) {
             size = Objects.label_default_size;
         }
@@ -399,6 +406,10 @@ class LabelSprite extends THREE.Sprite implements AmvLevel1.ObjectLabel
         // this.visible = show;
     }
 
+    public shown() :boolean {
+        return true;
+    }
+
     public set_scale(scale :number) :void {
         // this.scale.multiplyScalar(scale);
     }
@@ -423,12 +434,15 @@ class LabelSprite extends THREE.Sprite implements AmvLevel1.ObjectLabel
         this.scale.set(scale, scale, 1);
     }
 
-    public set_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
+    public set_position(x :number, y :number) :void {
+    }
+
+    public adjust_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
         // console.log('canv', this.canvas.height, this.scale.y, this.canvas.height * this.scale.y / 2);
         this.position.set(object_position.x, object_position.y - body_radius * object_scale.y - this.scale.y / 2, object_position.z);
     }
 
-    public set_size(size? :number) :void {
+    public set_size(size :number) :void {
         if (!size) {
             size = Objects.label_default_size;
         }
@@ -444,10 +458,11 @@ class LabelSprite extends THREE.Sprite implements AmvLevel1.ObjectLabel
 class LabelDiv implements AmvLevel1.ObjectLabel
 {
     private div :JQuery;
+    private position :{x :number, y :number} = {x: 0, y: 1};
 
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
         this.div = $('<div></div>')
-              .css({position: 'absolute', backgroundColor: "transparent"}) // zIndex: 1, top: 0, left: 0
+              .css({position: 'absolute', backgroundColor: "transparent", whiteSpace: "nowrap"}) // zIndex: 1, top: 0, left: 0
               .appendTo($(widget.domElement()).parent());
     }
 
@@ -458,17 +473,34 @@ class LabelDiv implements AmvLevel1.ObjectLabel
         this.div.css('opacity', show ? 1 : 0);
     }
 
+    public shown() :boolean {
+        return parseFloat(this.div.css('opacity')) !== 0;
+    }
+
     public set_scale(scale :number) :void {
-        var initial_size = parseInt(this.div.css('font-size'), 10);
-        this.div.css('font-size', (initial_size * scale))
+        if (scale !== null && scale !== undefined && scale > 0 && (scale < 1 || scale > 1)) {
+            var initial_size = parseInt(this.div.css('font-size'), 10);
+            var new_size = Math.round(initial_size * scale);
+            if (new_size === initial_size) {
+                new_size = scale > 1 ? initial_size + 1 : initial_size - 1;
+            }
+            if (new_size < 3) {
+                new_size = 3;
+            }
+            this.div.css('font-size', '' + new_size + 'px');
+        }
     }
 
     public set_text(text :string) :void {
         this.div.html(text);
     }
 
-    public set_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
-        var label_position = {x: 0, y: 1};
+    public set_position(x :number, y :number) :void {
+        this.position.x = x;
+        this.position.y = y;
+    }
+
+    public adjust_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
         // http://stackoverflow.com/questions/27409074/three-js-converting-3d-position-to-2d-screen-position-r69
 
         var width = viewer.widget.domElement().width;
@@ -490,32 +522,29 @@ class LabelDiv implements AmvLevel1.ObjectLabel
         var label_width = parseInt(this.div.css('width'), 10);
         var label_height = parseInt(this.div.css('height'), 10);
         var label_offset_left = 0, label_offset_top = 0;
-        if (label_position.x <= -1) {
-            label_offset_left = - label_width + object_radius * label_position.x;
+        if (this.position.x <= -1) {
+            label_offset_left = - label_width + object_radius * this.position.x;
         }
-        else if (label_position.x >= 1) {
-            label_offset_left = label_width + object_radius * label_position.x;
+        else if (this.position.x >= 1) {
+            label_offset_left = object_radius * this.position.x;
         }
         else { // centered
-            label_offset_left = - label_width / 2 + (label_width / 2 + object_radius) * label_position.x;
+            label_offset_left = - label_width / 2 + (label_width / 2 + object_radius) * this.position.x;
         }
-        if (label_position.y <= -1) {
-            label_offset_top = - label_height + object_radius * label_position.y;
+        if (this.position.y <= -1) {
+            label_offset_top = - label_height + object_radius * this.position.y;
         }
-        else if (label_position.y >= 1) {
-            label_offset_top = label_height + object_radius * label_position.y;
+        else if (this.position.y >= 1) {
+            label_offset_top = object_radius * this.position.y;
         }
         else {
-            label_offset_top = - label_height / 2 + (label_height / 2 + object_radius) * label_position.y;
+            label_offset_top = - label_height / 2 + (label_height / 2 + object_radius) * this.position.y;
         }
 
         this.div.css({top: label_pos.top + label_offset_top, left: label_pos.left + label_offset_left});
     }
 
-    public set_size(size? :number) :void {
-        if (!size) {
-            size = 1;
-        }
+    public set_size(size :number) :void {
         this.div.css('font-size', '' + size + 'em');
     }
 
@@ -545,12 +574,13 @@ export class Object extends AmvLevel1.Object
         }
         if (this.label) {
             this.label.show(show);
+            this.label_adjust_position(widget.viewer);
         }
         return this.label;
     }
 
     public label_adjust_position(viewer :AmvLevel1.Viewer) :void {
-        if (this.label) {
+        if (this.label && this.label.shown()) {
             var body = this.body;
             var body_radius = body.scale.clone().applyEuler(body.rotation).y / 2;
             if (this.shape() === "circle" && body.scale.x !== body.scale.y && body.rotation.z !== 0) {
@@ -567,7 +597,7 @@ export class Object extends AmvLevel1.Object
             // var pos = new THREE.Vector3().setFromMatrixPosition(this.matrixWorld);
             var pos = this.position;
 
-            this.label.set_position(viewer, pos, this.scale, body_radius + outline_width / Objects.object_default_size + label_offset);
+            this.label.adjust_position(viewer, pos, this.scale, body_radius + outline_width / Objects.object_default_size + label_offset);
         }
     }
 }
@@ -676,6 +706,10 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
     public make_outline(shape :string, outline_width :number, outline_color :any) :THREE.Object3D {
         var outline_material = this.outline_material(this.convert_color(outline_color), outline_width);
         return new THREE.Line(this.geometries[`${shape}-outline`], <THREE.ShaderMaterial>outline_material);
+    }
+
+    public make_label(widget :AmvLevel1.MapWidgetLevel1) :AmvLevel1.ObjectLabel {
+        return new LabelDiv(widget);
     }
 
     // adds to this.geometries

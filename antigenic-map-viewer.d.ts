@@ -39,6 +39,12 @@ declare module AntigenicMapViewer {
         shape :string;
         size :number;
         shown? :boolean;
+        label? :string;
+        label_color? :any;
+        label_position_x? :number;
+        label_position_y? :number;
+        label_shown? :boolean;
+        label_size? :number;
     }
 
     interface PlotDataTitle
