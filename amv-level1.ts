@@ -103,6 +103,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     // in pixels
     public size(size? :number) :number {
+        console.log('widget size', size, this._size);
         if (size !== undefined && size !== null) {
             this._size = size;
             this.renderer.setSize(size, size);
