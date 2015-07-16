@@ -350,12 +350,12 @@ class LabelMesh extends THREE.Mesh implements AmvLevel1.ObjectLabel
         this.geometry = this.make_text_geometry(text);
     }
 
-    public set_position(object_position :THREE.Vector3, object_scale :THREE.Vector3, body_size :THREE.Vector3) :void {
+    public set_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
         var lg = this.geometry;
         lg.computeBoundingBox();
         var label_size = new THREE.Vector3().multiplyVectors(this.scale, lg.boundingBox.size());
 
-        this.position.set(- label_size.x / 2, - body_size.y - label_size.y, 0);
+        this.position.set(- label_size.x / 2, - body_radius - label_size.y, 0);
     }
 
     public set_size(size? :number) :void {
@@ -423,9 +423,9 @@ class LabelSprite extends THREE.Sprite implements AmvLevel1.ObjectLabel
         this.scale.set(scale, scale, 1);
     }
 
-    public set_position(object_position :THREE.Vector3, object_scale :THREE.Vector3, body_size :THREE.Vector3) :void {
+    public set_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
         // console.log('canv', this.canvas.height, this.scale.y, this.canvas.height * this.scale.y / 2);
-        this.position.set(object_position.x, object_position.y - body_size.y * object_scale.y - this.scale.y / 2, object_position.z);
+        this.position.set(object_position.x, object_position.y - body_radius * object_scale.y - this.scale.y / 2, object_position.z);
     }
 
     public set_size(size? :number) :void {
@@ -446,47 +446,81 @@ class LabelDiv implements AmvLevel1.ObjectLabel
     private div :JQuery;
 
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
-        this.div = $('<div></div>').css({position: 'absolute', backgroundColor: "transparent", top: 100, left: 100});
-        // $('body').append(this.div);
-        $(widget.domElement()).parent().append(this.div);
-        // //this.div.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
-        // // this.div.style.width = "" + 100;
-        // // this.div.style.height = "" + 100;
-        // this.div.style.backgroundColor = "transparent";
-        // // this.div.innerHTML = "This.DivWMW";
-        // this.div.style.top = 200 + 'px';
-        // this.div.style.left = 200 + 'px';
-        // widget.domElement().appendChild(this.div);
-        // document.body.appendChild(this.div);
+        this.div = $('<div></div>')
+              .css({position: 'absolute', backgroundColor: "transparent"}) // zIndex: 1, top: 0, left: 0
+              .appendTo($(widget.domElement()).parent());
     }
 
     public destroy() {
     }
 
     public show(show :boolean) :void {
-        // this.visible = show;
+        this.div.css('opacity', show ? 1 : 0);
     }
 
     public set_scale(scale :number) :void {
-        // this.scale.multiplyScalar(scale);
+        var initial_size = parseInt(this.div.css('font-size'), 10);
+        this.div.css('font-size', (initial_size * scale))
     }
 
     public set_text(text :string) :void {
         this.div.html(text);
     }
 
-    public set_position(object_position :THREE.Vector3, object_scale :THREE.Vector3, body_size :THREE.Vector3) :void {
+    public set_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
+        var label_position = {x: 0, y: 1};
         // http://stackoverflow.com/questions/27409074/three-js-converting-3d-position-to-2d-screen-position-r69
+
+        var width = viewer.widget.domElement().width;
+        var width2 = width / 2;
+        var height2 = viewer.widget.domElement().height / 2;
+        var camera = <THREE.OrthographicCamera>viewer.camera;
+        var calculate_position = function (pos3d :THREE.Vector3) :{top :number, left :number} {
+            var pos = pos3d.project(camera);
+            var top = - pos.y * height2 + height2;
+            var left = pos.x * width2 + width2;
+            return {top: top, left: left};
+        };
+        var calculate_offset = function (offset :number) :number {
+            return width / (camera.right - camera.left) * offset;
+        }
+        var label_pos = calculate_position(object_position.clone());
+        var object_radius = calculate_offset(body_radius * object_scale.x);
+
+        var label_width = parseInt(this.div.css('width'), 10);
+        var label_height = parseInt(this.div.css('height'), 10);
+        var label_offset_left = 0, label_offset_top = 0;
+        if (label_position.x <= -1) {
+            label_offset_left = - label_width + object_radius * label_position.x;
+        }
+        else if (label_position.x >= 1) {
+            label_offset_left = label_width + object_radius * label_position.x;
+        }
+        else { // centered
+            label_offset_left = - label_width / 2 + (label_width / 2 + object_radius) * label_position.x;
+        }
+        if (label_position.y <= -1) {
+            label_offset_top = - label_height + object_radius * label_position.y;
+        }
+        else if (label_position.y >= 1) {
+            label_offset_top = label_height + object_radius * label_position.y;
+        }
+        else {
+            label_offset_top = - label_height / 2 + (label_height / 2 + object_radius) * label_position.y;
+        }
+
+        this.div.css({top: label_pos.top + label_offset_top, left: label_pos.left + label_offset_left});
     }
 
     public set_size(size? :number) :void {
         if (!size) {
-            size = Objects.label_default_size;
+            size = 1;
         }
-        // this.scale.set(size, size, 1);
+        this.div.css('font-size', '' + size + 'em');
     }
 
     public set_color(color :number|string) :void {
+        this.div.css('color', color);
     }
 }
 
@@ -515,11 +549,10 @@ export class Object extends AmvLevel1.Object
         return this.label;
     }
 
-    public label_adjust_position() :void {
+    public label_adjust_position(viewer :AmvLevel1.Viewer) :void {
         if (this.label) {
             var body = this.body;
-            var body_size = body.scale.clone().applyEuler(body.rotation);
-            var body_radius =  body_size.y / 2;
+            var body_radius = body.scale.clone().applyEuler(body.rotation).y / 2;
             if (this.shape() === "circle" && body.scale.x !== body.scale.y && body.rotation.z !== 0) {
                 var aspect = body.scale.y / body.scale.x;
                 body_radius *= (aspect > 1) ? 1 / aspect : aspect;
@@ -528,9 +561,13 @@ export class Object extends AmvLevel1.Object
             if (this.outline) {
                 outline_width = (<THREE.LineBasicMaterial>(<THREE.Mesh>this.outline).material).linewidth;
             }
-            var label_offset = 5 / Objects.object_default_size;
+            var label_offset = 0; // 5 / Objects.object_default_size;
 
-            this.label.set_position(this.position, this.scale, new THREE.Vector3(0, body_radius + outline_width / Objects.object_default_size + label_offset, 0));
+            // this.updateMatrixWorld(true);
+            // var pos = new THREE.Vector3().setFromMatrixPosition(this.matrixWorld);
+            var pos = this.position;
+
+            this.label.set_position(viewer, pos, this.scale, body_radius + outline_width / Objects.object_default_size + label_offset);
         }
     }
 }
