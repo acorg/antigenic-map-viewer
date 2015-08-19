@@ -62,7 +62,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
             this.map.on("show-names:amv", (show :boolean) :void => { this.map.show_object_labels(show, "all"); this.object_labels_shown = show; });
             // change label type via popup menu
             this.map.on("label-type:amv", (data :any) :void => { this.user_object_label_type = data.label_type; });
-            this.map.trigger("show-names:amv", true);
+            // this.map.trigger("show-names:amv", true);
         });
 
         // buttons
