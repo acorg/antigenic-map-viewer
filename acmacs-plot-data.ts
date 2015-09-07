@@ -31,10 +31,11 @@ export class PlotData
             this.add_objects(widget);
             if (number_of_dimensions === 2) {
                 (<Amv2d.Objects>widget.objects).viewport(this.viewport());
-                (<Amv2d.Viewer>widget.viewer).transform(this.transformation());
+                (<Amv2d.Viewer>widget.viewer).initial_transformation(this.transformation());
+                widget.viewer.reset();
             }
-            widget.viewer.objects_updated();
             widget.viewer.camera_update();
+            widget.viewer.objects_updated();
         });
     }
 

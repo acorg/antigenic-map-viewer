@@ -17,7 +17,7 @@ export class Application
         // var json_file = "../test-2d-67.json";
         // require([`json!${json_file}`, "amv-level2", "css!test", "acmacs-toolkit", "acmacs-plot-data", "amv-utils"], (test_data_2d :AntigenicMapViewer.PlotDataInterface, amv :AntigenicMapViewer.MapWidget) => {
         require(["amv-level2", "css!test", "acmacs-toolkit", "acmacs-plot-data", "amv-utils"], (amv :AntigenicMapViewer.MapWidget) => {
-            console.log('amv-test 2d', new Date());
+            console.log('=========== amv-test 2d ========== ', new Date(), "===========");
 
             // make layout 2d
             // test_data_2d.layout = test_data_2d.layout.map((c) => [c[0], c[1]]);
@@ -73,7 +73,8 @@ export class Application
             },
             // title: {"0": {text: ["2D map"]}}};
             title: {"0": {text: ["random " + num_points]}},
-            transformation: <[[number, number], [number, number]]>[[0.3, 0.5], [0.5, 0.3]]
+            // transformation: <[[number, number], [number, number]]>[[0.3, 0.5], [0.5, 0.3]]
+            transformation: <[[number, number], [number, number]]>[[0, 1], [-1, 0]]
         };
         for (var i = 1; i < num_points; ++i) {
             var coord = [random_in(layout_range), random_in(layout_range)];

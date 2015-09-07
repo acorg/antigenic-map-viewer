@@ -39,6 +39,7 @@ export class Viewer extends AmvLevel1.Viewer
     private grid :Grid;
     private viewport_initial :Viewport; // for reset
     private _pixels_per_unit :number;   // map resolution on screen
+    private _initial_transformation :Transformation;
 
     private rotate_control :AmvManipulator2d.RotateControl;
     private fliph_control :AmvManipulator2d.FlipControl;
@@ -56,7 +57,6 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0, DrawingOrderNS.maximum + 2);
         widget.add(this.camera);
         this.grid = new Grid(this, 0);
-        this.reset()
         this.on("widget-resized:amv", (size :number) => this.update_resolution(size));
     }
 
@@ -68,25 +68,38 @@ export class Viewer extends AmvLevel1.Viewer
         console.log('state: viewport', JSON.stringify(viewport));
     }
 
+    public initial_transformation(transformation :Transformation) :void {
+        if (transformation !== null && transformation !== undefined) {
+            this._initial_transformation = transformation;
+        }
+        else {
+            this._initial_transformation = null;
+        }
+    }
+
     public reset() :void {
         this.widget.reset_objects();
         this.camera.up.copy(Viewer.camera_up);
         this.camera.position.set(0, 0, DrawingOrderNS.maximum + 1);
         this.camera_look_at(AmvLevel1.Viewer.const_vector3_zero);
         this.viewport(this.viewport_initial);
+        if (this._initial_transformation !== null && this._initial_transformation !== undefined) {
+            this.transform(this._initial_transformation);
+        }
+        this.widget.reorient_objects();
         this.camera_update();
     }
 
     public viewport(viewport? :Viewport, grid_full_reset :boolean = false) :Viewport {
         var camera = <THREE.OrthographicCamera>this.camera;
         if (viewport) {
-            console.log('set viewport', JSON.stringify(viewport));
             var hsize = (viewport.size ? viewport.size : (camera.right - camera.left)) / 2;
             camera.left = viewport.cx - hsize;
             camera.right = viewport.cx + hsize;
             camera.top = viewport.cy + hsize;
             camera.bottom = viewport.cy - hsize;
             camera.updateProjectionMatrix();
+            // console.log('viewport camera\n\t', JSON.stringify({l: camera.left, r: camera.right, b: camera.bottom, t: camera.top}), '\n\t', JSON.stringify(viewport));
             this.widget.reorient_objects();
             this.grid.reset(grid_full_reset);
             this.update_resolution();
@@ -140,15 +153,20 @@ export class Viewer extends AmvLevel1.Viewer
 
     public transform(transformation :Transformation) :void {
         if (transformation) {
-            var m = new THREE.Matrix4();
-            m.elements[0] = transformation[0][0];
-            m.elements[1] = transformation[0][1];
-            m.elements[4] = transformation[1][0];
-            m.elements[5] = transformation[1][1];
-            this._set_m4(this.get_m4().multiply(m));
-            // transform viewport center (we do transformation relative to the viewport center)
-            var v = this.viewport();
-            this.viewport({cx: v.cx * transformation[0][0] + v.cy * transformation[1][0], cy: v.cx * transformation[0][1] + v.cy * transformation[1][1]}, true);
+            $.when(this.widget.objects_created && this.widget.initialization_completed).done(() => {
+                var viewport = this.viewport();
+                var m = new THREE.Matrix4();
+                m.elements[0] = transformation[0][0];
+                m.elements[1] = transformation[0][1];
+                m.elements[4] = transformation[1][0];
+                m.elements[5] = transformation[1][1];
+                var m4 = this.get_m4().multiply(m);
+                this._set_m4(m4);
+
+                var viewport_center = new THREE.Vector3(viewport.cx, viewport.cy, 0);
+                viewport_center.applyMatrix4(m4).multiplyScalar(-1);
+                this.viewport_move(viewport_center);
+            });
         }
     }
 
@@ -191,7 +209,7 @@ export class Viewer extends AmvLevel1.Viewer
                 objects_viewport = {cx: center.x, cy: center.y, size: Math.ceil(this.widget.objects.diameter() + 0.5)};
             }
             this.viewport_initial = this.viewport(objects_viewport);
-            // console.log('viewport_initial', JSON.stringify(this.viewport_initial));
+            console.log('objects_updated viewport_initial', JSON.stringify(this.viewport_initial));
         }
         else {
             this.grid.reset(false);
@@ -230,7 +248,7 @@ export class Viewer extends AmvLevel1.Viewer
         case 116:               // t
             this.transform([[-1, 0], [0, 1]]);
             break;
-        case 113:               // p
+        case 113:               // r
             this.viewport_rotate(Math.PI / 2);
             break;
         case 45:               // -

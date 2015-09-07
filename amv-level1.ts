@@ -103,7 +103,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     // in pixels
     public size(size? :number) :number {
-        console.log('widget size', size, this._size);
+        // console.log('widget size', size, this._size);
         if (size !== undefined && size !== null) {
             this._size = size;
             this.renderer.setSize(size, size);
@@ -215,7 +215,9 @@ export class Viewer implements AntigenicMapViewer.TriggeringEvent
     }
 
     public camera_update() :void {
-        this.camera.lookAt(this.camera_looking_at);
+        if (this.camera_looking_at !== null && this.camera_looking_at !== undefined) {
+            this.camera.lookAt(this.camera_looking_at);
+        }
     }
 
     public camera_look_at(lookAt :THREE.Vector3) :void {
