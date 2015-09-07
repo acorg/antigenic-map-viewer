@@ -188,7 +188,7 @@ export class PlotData
 
     private make_names(point_info :any) :any {
         var r :any = {};
-        if (point_info.name) {
+        if (point_info.name !== null && point_info.name !== undefined) {
             var n = point_info.name;
             if (n.isolation_number) {
                 r.full = [n.virus_type || '', n.host || '', n.location || '', n.isolation_number || '', n.year || ''].join('/')
@@ -218,6 +218,11 @@ export class PlotData
                 r.short += ' ' + point_info.extra;
                 r.abbreviated += ' ' + point_info.extra;
             }
+        }
+        else if (point_info.label !== null && point_info.label !== undefined) {
+            r.full = point_info.label;
+            r.short = r.full;
+            r.abbreviated = r.full;
         }
         if (point_info.date) {
             r.date = point_info.date;

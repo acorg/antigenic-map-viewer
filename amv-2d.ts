@@ -80,6 +80,7 @@ export class Viewer extends AmvLevel1.Viewer
     public viewport(viewport? :Viewport, grid_full_reset :boolean = false) :Viewport {
         var camera = <THREE.OrthographicCamera>this.camera;
         if (viewport) {
+            console.log('set viewport', JSON.stringify(viewport));
             var hsize = (viewport.size ? viewport.size : (camera.right - camera.left)) / 2;
             camera.left = viewport.cx - hsize;
             camera.right = viewport.cx + hsize;
@@ -190,6 +191,7 @@ export class Viewer extends AmvLevel1.Viewer
                 objects_viewport = {cx: center.x, cy: center.y, size: Math.ceil(this.widget.objects.diameter() + 0.5)};
             }
             this.viewport_initial = this.viewport(objects_viewport);
+            // console.log('viewport_initial', JSON.stringify(this.viewport_initial));
         }
         else {
             this.grid.reset(false);
