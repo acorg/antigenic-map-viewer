@@ -23,7 +23,7 @@ export class Application
             // test_data_2d.layout = test_data_2d.layout.map((c) => [c[0], c[1]]);
 
             // var test_data_2d = this.test_data_2d();
-            var test_data_2d = this.test_data_2d_random(100);
+            var test_data_2d = this.test_data_2d_random(500);
             var widget1 = amv.make_widget($('body'), null, test_data_2d);
         });
     }

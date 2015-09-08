@@ -22,6 +22,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     public viewer :Viewer;
     public objects :Objects;
     public scene :THREE.Scene;
+    public labels_shown :boolean = false;
 
     private renderer :THREE.WebGLRenderer;
     private _size :number; // canvas size
@@ -149,6 +150,17 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
                     }
                 });
                 console.log('' + indices.length, 'labels shown in', Date.now() - start);
+                if (show) {
+                    if (indices.length > 0) {
+                        this.labels_shown = true;
+                    }
+                }
+                else {
+                    // if all are being hidden or no labels shown in the result
+                    if (indices.length === this.objects.objects.length || !this.objects.objects.some((o) => o.label_shown())) {
+                        this.labels_shown = false;
+                    }
+                }
             }
             else {
                 console.warn('showing names in 3D is not supported');
@@ -306,6 +318,10 @@ export class Object extends THREE.Object3D
     }
 
     public label_show(show :boolean, widget :MapWidgetLevel1) :ObjectLabel { return null; }
+
+    public label_shown() :boolean {
+        return !!this.label && this.label.shown();
+    }
     public label_adjust_position(viewer :Viewer) :void {}
 
     public rescale(object_factor :number, label_factor :number, viewer :Viewer) :void {
@@ -316,11 +332,12 @@ export class Object extends THREE.Object3D
         }
     }
 
-    public set_scale(object_scale :number, viewer :Viewer) :void {
+    public set_scale(object_scale :number) :void {
         this.scale.set(object_scale, object_scale, object_scale);
-        if (this.label) {
-        //     var ls = label_scale / object_scale;
-        //     // this.label.scale.set(ls, ls, 1);
+    }
+
+    public label_adjust_after_object_rescale(viewer :Viewer) :void {
+        if (this.label && this.label.shown()) {
             this.label_adjust_position(viewer);
         }
     }

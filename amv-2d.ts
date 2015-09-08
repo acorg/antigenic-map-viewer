@@ -101,7 +101,6 @@ export class Viewer extends AmvLevel1.Viewer
             camera.top = viewport.cy + hsize;
             camera.bottom = viewport.cy - hsize;
             camera.updateProjectionMatrix();
-            // console.log('viewport camera\n\t', JSON.stringify({l: camera.left, r: camera.right, b: camera.bottom, t: camera.top}), '\n\t', JSON.stringify(viewport));
             this.widget.reorient_objects();
             this.grid.reset(grid_full_reset);
             this.update_resolution();
@@ -161,7 +160,6 @@ export class Viewer extends AmvLevel1.Viewer
     public transform(transformation :Transformation) :void {
         if (transformation !== null && transformation !== undefined) {
             $.when(this.widget.objects_created && this.widget.initialization_completed).done(() => {
-                // console.log('before', JSON.stringify(this.viewport()), JSON.stringify(this.camera.up));
                 var m = new THREE.Matrix4();
                 m.elements[0] = transformation[0][0];
                 m.elements[1] = transformation[0][1];
@@ -639,11 +637,13 @@ export class Objects extends AmvLevel1.Objects
     public static object_default_size :number = 5; // in pixels, multiplied by this._object_scale
     public static label_default_size :number = 2; // in pixels, multiplied by this._object_scale
     private event_handlers :JQuery[] = [];
+    private pixels_per_unit :number; // store old value to speed up resize()
+    private labels_adjust_timeout :number = null;
 
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
         this._flip = false;
-        this.event_handlers.push(widget.on("map-resolution-changed:amv", (pixels_per_unit) => this.resize(pixels_per_unit)));
+        this.event_handlers.push(widget.on("map-resolution-changed:amv", (pixels_per_unit) => this.map_resolution_changed(pixels_per_unit)));
     }
 
     public destroy() {
@@ -692,10 +692,37 @@ export class Objects extends AmvLevel1.Objects
         return {min: units_per_pixel * 20, max: this.widget.size() * units_per_pixel};
     }
 
-    private resize(pixels_per_unit :number) :void {
-        // console.log('resize_with_labels', pixels_per_unit, Objects.object_default_size / pixels_per_unit);
-        this.objects.map(o => o.set_scale(Objects.object_default_size / pixels_per_unit, this.widget.viewer));
+    private map_resolution_changed(pixels_per_unit :number) :void {
+        this.labels_adjust_later();
+        this.resize(pixels_per_unit);
     }
+
+    private resize(pixels_per_unit :number) :void {
+        if (pixels_per_unit !== this.pixels_per_unit) {
+            var scale = Objects.object_default_size / pixels_per_unit;
+            // console.log('resize_with_labels', pixels_per_unit, Objects.object_default_size / pixels_per_unit);
+            this.objects.map(o => o.set_scale(scale));
+            this.pixels_per_unit = pixels_per_unit;
+        }
+    }
+
+    private labels_adjust_later() :void {
+        // operations on labels are very slow
+        if (this.widget.labels_shown || this.labels_adjust_timeout !== null) {
+            if (this.widget.labels_shown) {
+                this.widget.trigger("show-names:amv", false);
+            }
+            if (this.labels_adjust_timeout !== null) {
+                window.clearTimeout(this.labels_adjust_timeout);
+            }
+            this.labels_adjust_timeout = window.setTimeout(() => { this.labels_adjust_timeout = null; this.widget.trigger("show-names:amv", true)}, 100);
+        }
+    }
+
+    // private label_adjust() :void {
+    //     var viewer = this.widget.viewer;
+    //     this.objects.map(o => o.label_adjust_after_object_rescale(viewer));
+    // }
 
     // private resize_with_labels(pixels_per_unit :number) :void {
     //     // console.log('resize_with_labels', pixels_per_unit, Objects.object_default_size / pixels_per_unit);
