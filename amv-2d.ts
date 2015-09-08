@@ -708,14 +708,14 @@ export class Objects extends AmvLevel1.Objects
 
     private labels_adjust_later() :void {
         // operations on labels are very slow
-        if (this.widget.labels_shown || this.labels_adjust_timeout !== null) {
-            if (this.widget.labels_shown) {
+        if (this.widget.labels_shown.length > 0 || this.labels_adjust_timeout !== null) {
+            if (this.widget.labels_shown.length > 0) {
                 this.widget.trigger("show-names:amv", false);
             }
             if (this.labels_adjust_timeout !== null) {
                 window.clearTimeout(this.labels_adjust_timeout);
             }
-            this.labels_adjust_timeout = window.setTimeout(() => { this.labels_adjust_timeout = null; this.widget.trigger("show-names:amv", true)}, 100);
+            this.labels_adjust_timeout = window.setTimeout(() => { this.labels_adjust_timeout = null; this.widget.trigger("show-names:amv", true)}, 1000);
         }
     }
 

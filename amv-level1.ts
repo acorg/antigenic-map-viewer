@@ -22,7 +22,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     public viewer :Viewer;
     public objects :Objects;
     public scene :THREE.Scene;
-    public labels_shown :boolean = false;
+    public labels_shown :number[] = [];
 
     private renderer :THREE.WebGLRenderer;
     private _size :number; // canvas size
@@ -150,17 +150,8 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
                     }
                 });
                 console.log('' + indices.length, 'labels shown in', Date.now() - start);
-                if (show) {
-                    if (indices.length > 0) {
-                        this.labels_shown = true;
-                    }
-                }
-                else {
-                    // if all are being hidden or no labels shown in the result
-                    if (indices.length === this.objects.objects.length || !this.objects.objects.some((o) => o.label_shown())) {
-                        this.labels_shown = false;
-                    }
-                }
+                this.labels_shown = [];
+                this.objects.objects.map((o, i) => { if (o.label_shown()) { this.labels_shown.push(i); } });
             }
             else {
                 console.warn('showing names in 3D is not supported');
