@@ -317,10 +317,6 @@ export class Object extends THREE.Object3D
 
     public rescale(object_factor :number, label_factor :number, viewer :Viewer) :void {
         this.body.scale.multiplyScalar(object_factor);
-        if (this.label) {
-            this.label.set_scale(label_factor);
-            this.label_adjust_position(viewer);
-        }
     }
 
     public set_scale(object_scale :number) :void {

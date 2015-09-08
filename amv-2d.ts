@@ -692,6 +692,11 @@ export class Objects extends AmvLevel1.Objects
         return {min: units_per_pixel * 20, max: this.widget.size() * units_per_pixel};
     }
 
+    public object_scale(factor :number) :void {
+        this.labels_adjust_later();
+        super.object_scale(factor);
+    }
+
     private map_resolution_changed(pixels_per_unit :number) :void {
         this.labels_adjust_later();
         this.resize(pixels_per_unit);
