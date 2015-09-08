@@ -73,8 +73,8 @@ export class Application
             },
             // title: {"0": {text: ["2D map"]}}};
             title: {"0": {text: ["random " + num_points]}},
-            // transformation: <[[number, number], [number, number]]>[[0.3, 0.5], [0.5, 0.3]]
-            transformation: <[[number, number], [number, number]]>[[0, 1], [-1, 0]]
+            transformation: <[[number, number], [number, number]]>[[0.3, 0.5], [-0.5, 0.3]]
+            // transformation: <[[number, number], [number, number]]>[[0, 1], [-1, 0]]
         };
         for (var i = 1; i < num_points; ++i) {
             var coord = [random_in(layout_range), random_in(layout_range)];

@@ -86,7 +86,9 @@ export class Viewer extends AmvLevel1.Viewer
         if (this._initial_transformation !== null && this._initial_transformation !== undefined) {
             this.transform(this._initial_transformation);
         }
-        this.widget.reorient_objects();
+        else {
+            this.widget.reorient_objects();
+        }
         this.camera_update();
     }
 
@@ -128,7 +130,7 @@ export class Viewer extends AmvLevel1.Viewer
         }
     }
 
-    public viewport_move(offset :AmvManipulator.MouseMovement|THREE.Vector3, grid_full_reset :boolean = false) :void {
+    public viewport_move_by(offset :AmvManipulator.MouseMovement|THREE.Vector3, grid_full_reset :boolean = false) :void {
         var camera = <THREE.OrthographicCamera>this.camera;
         camera.left += offset.x;
         camera.right += offset.x;
@@ -136,6 +138,11 @@ export class Viewer extends AmvLevel1.Viewer
         camera.top += offset.y;
         camera.updateProjectionMatrix();
         this.grid.reset(grid_full_reset);
+    }
+
+    public viewport_move_to(new_center :THREE.Vector3, grid_full_reset :boolean = false) :void {
+        var camera = <THREE.OrthographicCamera>this.camera;
+        this.viewport({cx: new_center.x, cy: new_center.y, size: camera.right - camera.left}, grid_full_reset);
     }
 
     private update_resolution(widget_size? :number) :void {
@@ -152,20 +159,21 @@ export class Viewer extends AmvLevel1.Viewer
     }
 
     public transform(transformation :Transformation) :void {
-        if (transformation) {
+        if (transformation !== null && transformation !== undefined) {
             $.when(this.widget.objects_created && this.widget.initialization_completed).done(() => {
-                var viewport = this.viewport();
+                // console.log('before', JSON.stringify(this.viewport()), JSON.stringify(this.camera.up));
                 var m = new THREE.Matrix4();
                 m.elements[0] = transformation[0][0];
                 m.elements[1] = transformation[0][1];
                 m.elements[4] = transformation[1][0];
                 m.elements[5] = transformation[1][1];
                 var m4 = this.get_m4().multiply(m);
-                this._set_m4(m4);
+                var q = this._set_m4(m4);
+                this.widget.reorient_objects();
 
-                var viewport_center = new THREE.Vector3(viewport.cx, viewport.cy, 0);
-                viewport_center.applyMatrix4(m4).multiplyScalar(-1);
-                this.viewport_move(viewport_center);
+                var viewport = this.viewport();
+                var viewport_center = new THREE.Vector3(viewport.cx, viewport.cy, 0).applyQuaternion(q.inverse());
+                this.viewport_move_to(viewport_center);
             });
         }
     }
@@ -193,6 +201,7 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera.up.copy(Viewer.camera_up).applyQuaternion(q).normalize();
         (<Objects>this.widget.objects).flip_set(s.x < 0);
         this.camera_update();
+        return q;
     }
 
     public camera_update() :void {
@@ -209,7 +218,6 @@ export class Viewer extends AmvLevel1.Viewer
                 objects_viewport = {cx: center.x, cy: center.y, size: Math.ceil(this.widget.objects.diameter() + 0.5)};
             }
             this.viewport_initial = this.viewport(objects_viewport);
-            console.log('objects_updated viewport_initial', JSON.stringify(this.viewport_initial));
         }
         else {
             this.grid.reset(false);
@@ -248,7 +256,7 @@ export class Viewer extends AmvLevel1.Viewer
         case 116:               // t
             this.transform([[-1, 0], [0, 1]]);
             break;
-        case 113:               // r
+        case 112:               // p
             this.viewport_rotate(Math.PI / 2);
             break;
         case 45:               // -
