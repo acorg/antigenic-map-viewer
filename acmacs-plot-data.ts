@@ -34,8 +34,8 @@ export class PlotData
                 (<Amv2d.Viewer>widget.viewer).initial_transformation(this.transformation());
                 widget.viewer.reset();
             }
-            widget.viewer.camera_update();
             widget.viewer.objects_updated();
+            widget.viewer.camera_update();
         });
     }
 
