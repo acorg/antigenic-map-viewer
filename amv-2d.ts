@@ -409,75 +409,75 @@ class LabelMesh extends THREE.Mesh implements AmvLevel1.ObjectLabel
 
 // ----------------------------------------------------------------------
 
-class LabelSprite extends THREE.Sprite implements AmvLevel1.ObjectLabel
-{
-    private canvas :HTMLCanvasElement;
+// class LabelSprite extends THREE.Sprite implements AmvLevel1.ObjectLabel
+// {
+//     private canvas :HTMLCanvasElement;
 
-    constructor() {
-        this.canvas = document.createElement('canvas');
-        //canvas.width = canvas.height = 2;
+//     constructor() {
+//         this.canvas = document.createElement('canvas');
+//         //canvas.width = canvas.height = 2;
 
-        var texture = new THREE.Texture(this.canvas); //, undefined, undefined, undefined, undefined, THREE.NearestFilter);
-        texture.needsUpdate = true;
-        super(new THREE.SpriteMaterial({map: texture, transparent: true, useScreenCoordinates: false}));
-        //parent.add(sprite);
-        (<any>window).scene.add(this);
-        this.scale.multiplyScalar(0.2);
-    }
+//         var texture = new THREE.Texture(this.canvas); //, undefined, undefined, undefined, undefined, THREE.NearestFilter);
+//         texture.needsUpdate = true;
+//         super(new THREE.SpriteMaterial({map: texture, transparent: true, useScreenCoordinates: false}));
+//         //parent.add(sprite);
+//         (<any>window).scene.add(this);
+//         this.scale.multiplyScalar(0.2);
+//     }
 
-    public destroy() {
-    }
+//     public destroy() {
+//     }
 
-    public show(show :boolean) :void {
-        // this.visible = show;
-    }
+//     public show(show :boolean) :void {
+//         // this.visible = show;
+//     }
 
-    public shown() :boolean {
-        return true;
-    }
+//     public shown() :boolean {
+//         return true;
+//     }
 
-    public set_scale(scale :number) :void {
-        // this.scale.multiplyScalar(scale);
-    }
+//     public set_scale(scale :number) :void {
+//         // this.scale.multiplyScalar(scale);
+//     }
 
-    public set_text(text :string) :void {
-        var font_size = 16;
-        var context = <CanvasRenderingContext2D>this.canvas.getContext('2d');
+//     public set_text(text :string) :void {
+//         var font_size = 16;
+//         var context = <CanvasRenderingContext2D>this.canvas.getContext('2d');
 
-        context.font = '' + font_size + 'px Arial';
+//         context.font = '' + font_size + 'px Arial';
 
-        this.canvas.width = this.canvas.height = Math.pow(2, Math.floor(Math.log(font_size * text.length * 0.7) / Math.log(2)) + 1);
-        console.log('ca', this.canvas.width);
-        context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+//         this.canvas.width = this.canvas.height = Math.pow(2, Math.floor(Math.log(font_size * text.length * 0.7) / Math.log(2)) + 1);
+//         console.log('ca', this.canvas.width);
+//         context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // context.fillStyle = "#BBBBBB";
-        // context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+//         // context.fillStyle = "#BBBBBB";
+//         // context.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        context.fillStyle = "black";
-        context.fillText(text, 0, font_size);
+//         context.fillStyle = "black";
+//         context.fillText(text, 0, font_size);
 
-        var scale = 0.05 * text.length;
-        this.scale.set(scale, scale, 1);
-    }
+//         var scale = 0.05 * text.length;
+//         this.scale.set(scale, scale, 1);
+//     }
 
-    public set_position(x :number, y :number) :void {
-    }
+//     public set_position(x :number, y :number) :void {
+//     }
 
-    public adjust_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
-        // console.log('canv', this.canvas.height, this.scale.y, this.canvas.height * this.scale.y / 2);
-        this.position.set(object_position.x, object_position.y - body_radius * object_scale.y - this.scale.y / 2, object_position.z);
-    }
+//     public adjust_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
+//         // console.log('canv', this.canvas.height, this.scale.y, this.canvas.height * this.scale.y / 2);
+//         this.position.set(object_position.x, object_position.y - body_radius * object_scale.y - this.scale.y / 2, object_position.z);
+//     }
 
-    public set_size(size :number) :void {
-        if (!size) {
-            size = Objects.label_default_size;
-        }
-        // this.scale.set(size, size, 1);
-    }
+//     public set_size(size :number) :void {
+//         if (!size) {
+//             size = Objects.label_default_size;
+//         }
+//         // this.scale.set(size, size, 1);
+//     }
 
-    public set_color(color :number|string) :void {
-    }
-}
+//     public set_color(color :number|string) :void {
+//     }
+// }
 
 // ----------------------------------------------------------------------
 

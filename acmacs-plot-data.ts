@@ -190,22 +190,23 @@ export class PlotData
     private make_names(point_info :any) :any {
         var r :any = {};
         if (point_info.name !== null && point_info.name !== undefined) {
-            var n = point_info.name;
-            if (n.isolation_number) {
-                r.full = [n.virus_type || '', n.host || '', n.location || '', n.isolation_number || '', n.year || ''].join('/')
-                r.short = [(n.virus_type && n.virus_type[0]) || '', (n.host && n.host !== "HUMAN") ? n.host : '', n.location || '', n.isolation_number || '', n.year || ''].filter(function(e) {return e !== '';}).join('/')
-                r.abbreviated = [(n.virus_type && n.virus_type[0]) || '', (n.host && n.host !== "HUMAN") ? n.host.substr(0, 2) : '', this.make_location_abbreviation(point_info), n.isolation_number || '', (n.year && n.year.substr(2)) || ''].filter(function(e) {return e !== '';}).join('/')
-            }
-            else if (n.name) {
-                if (n.cdc_abbreviation) {
-                    r.full = n.cdc_abbreviation + ' ' + n.name;
-                }
-                else {
-                    r.full = n.name
-                }
-                r.short = r.full;
-                r.abbreviated = r.full;
-            }
+            // var n = point_info.name;
+            // if (n.isolation_number) {
+            //     r.full = [n.virus_type || '', n.host || '', n.location || '', n.isolation_number || '', n.year || ''].join('/')
+            //     r.short = [(n.virus_type && n.virus_type[0]) || '', (n.host && n.host !== "HUMAN") ? n.host : '', n.location || '', n.isolation_number || '', n.year || ''].filter(function(e) {return e !== '';}).join('/')
+            //     r.abbreviated = [(n.virus_type && n.virus_type[0]) || '', (n.host && n.host !== "HUMAN") ? n.host.substr(0, 2) : '', this.make_location_abbreviation(point_info), n.isolation_number || '', (n.year && n.year.substr(2)) || ''].filter(function(e) {return e !== '';}).join('/')
+            // }
+            // else if (n.name) {
+                // if (n.cdc_abbreviation) {
+                //     r.full = n.cdc_abbreviation + ' ' + n.name;
+                // }
+                // else {
+                //     r.full = n.name
+                // }
+            r.full = point_info.name
+            r.short = r.full;
+            r.abbreviated = r.full;
+            // }
             if (point_info.serum_id) {
                 r.full += ' ' + point_info.serum_id;
                 r.serum_id = point_info.serum_id;
