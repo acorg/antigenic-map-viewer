@@ -62,7 +62,7 @@ export class PopupMenu
         var offset = parent.offset();
         this.node.css({left: offset.left, top: offset.top});
         this.node.show();
-        this.node.menu({select: (e :JQueryEventObject, ui :any) => this.clicked(ui.item)});
+        this.node.menu("select", (e :JQueryEventObject, ui :any) => this.clicked(ui.item));
         this.preprocess_items();
     }
 

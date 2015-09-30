@@ -470,7 +470,7 @@ export interface MaterialClass
 
 export class ObjectFactory
 {
-    protected material :MaterialClass;
+    protected material :any; // MaterialClass;
     protected geometries :any;  // "shape-[-outline-<outline_width>]": THREE.Geometry
 
     constructor() {
