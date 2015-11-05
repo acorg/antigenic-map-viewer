@@ -101,7 +101,7 @@ $(BUILD)/require.d.ts: | $(BUILD)
 
 $(DIST)/three.js: | $(BUILD) $(DIST)
 	cd $(BUILD) && bower install threejs
-	ln -sf $(call RELPATH,$(BUILD)/bower_components/threejs/build,$(dir $@))/three.min.js $@
+	ln -sf $(call RELPATH,$(BUILD)/bower_components/three.js/build,$(dir $@))/three.min.js $@
 
 $(BUILD)/three.d.ts: | $(BUILD)
 	cd $(BUILD) && tsd query three --action install
