@@ -1,4 +1,4 @@
-/// <reference path="build/jquery" />
+/// <reference path="build/typings/jquery" />
 
 import AmvLevel1 = require("amv-level1");
 

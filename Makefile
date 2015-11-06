@@ -18,17 +18,28 @@ AMV_LESS = acmacs-toolkit.less amv.less
 AMV_TYPINGS = antigenic-map-viewer.d.ts
 AMV_FONTS = fonts/helvetiker_regular.typeface.js fonts/helvetiker_bold.typeface.js
 
-LIB_JS = jquery jquery.mousewheel jquery-ui require three css json
+# LIB_JS = jquery jquery.mousewheel jquery-ui require three css json
 # LIB_TYPINGS = jquery jqueryui require three
+
+LIB_JS = jquery threejs require
+
+# ----------------------------------------------------------------------
+
+TARGET_JS = $(TS_TO_JS) $(patsubst %.js,$(DIST)/%.js,$(filter %.js,$(AMV))) $(patsubst %.json,$(DIST)/%.json,$(filter %.json,$(AMV))) $(patsubst fonts/%.js,$(DIST)/%.js,$(AMV_FONTS))
+  # $(patsubst %,$(DIST)/%.js,$(LIB_JS))
+TARGET_CSS = $(patsubst %.less,$(DIST)/%.css,$(filter %.less,$(AMV)))
+TARGET_HTML = $(patsubst %,$(DIST)/%,$(filter %.html,$(AMV)))
+
+# BUILD_TYPINGS = $(patsubst %,$(BUILD)/%.d.ts,$(LIB_TYPINGS)) $(AMV_TYPINGS)
 
 # ----------------------------------------------------------------------
 
 BUILD = build
 DIST = dist
 
-all: $(TARGET_JS) $(TARGET_CSS) $(TARGET_HTML)
-	@echo TARGET_JS $(TARGET_JS)
-	@echo $(DIST)/acmacs-plot-data.js
+all: ${TARGET_JS} $(TARGET_CSS) $(TARGET_HTML)
+	@echo rebuilt $?
+	@echo all $^
 
 # ----------------------------------------------------------------------
 
@@ -42,19 +53,11 @@ include Makefile.eupa
 # ----------------------------------------------------------------------
 
 TS_TO_JS = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV)))
-TARGET_JS = $(TS_TO_JS) $(patsubst %.js,$(DIST)/%.js,$(filter %.js,$(AMV))) $(patsubst %.json,$(DIST)/%.json,$(filter %.json,$(AMV))) $(patsubst fonts/%.js,$(DIST)/%.js,$(AMV_FONTS)) $(patsubst %,$(DIST)/%.js,$(LIB_JS))
-TARGET_CSS = $(patsubst %.less,$(DIST)/%.css,$(filter %.less,$(AMV)))
-TARGET_HTML = $(patsubst %,$(DIST)/%,$(filter %.html,$(AMV)))
-
-# BUILD_TYPINGS = $(patsubst %,$(BUILD)/%.d.ts,$(LIB_TYPINGS)) $(AMV_TYPINGS)
 
 INSTALL_FILES = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV_LIB))) $(AMV_LESS) $(patsubst fonts/%.js,$(DIST)/%.js,$(AMV_FONTS))
 
 VERSION = $(shell cat VERSION.txt)
 PKG_CONFIG_PATH = $(firstword $(subst :, ,$(shell pkg-config --variable pc_path pkg-config)))
-
-# ----------------------------------------------------------------------
-
 
 # ----------------------------------------------------------------------
 
@@ -137,7 +140,8 @@ RELPATH = $(shell python -c "import os, sys; sys.stdout.write(os.path.relpath('$
 
 # ----------------------------------------------------------------------
 
-$(TS_TO_JS): $(DIST)/%.js: %.ts | $(TSC) $(DIST)
+# $(TS_TO_JS): $(DIST)/%.js: %.ts | $(TSC) $(DIST) $(LIB_JS)
+$(DIST)/%.js: %.ts | $(TSC) $(DIST) $(LIB_JS)
 	$(TSC) --outDir $(DIST) --removeComments -m amd -t ES5 --noEmitOnError --noImplicitAny $<
 
 $(DIST)/%.js: %.js | $(DIST)
@@ -149,7 +153,7 @@ $(DIST)/%.js: fonts/%.js | $(DIST)
 $(DIST)/%.json: %.json | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@
 
-$(DIST)/%.css: %.less $(AMV_LESS) | $(DIST)
+$(DIST)/%.css: %.less $(AMV_LESS) | $(DIST) $(LESSC)
 	$(LESSC) $< $@
 
 # $(DIST)/%.min.map: build/js/%.min.map

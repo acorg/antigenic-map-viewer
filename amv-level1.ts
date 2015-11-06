@@ -1,5 +1,5 @@
-/// <reference path="build/jquery" />
-/// <reference path="build/three" />
+/// <reference path="build/typings/jquery" />
+/// <reference path="build/typings/three" />
 
 /// <reference path="antigenic-map-viewer.d.ts" />
 

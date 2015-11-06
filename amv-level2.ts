@@ -1,4 +1,4 @@
-/// <reference path="build/jquery" />
+/// <reference path="build/typings/jquery" />
 
 /// <reference path="antigenic-map-viewer.d.ts" />
 

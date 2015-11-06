@@ -1,5 +1,5 @@
-/// <reference path="build/jquery" />
-/// <reference path="build/jqueryui" />
+/// <reference path="build/typings/jquery" />
+/// <reference path="build/typings/jqueryui" />
 
 // ----------------------------------------------------------------------
 
