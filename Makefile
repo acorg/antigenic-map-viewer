@@ -21,7 +21,7 @@ AMV_FONTS = fonts/helvetiker_regular.typeface.js fonts/helvetiker_bold.typeface.
 # LIB_JS = jquery jquery.mousewheel jquery-ui require three css json
 # LIB_TYPINGS = jquery jqueryui require three
 
-LIB_JS = jquery threejs require
+LIB_JS = jquery jquery-ui threejs require
 
 # ----------------------------------------------------------------------
 
