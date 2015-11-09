@@ -53,7 +53,12 @@ all: $(TARGET_JS) $(TARGET_CSS) $(TARGET_HTML)
 EUPA_ROOT = $(BUILD)
 EUPA_JS = $(DIST)
 
-include Makefile.eupa
+ifeq ($(findstring clean,$(MAKECMDGOALS)),)
+ifeq ($(wildcard eupa/Makefile.eupa),)
+  $(shell git clone https://github.com/skepner/eupa.git)
+endif
+-include eupa/Makefile.eupa
+endif
 
 # TYPINGS = $(EUPA_DTS)
 
@@ -75,7 +80,7 @@ clean:
 	rm -rf $(DIST)
 
 distclean: clean
-	rm -rf $(BUILD)
+	rm -rf $(BUILD) eupa
 
 # ----------------------------------------------------------------------
 
