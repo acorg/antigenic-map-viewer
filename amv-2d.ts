@@ -330,7 +330,7 @@ class Grid
             lines_geometry.vertices.push(new THREE.Vector3(camera.left,  offset, 0));
             lines_geometry.vertices.push(new THREE.Vector3(camera.right, offset, 0));
         }
-        this.lines = new THREE.Line(lines_geometry, new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.2, transparent: true}), THREE.LinePieces)
+        this.lines = new THREE.LineSegments(lines_geometry, new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.2, transparent: true}))
         this.grid.add(this.lines)
     }
 

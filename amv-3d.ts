@@ -154,7 +154,7 @@ class Grid
         this.size = Math.ceil(this.viewer.widget.objects.diameter() * 3.0);
         var lines_geometry = new THREE.Geometry();
         Grid.components.map((component_order) => this.add_vertice(component_order, lines_geometry));
-        this.lines = new THREE.Line(lines_geometry, new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.2, transparent: true}), THREE.LinePieces)
+        this.lines = new THREE.LineSegments(lines_geometry, new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.2, transparent: true}))
         this.grid.add(this.lines)
     }
 
