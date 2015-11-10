@@ -49,6 +49,7 @@ export class PopupMenu
                 li.data({event: item.event, eventNode: item.eventNode, eventData: item.eventData});
             }
         }
+        this.node.menu();
     }
 
     public destroy() :void {
@@ -61,8 +62,8 @@ export class PopupMenu
         this.back.show();
         var offset = parent.offset();
         this.node.css({left: offset.left, top: offset.top});
-        this.node.show();
         this.node.menu("select", (e :JQueryEventObject, ui :any) => this.clicked(ui.item));
+        this.node.show();
         this.preprocess_items();
     }
 
