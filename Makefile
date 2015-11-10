@@ -18,7 +18,7 @@ AMV_LESS = acmacs-toolkit.less amv.less
 AMV_TYPINGS = antigenic-map-viewer.d.ts
 AMV_FONTS = fonts/helvetiker_regular.typeface.js fonts/helvetiker_bold.typeface.js
 
-LIB_JS = jquery jquery-ui threejs require
+LIB_JS = jquery jquery-ui three.js require.js
 
 # ----------------------------------------------------------------------
 
