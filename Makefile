@@ -50,8 +50,8 @@ all: $(TARGET_JS) $(TARGET_CSS) $(TARGET_HTML)
 
 # ----------------------------------------------------------------------
 
-EUPA_ROOT = $(BUILD)
-EUPA_JS = $(DIST)
+EUPA_ROOT ?= $(BUILD)
+EUPA_JS ?= $(DIST)
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 ifeq ($(wildcard eupa/Makefile.eupa),)
