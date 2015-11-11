@@ -1,14 +1,10 @@
-/// <reference path="build/typings/jquery" />
-/// <reference path="build/typings/three" />
-
-/// <reference path="antigenic-map-viewer.d.ts" />
+"use strict";
 
 // ----------------------------------------------------------------------
 // Level 1 (the most inner) map widget
 // ----------------------------------------------------------------------
 
-"use strict";
-
+import TypingsReferences = require("typings-references");
 import AmvUtils = require("amv-utils");
 import Amv3d = require("amv-3d");
 import AmvManipulator = require("amv-manipulator");
@@ -330,11 +326,12 @@ export class Object extends THREE.Object3D
     }
 
     public shape() :string {
-        var shape = ((this.body.geometry && this.body.geometry.type) || "circle").toLowerCase().replace('geometry', '');
+        var geometry = <THREE.Geometry>this.body.geometry;
+        var shape = ((geometry && geometry.type) || "circle").toLowerCase().replace('geometry', '');
         if (shape === "shape") {
             // 2d box or triangle
-            if (this.body.geometry.vertices) {
-                if (this.body.geometry.vertices.length === 3)
+            if (geometry.vertices) {
+                if (geometry.vertices.length === 3)
                     shape = "triangle";
                 else
                     shape = "box";

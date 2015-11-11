@@ -8,9 +8,7 @@ PREFIX = /tmp
 
 MAKEFLAGS = -w
 
-AMV = $(AMV_LIB) $(AMV_TEST)
-
-AMV_TEST = amv-config.js test-3d.ts test.less test-3d.json test-2d.ts test-3d.html #test-2d.html
+AMV_TEST = amv-config.js test-3d.ts test.less test-3d.json test-2d.ts test-3d.html test-2d.html
 AMV_LIB = acmacs-plot-data.ts amv-level1.ts amv-level2.ts \
 	  amv-manipulator.ts amv-manipulator-2d.ts amv-manipulator-3d.ts amv-2d.ts amv-3d.ts \
 	  amv-utils.ts acmacs-toolkit.ts amv-state.ts
@@ -19,6 +17,8 @@ AMV_TYPINGS = antigenic-map-viewer.d.ts
 AMV_FONTS = fonts/helvetiker_regular.typeface.js fonts/helvetiker_bold.typeface.js
 
 LIB_JS = jquery jquery-ui three.js require.js
+
+AMV = $(AMV_LIB) $(AMV_TEST)
 
 # ----------------------------------------------------------------------
 
@@ -52,13 +52,12 @@ all: $(TARGET_JS) $(TARGET_CSS) $(TARGET_HTML)
 
 EUPA_MAKEFILE ?= eupa/Makefile.eupa
 EUPA_ROOT ?= $(BUILD)
-EUPA_JS ?= $(DIST)
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 ifeq ($(wildcard $(EUPA_MAKEFILE)),)
   $(shell git clone https://github.com/skepner/eupa.git)
 endif
--include $(EUPA_MAKEFILE)
+include $(EUPA_MAKEFILE)
 endif
 
 # TYPINGS = $(EUPA_DTS)
@@ -75,7 +74,7 @@ install: all
 	/usr/bin/install -pv -m 0644 $(INSTALL_FILES) $(PREFIX)/share/antigenic-map-viewer
 	/usr/bin/install -d -m 0755 $(PREFIX)/share/antigenic-map-viewer/typings
 	/usr/bin/install -pv -m 0644 $(AMV_TYPINGS) $(PREFIX)/share/antigenic-map-viewer/typings
-	/usr/bin/awk "{ sub(/%PREFIX%/, \"$(PREFIX)\"); sub(/%VERSION%/, \"$(VERSION)\"); print }" antigenic-map-viewer.pc >$(PKG_CONFIG_PATH)/antigenic-map-viewer.pc
+	@# /usr/bin/awk "{ sub(/%PREFIX%/, \"$(PREFIX)\"); sub(/%VERSION%/, \"$(VERSION)\"); print }" antigenic-map-viewer.pc >$(PKG_CONFIG_PATH)/antigenic-map-viewer.pc
 
 clean:
 	rm -rf $(DIST)
@@ -95,6 +94,9 @@ $(DIST)/%.js: %.ts | $(TSC) $(DIST) $(LIB_JS)
 $(DIST)/%.js: %.js | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@
 
+$(DIST)/%.js: %.js.in | $(DIST)
+	sed 's/{REQUIRE-JQUERY-PATH}/..\/build\/js/' $^ >$@
+
 $(DIST)/%.js: fonts/%.js | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$(notdir $^) $@
 
@@ -113,3 +115,6 @@ $(DIST)/%.html: %.html | $(DIST)
 	cp $^ $@
 
 # ----------------------------------------------------------------------
+
+$(DIST):
+	$(call make_target_dir,$(DIST),DIST)

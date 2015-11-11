@@ -1,8 +1,6 @@
-/// <reference path="build/typings/jquery" />
-
-/// <reference path="antigenic-map-viewer.d.ts" />
-
 "use strict";
+
+import TypingsReferences = require("typings-references");
 
 import AmvUtils = require("amv-utils");
 import AcmacsPlotData = require("acmacs-plot-data");

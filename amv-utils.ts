@@ -1,5 +1,6 @@
-/// <reference path="build/typings/jquery" />
-/// <reference path="build/typings/require" />
+"use strict";
+
+import TypingsReferences = require("typings-references");
 
 // ----------------------------------------------------------------------
 

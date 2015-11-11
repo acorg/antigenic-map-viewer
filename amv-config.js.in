@@ -1,0 +1,18 @@
+require.config({
+    paths: {
+        'jquery': '{REQUIRE-JQUERY-PATH}/jquery',
+        'jquery-ui': '{REQUIRE-JQUERY-PATH}/jquery-ui',
+        'jquery-mousewheel': '{REQUIRE-JQUERY-PATH}/jquery.mousewheel',
+        'three':  '{REQUIRE-JQUERY-PATH}/three',
+        'css': '{REQUIRE-JQUERY-PATH}/css',
+        'json': '{REQUIRE-JQUERY-PATH}/json',
+        'text': '{REQUIRE-JQUERY-PATH}/text'
+    }
+});
+
+// Chrome (40) requires loading libraries one by one, otherwise bacon does not add its function to $
+require(["jquery", "three"], function() {
+    require(["jquery-mousewheel", "jquery-ui", "css!jquery-ui"], function () {
+        require([AMV_MAIN], function(main) { (new main.Application()).run(); });
+    });
+});

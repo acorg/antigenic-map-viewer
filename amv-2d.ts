@@ -1,7 +1,6 @@
-/// <reference path="build/typings/jquery" />
-/// <reference path="build/typings/three" />
+"use strict";
 
-/// <reference path="antigenic-map-viewer.d.ts" />
+import TypingsReferences = require("typings-references");
 
 import AmvUtils = require("amv-utils");
 import AmvLevel1 = require("amv-level1");
@@ -775,7 +774,7 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
     // adds to this.geometries
     protected make_circle() :void {
         this.geometries["circle"] = this.geometries["sphere"] = new THREE.CircleGeometry(ObjectFactory.geometry_size / 2, this.ball_segments);
-        var circle_curve = new THREE.EllipseCurve(0, 0, ObjectFactory.geometry_size / 2, ObjectFactory.geometry_size / 2, 0, Math.PI * 2, false);
+        var circle_curve = new THREE.EllipseCurve(0, 0, ObjectFactory.geometry_size / 2, ObjectFactory.geometry_size / 2, 0, Math.PI * 2, false, 0);
         var circle_path = new THREE.Path(circle_curve.getPoints(this.ball_segments));
         this.geometries["circle-outline"] = this.geometries["sphere-outline"] = circle_path.createPointsGeometry(this.ball_segments);
     }

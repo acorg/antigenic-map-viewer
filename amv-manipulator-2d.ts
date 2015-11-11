@@ -1,5 +1,6 @@
-/// <reference path="build/typings/jquery" />
-/// <reference path="build/typings/three" />
+"use strict";
+
+import TypingsReferences = require("typings-references");
 
 import AmvLevel1 = require("amv-level1");
 import AmvManipulator = require("amv-manipulator");

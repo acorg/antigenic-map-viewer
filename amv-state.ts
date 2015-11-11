@@ -1,7 +1,6 @@
-/// <reference path="build/typings/jquery" />
-/// <reference path="build/typings/three" />
+"use strict";
 
-/// <reference path="antigenic-map-viewer.d.ts" />
+import TypingsReferences = require("typings-references");
 
 "use strict";
 

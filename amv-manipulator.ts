@@ -1,4 +1,6 @@
-/// <reference path="build/typings/jquery" />
+"use strict";
+
+import TypingsReferences = require("typings-references");
 
 import AmvLevel1 = require("amv-level1");
 
