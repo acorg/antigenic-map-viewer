@@ -50,14 +50,15 @@ all: $(TARGET_JS) $(TARGET_CSS) $(TARGET_HTML)
 
 # ----------------------------------------------------------------------
 
+EUPA_MAKEFILE ?= eupa/Makefile.eupa
 EUPA_ROOT ?= $(BUILD)
 EUPA_JS ?= $(DIST)
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-ifeq ($(wildcard eupa/Makefile.eupa),)
+ifeq ($(wildcard $(EUPA_MAKEFILE)),)
   $(shell git clone https://github.com/skepner/eupa.git)
 endif
--include eupa/Makefile.eupa
+-include $(EUPA_MAKEFILE)
 endif
 
 # TYPINGS = $(EUPA_DTS)
