@@ -4,7 +4,7 @@
 // Level 1 (the most inner) map widget
 // ----------------------------------------------------------------------
 
-import TypingsReferences = require("typings-references");
+import TypingsReferences = require("build/typings-references");
 import AmvUtils = require("amv-utils");
 import Amv3d = require("amv-3d");
 import AmvManipulator = require("amv-manipulator");

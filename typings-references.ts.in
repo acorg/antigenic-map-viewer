@@ -1,0 +1,11 @@
+/// <reference path="{TYPINGS-DIR}/jquery" />
+/// <reference path="{TYPINGS-DIR}/jqueryui" />
+/// <reference path="{TYPINGS-DIR}/require" />
+/// <reference path="{TYPINGS-DIR}/three" />
+
+/// <reference path="../antigenic-map-viewer.d.ts" />
+
+// ----------------------------------------------------------------------
+
+var this_is_module = true;
+export = this_is_module;

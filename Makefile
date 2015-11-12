@@ -1,4 +1,5 @@
 # -*- Makefile -*-
+# Eugene Skepner 2015
 # ----------------------------------------------------------------------
 
 # override in command line
@@ -51,7 +52,8 @@ all: $(TARGET_JS) $(TARGET_CSS) $(TARGET_HTML)
 # ----------------------------------------------------------------------
 
 EUPA_MAKEFILE ?= eupa/Makefile.eupa
-EUPA_ROOT ?= $(BUILD)
+EUPA_DIST ?= dist
+EUPA_BUILD ?= build
 
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 ifeq ($(wildcard $(EUPA_MAKEFILE)),)
@@ -60,7 +62,7 @@ endif
 include $(EUPA_MAKEFILE)
 endif
 
-# TYPINGS = $(EUPA_DTS)
+TYPINGS_DIR = $(EUPA_BUILD)
 
 # ----------------------------------------------------------------------
 
@@ -88,14 +90,17 @@ RELPATH = $(shell python -c "import os, sys; sys.stdout.write(os.path.relpath('$
 
 # ----------------------------------------------------------------------
 
-$(DIST)/%.js: %.ts | $(TSC) $(DIST) $(LIB_JS)
+$(BUILD)/typings-references.ts: typings-references.ts.in | $(BUILD)
+	sed 's/{TYPINGS-DIR}/$(subst /,\/,$(TYPINGS_DIR))/g' $< >$@
+
+$(DIST)/%.js: %.ts $(BUILD)/typings-references.ts | $(TSC) $(DIST) $(LIB_JS)
 	$(TSC) --outDir $(DIST) --removeComments -m amd -t ES5 --noEmitOnError --noImplicitAny $<
 
 $(DIST)/%.js: %.js | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@
 
 $(DIST)/%.js: %.js.in | $(DIST)
-	sed 's/{REQUIRE-JQUERY-PATH}/..\/build\/js/' $^ >$@
+	sed 's/{REQUIRE-JQUERY-PATH}/./' $^ >$@
 
 $(DIST)/%.js: fonts/%.js | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$(notdir $^) $@
@@ -118,3 +123,6 @@ $(DIST)/%.html: %.html | $(DIST)
 
 $(DIST):
 	$(call make_target_dir,$(DIST),DIST)
+
+$(BUILD):
+	$(call make_target_dir,$(BUILD),BUILD)
