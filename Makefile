@@ -2,14 +2,16 @@
 # Eugene Skepner 2015
 # ----------------------------------------------------------------------
 
+MAKEFLAGS = -w
+
 # override in command line
+ifneq ($(findstring install,$(MAKECMDGOALS)),)
 ifeq ($(ANTIGENIC_MAP_VIEWER_INSTALL),)
-  $(error ANTIGENIC_MAP_VIEWER_INSTALL is not set)
+  $(error ANTIGENIC_MAP_VIEWER_INSTALL not set)
+endif
 endif
 
 # ----------------------------------------------------------------------
-
-MAKEFLAGS = -w
 
 AMV_TEST = amv-config.js test-3d.ts test.less test-3d.json test-2d.ts test-3d.html test-2d.html
 AMV_LIB = acmacs-plot-data.ts amv-level1.ts amv-level2.ts \
@@ -77,10 +79,6 @@ install: all
 	/usr/bin/install -d -m 0755 $(ANTIGENIC_MAP_VIEWER_INSTALL)
 	/usr/bin/install -pv -m 0644 $(INSTALL_FILES) $(AMV_TYPINGS) $(ANTIGENIC_MAP_VIEWER_INSTALL)
 
-#	/usr/bin/install -d -m 0755 $(ANTIGENIC_MAP_VIEWER_INSTALL)/typings
-#	/usr/bin/install -pv -m 0644 $(AMV_TYPINGS) $(ANTIGENIC_MAP_VIEWER_INSTALL)/typings
-#	/usr/bin/awk "{ sub(/%PREFIX%/, \"$(PREFIX)\"); sub(/%VERSION%/, \"$(VERSION)\"); print }" antigenic-map-viewer.pc >$(PKG_CONFIG_PATH)/antigenic-map-viewer.pc
-
 clean:
 	rm -rf $(DIST)
 
@@ -97,7 +95,7 @@ $(BUILD)/typings-references.ts: typings-references.ts.in | $(BUILD)
 	sed 's/{TYPINGS-DIR}/$(subst /,\/,$(TYPINGS_DIR))/g' $< >$@
 
 $(DIST)/%.js: %.ts $(BUILD)/typings-references.ts | $(TSC) $(DIST) $(LIB_JS)
-	$(TSC) --outDir $(DIST) --removeComments -m amd -t ES5 --noEmitOnError --noImplicitAny $<
+	$(TSC_RUN) --outDir $(DIST) --sourceMap $<
 
 $(DIST)/%.js: %.js | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@
@@ -113,10 +111,6 @@ $(DIST)/%.json: %.json | $(DIST)
 
 $(DIST)/%.css: %.less $(AMV_LESS) | $(DIST) $(LESSC)
 	$(LESSC) $< $@
-
-# $(DIST)/%.min.map: build/js/%.min.map
-#	@mkdir -p $(dir $@)
-#	ln -s ../$^ $@
 
 # Have to copy html to dist, Firefox does not like symbolic links
 $(DIST)/%.html: %.html | $(DIST)
