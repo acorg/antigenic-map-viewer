@@ -78,7 +78,7 @@ endif
 
 install: all
 	/usr/bin/install -d -m 0755 $(ANTIGENIC_MAP_VIEWER_INSTALL)
-	/usr/bin/install -pvC -m 0644 $(INSTALL_FILES) $(AMV_TYPINGS) $(ANTIGENIC_MAP_VIEWER_INSTALL)
+	/usr/bin/install -vC -m 0644 $(INSTALL_FILES) $(AMV_TYPINGS) $(ANTIGENIC_MAP_VIEWER_INSTALL)
 
 clean:
 	rm -rf $(DIST)
