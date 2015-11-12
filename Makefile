@@ -3,7 +3,9 @@
 # ----------------------------------------------------------------------
 
 # override in command line
-PREFIX = /tmp
+ifeq ($(ANTIGENIC_MAP_VIEWER_INSTALL),)
+  $(error ANTIGENIC_MAP_VIEWER_INSTALL is not set)
+endif
 
 # ----------------------------------------------------------------------
 
@@ -72,11 +74,12 @@ ifeq ($(shell uname -s),Darwin)
 endif
 
 install: all
-	/usr/bin/install -d -m 0755 $(PREFIX)/share/antigenic-map-viewer
-	/usr/bin/install -pv -m 0644 $(INSTALL_FILES) $(PREFIX)/share/antigenic-map-viewer
-	/usr/bin/install -d -m 0755 $(PREFIX)/share/antigenic-map-viewer/typings
-	/usr/bin/install -pv -m 0644 $(AMV_TYPINGS) $(PREFIX)/share/antigenic-map-viewer/typings
-	@# /usr/bin/awk "{ sub(/%PREFIX%/, \"$(PREFIX)\"); sub(/%VERSION%/, \"$(VERSION)\"); print }" antigenic-map-viewer.pc >$(PKG_CONFIG_PATH)/antigenic-map-viewer.pc
+	/usr/bin/install -d -m 0755 $(ANTIGENIC_MAP_VIEWER_INSTALL)
+	/usr/bin/install -pv -m 0644 $(INSTALL_FILES) $(AMV_TYPINGS) $(ANTIGENIC_MAP_VIEWER_INSTALL)
+
+#	/usr/bin/install -d -m 0755 $(ANTIGENIC_MAP_VIEWER_INSTALL)/typings
+#	/usr/bin/install -pv -m 0644 $(AMV_TYPINGS) $(ANTIGENIC_MAP_VIEWER_INSTALL)/typings
+#	/usr/bin/awk "{ sub(/%PREFIX%/, \"$(PREFIX)\"); sub(/%VERSION%/, \"$(VERSION)\"); print }" antigenic-map-viewer.pc >$(PKG_CONFIG_PATH)/antigenic-map-viewer.pc
 
 clean:
 	rm -rf $(DIST)
