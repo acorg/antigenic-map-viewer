@@ -38,7 +38,9 @@ TARGET_HTML = $(patsubst %,$(DIST)/%,$(filter %.html,$(AMV)))
 
 TS_TO_JS = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV)))
 
-INSTALL_FILES = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV_LIB))) $(AMV_LESS) $(patsubst fonts/%.js,$(DIST)/%.js,$(AMV_FONTS))
+INSTALL_FILES = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV_LIB))) \
+		$(patsubst %.ts,$(DIST)/%.js.map,$(filter %.ts,$(AMV_LIB))) \
+		$(AMV_LESS) $(patsubst fonts/%.js,$(DIST)/%.js,$(AMV_FONTS))
 
 VERSION = $(shell cat VERSION.txt)
 PKG_CONFIG_PATH = $(firstword $(subst :, ,$(shell pkg-config --variable pc_path pkg-config)))
@@ -77,7 +79,7 @@ endif
 
 install: all
 	/usr/bin/install -d -m 0755 $(ANTIGENIC_MAP_VIEWER_INSTALL)
-	/usr/bin/install -pv -m 0644 $(INSTALL_FILES) $(AMV_TYPINGS) $(ANTIGENIC_MAP_VIEWER_INSTALL)
+	/usr/bin/install -pvC -m 0644 $(INSTALL_FILES) $(AMV_TYPINGS) $(ANTIGENIC_MAP_VIEWER_INSTALL)
 
 clean:
 	rm -rf $(DIST)
