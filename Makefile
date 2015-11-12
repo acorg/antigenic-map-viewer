@@ -39,7 +39,6 @@ TARGET_HTML = $(patsubst %,$(DIST)/%,$(filter %.html,$(AMV)))
 TS_TO_JS = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV)))
 
 INSTALL_FILES = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV_LIB))) \
-		$(patsubst %.ts,$(DIST)/%.js.map,$(filter %.ts,$(AMV_LIB))) \
 		$(AMV_LESS) $(patsubst fonts/%.js,$(DIST)/%.js,$(AMV_FONTS))
 
 VERSION = $(shell cat VERSION.txt)
@@ -97,7 +96,7 @@ $(BUILD)/typings-references.ts: typings-references.ts.in | $(BUILD)
 	sed 's/{TYPINGS-DIR}/$(subst /,\/,$(TYPINGS_DIR))/g' $< >$@
 
 $(DIST)/%.js: %.ts $(BUILD)/typings-references.ts | $(TSC) $(DIST) $(LIB_JS)
-	$(TSC_RUN) --outDir $(DIST) --sourceMap $<
+	$(TSC_RUN) --outDir $(DIST) $<
 
 $(DIST)/%.js: %.js | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@
