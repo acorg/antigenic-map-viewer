@@ -353,58 +353,58 @@ class Grid
 
 // ----------------------------------------------------------------------
 
-class LabelMesh extends THREE.Mesh implements AmvLevel1.ObjectLabel
-{
-    constructor(parent :Object) {
-        super(this.make_text_geometry(), new THREE.MeshBasicMaterial(AmvLevel1.ObjectFactory.convert_color("black")));
-        parent.add(this);
-    }
+// class LabelMesh extends THREE.Mesh implements AmvLevel1.ObjectLabel
+// {
+//     constructor(parent :Object) {
+//         super(this.make_text_geometry(), new THREE.MeshBasicMaterial(AmvLevel1.ObjectFactory.convert_color("black")));
+//         parent.add(this);
+//     }
 
-    public destroy() {
-    }
+//     public destroy() {
+//     }
 
-    public show(show :boolean) :void {
-        this.visible = show;
-    }
+//     public show(show :boolean) :void {
+//         this.visible = show;
+//     }
 
-    public shown() :boolean {
-        return this.visible;
-    }
+//     public shown() :boolean {
+//         return this.visible;
+//     }
 
-    public set_scale(scale :number) :void {
-        this.scale.multiplyScalar(scale);
-    }
+//     public set_scale(scale :number) :void {
+//         this.scale.multiplyScalar(scale);
+//     }
 
-    public set_text(text :string) :void {
-        this.geometry = this.make_text_geometry(text);
-    }
+//     public set_text(text :string) :void {
+//         this.geometry = this.make_text_geometry(text);
+//     }
 
-    public set_position(x :number, y :number) :void {
-    }
+//     public set_position(x :number, y :number) :void {
+//     }
 
-    public adjust_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
-        var lg = this.geometry;
-        lg.computeBoundingBox();
-        var label_size = new THREE.Vector3().multiplyVectors(this.scale, lg.boundingBox.size());
+//     public adjust_position(viewer :AmvLevel1.Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) :void {
+//         var lg = this.geometry;
+//         lg.computeBoundingBox();
+//         var label_size = new THREE.Vector3().multiplyVectors(this.scale, lg.boundingBox.size());
 
-        this.position.set(- label_size.x / 2, - body_radius - label_size.y, 0);
-    }
+//         this.position.set(- label_size.x / 2, - body_radius - label_size.y, 0);
+//     }
 
-    public set_size(size :number) :void {
-        if (!size) {
-            size = Objects.label_default_size;
-        }
-        this.scale.set(size, size, 1);
-    }
+//     public set_size(size :number) :void {
+//         if (!size) {
+//             size = Objects.label_default_size;
+//         }
+//         this.scale.set(size, size, 1);
+//     }
 
-    public set_color(color :number|string) :void {
-        (<THREE.MeshBasicMaterial>this.material).color = new THREE.Color(<any>color);
-    }
+//     public set_color(color :number|string) :void {
+//         (<THREE.MeshBasicMaterial>this.material).color = new THREE.Color(<any>color);
+//     }
 
-    private make_text_geometry(text? :string, size :number = 1) :THREE.TextGeometry {
-        return new THREE.TextGeometry(text, {size: size, font: 'helvetiker'});  //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
-    }
-}
+//     private make_text_geometry(text? :string, size :number = 1) :THREE.TextGeometry {
+//         return new THREE.TextGeometry(text, {size: size, font: 'helvetiker'});  //, font: 'helvetiker', weight: 'normal', style: 'normal'}); // curveSegments: 300
+//     }
+// }
 
 // ----------------------------------------------------------------------
 
