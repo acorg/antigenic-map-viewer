@@ -160,13 +160,12 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     }
 
     private auto_size(size :number) :number {
-        console.log('auto_size', $(window).width(), $(window).height());
+        // console.log('auto_size', $(window).width(), $(window).height());
         if (!size) {
             var widget_offset = this.wrapper.offset(), map_offset = this.wrapper.find('.amv-level2-map-wrapper').offset();
-            var field_size = Math.min($(window).width() - map_offset.left * 2, $(window).height() - (widget_offset.top > 300 /* not the first map on page? */ ? 150 : widget_offset.top + map_offset.top));
-            // console.log('window', $(window).width(), $(window).height(), 'widget offset', widget_offset.left, widget_offset.top, 'position', this.wrapper.position().left, this.wrapper.position().top);
-            // console.log('map wrapper', map_offset.left, map_offset.top);
-            size = field_size;
+            var w = $(window).width() - map_offset.left * 2 - 100; // -100 to leave space at the right for labels
+            var h = $(window).height() - (widget_offset.top > 300 /* not the first map on page? */ ? 150 : widget_offset.top + map_offset.top);
+            size = Math.min(w, h);
         }
         // console.log('auto_size size', size);
         return size;
