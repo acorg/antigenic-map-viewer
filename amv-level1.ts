@@ -30,7 +30,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     constructor(container :JQuery, size :number) {
         this.scene = new THREE.Scene();
-        (<any>window).scene = this.scene;
+        // (<any>window).scene = this.scene;
         this.renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true, alpha: true}) // , precision: "highp"
         this.size(size)
         this.renderer.setClearColor(0xFFFFFF)
