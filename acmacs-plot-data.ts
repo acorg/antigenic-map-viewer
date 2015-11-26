@@ -14,7 +14,6 @@ export type PlotDataLayout = AntigenicMapViewer.PlotDataLayout;
 
 export class PlotData
 {
-//!    private _label_types :string[];
     private _drawing_order :number[]; // drawing order for an object by its index
 
     constructor(private plot_data :AntigenicMapViewer.PlotDataInterface) {
@@ -46,7 +45,7 @@ export class PlotData
             var obj = factory.make_object();
             var style = styles[this.style_no(i)];
             var coordinates = this.layout(i);
-            obj.set_body(style.make_body(), style.make_outline(), style.make_label(widget));
+            obj.set_body(style.make_body(), style.make_outline());
             obj.userData = this.user_data(i);
             if (number_of_dimensions === 2) {
                 // flip layout
@@ -93,55 +92,6 @@ export class PlotData
     public transformation() :AntigenicMapViewer.PlotDataTransformation {
         return this.plot_data.transformation;
     }
-
-//!    public label_types() :string[] {
-//!        if (!this._label_types) {
-//!            this._label_types = [];
-//!            try {
-//!                var kk :string[] = [];
-//!                for (var point_no = 0; point_no < this.plot_data.point_info.length; ++point_no) {
-//!                    for (var k in this.plot_data.point_info[point_no]) {
-//!                        kk.push(k);
-//!                    }
-//!                }
-//!                kk.sort();
-//!                for (var k_no = 0; k_no < kk.length; ++k_no) {
-//!                    if (k_no === 0 || kk[k_no] !== kk[k_no - 1]) {
-//!                        this._label_types.push(kk[k_no]);
-//!                    }
-//!                }
-//!            } catch (err) {
-//!                console.error('error looking for label_types:', err);
-//!            }
-//!        }
-//!        return this._label_types;
-//!    }
-
-//!    public default_label_type() :string {
-//!        var label_type = "label_capitalized";
-//!        var all_label_types = this.label_types();
-//!        if (all_label_types.length !== 0 && all_label_types.indexOf(label_type) === -1) {
-//!            label_type = all_label_types[0];
-//!        }
-//!        return label_type;
-//!    }
-//!
-//!    public label_of(index :number, label_type :string) :string {
-//!        var labels :any = this.plot_data.point_info[index];
-//!        var label :string = labels[label_type];
-//!        if (label === null || label === undefined) {
-//!            // No label_type present for this point, return any existing label_type
-//!            for (var lt in labels) {
-//!                label = labels[lt];
-//!                break;
-//!            }
-//!            if (label === null || label === undefined) {
-//!                // no labels for this point at all
-//!                label = "*no label for " + index + "*";
-//!            }
-//!        }
-//!        return label;
-//!    }
 
     public user_data(index :number) :AmvLevel1.ObjectUserData {
         var point_info :any = this.plot_data.point_info[index];
@@ -219,11 +169,11 @@ export class PlotData
                 r.abbreviated += ' ' + point_info.extra;
             }
         }
-        else if (point_info.label !== null && point_info.label !== undefined) {
-            r.full = point_info.label;
-            r.short = r.full;
-            r.abbreviated = r.full;
-        }
+        // else if (point_info.label !== null && point_info.label !== undefined) {
+        //     r.full = point_info.label;
+        //     r.short = r.full;
+        //     r.abbreviated = r.full;
+        // }
         if (point_info.date) {
             r.date = point_info.date;
         }
@@ -276,22 +226,6 @@ export class ObjectStyle
 
     public make_outline() :THREE.Object3D {
         return this.factory.make_outline(this.plot_style.shape || "circle", this.plot_style.outline_width, this.plot_style.outline_color);
-    }
-
-    public make_label(widget :AmvLevel1.MapWidgetLevel1) :AmvLevel1.ObjectLabel {
-        var label = this.factory.make_label(widget);
-        if (label) {
-            label.show(this.plot_style.label_shown || this.plot_style.label_shown === null || this.plot_style.label_shown === undefined);
-            label.set_size(this.plot_style.label_size || 1);
-            if (this.plot_style.label !== null && this.plot_style.label !== undefined && this.plot_style.label !== "") {
-                label.set_text(this.plot_style.label);
-            }
-            label.set_color(this.plot_style.label_color || 0);
-            if (this.plot_style.label_position_x !== null && this.plot_style.label_position_x !== undefined && this.plot_style.label_position_y !== null && this.plot_style.label_position_y !== undefined) {
-                label.set_position(this.plot_style.label_position_x, this.plot_style.label_position_y);
-            }
-        }
-        return label;
     }
 
     public rotation() :number {

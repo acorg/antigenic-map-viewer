@@ -18,7 +18,6 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     public viewer :Viewer;
     public objects :Objects;
     public scene :THREE.Scene;
-    public labels_shown :number[] = [];
 
     private renderer :THREE.WebGLRenderer;
     private _size :number; // canvas size
@@ -120,59 +119,6 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     public help_text() :string {
         return this.viewer.help_text();
     }
-
-    // --------------------------------------------------
-    // showing/hiding object names
-
-    public show_object_labels(show :boolean, list :string|number[], name_type :string = "full") :void {
-        // list: "all", [indices]
-        $.when(this.objects_created).done(() => {
-            if (this.objects.number_of_dimensions() === 2) {
-                var start = Date.now();
-                var indices = this._elicit_indices(list);
-                indices.forEach((index) => {
-                    var obj = this.objects.objects[index];
-                    if (obj) {
-                        var label = obj.label_show(show, this);
-                        if (show) {
-                            var text = (obj.userData.names && (obj.userData.names[name_type] || obj.userData.names.full)) || ('' + obj.userData.index);
-                            // obj.label_color("blue");
-                            label.set_text(text);
-                            obj.label_adjust_position(this.viewer);
-                        }
-                    }
-                    else {
-                        console.warn('cannot show/hide name: invalid object index', index);
-                    }
-                });
-                console.log('' + indices.length, 'labels shown in', Date.now() - start);
-                this.labels_shown = [];
-                this.objects.objects.map((o, i) => { if (o.label_shown()) { this.labels_shown.push(i); } });
-            }
-            else {
-                console.warn('showing names in 3D is not supported');
-            }
-        });
-    }
-
-    private _elicit_indices(list :string|number[]) :number[] {
-        var indices :number[] = [];
-        if (typeof list === "string") {
-            if (list === "all") {
-                for (var i = 0; i < this.objects.objects.length; ++i) {
-                    indices.push(i);
-                }
-            }
-            else {
-                console.warn("unrecognized show_object_labels list argument value", list);
-            }
-        }
-        else {
-            indices = <number[]>list;
-        }
-        return indices;
-    }
-
 }
 
 // ----------------------------------------------------------------------
@@ -264,31 +210,15 @@ export interface ObjectUserData
 
 // ----------------------------------------------------------------------
 
-export interface ObjectLabel
-{
-    show: (show :boolean) => void;
-    shown: () => boolean;
-    set_scale: (scale :number) => void;
-    set_text: (text :string) => void;
-    set_size: (size :number) => void;
-    set_color: (color :number|string) => void;
-    set_position: (x :number, y :number) => void;
-    adjust_position: (viewer :Viewer, object_position :THREE.Vector3, object_scale :THREE.Vector3, body_radius :number) => void;
-    destroy: () => void;
-}
-
-// ----------------------------------------------------------------------
-
 export class Object extends THREE.Object3D
 {
     public body :THREE.Mesh;
     public outline :THREE.Object3D;
-    public label :ObjectLabel;
 
     public destroy() {
     }
 
-    public set_body(body :THREE.Mesh, outline :THREE.Object3D, label :ObjectLabel) :void {
+    public set_body(body :THREE.Mesh, outline :THREE.Object3D) :void {
         // if (this.body) {
         //     this.remove(this.body);
         // }
@@ -301,28 +231,14 @@ export class Object extends THREE.Object3D
         if (this.outline) {
             this.body.add(this.outline);
         }
-        this.label = label;
     }
 
-    public label_show(show :boolean, widget :MapWidgetLevel1) :ObjectLabel { return null; }
-
-    public label_shown() :boolean {
-        return !!this.label && this.label.shown();
-    }
-    public label_adjust_position(viewer :Viewer) :void {}
-
-    public rescale(object_factor :number, label_factor :number, viewer :Viewer) :void {
+    public rescale(object_factor :number, viewer :Viewer) :void {
         this.body.scale.multiplyScalar(object_factor);
     }
 
     public set_scale(object_scale :number) :void {
         this.scale.set(object_scale, object_scale, object_scale);
-    }
-
-    public label_adjust_after_object_rescale(viewer :Viewer) :void {
-        if (this.label && this.label.shown()) {
-            this.label_adjust_position(viewer);
-        }
     }
 
     public shape() :string {
@@ -357,14 +273,12 @@ export class Objects
     private _center :THREE.Vector3;
     private _diameter :number;
     protected _object_scale :number;     // keep current scale to be able to reset
-    protected _label_scale :number;      // keep current scale to be able to reset
 
     protected _object_factory :ObjectFactory;
 
     constructor(protected widget :MapWidgetLevel1) {
         this.objects = [];
         this._object_scale = 1.0;
-        this._label_scale = 1.0;
     }
 
     public destroy() {
@@ -415,12 +329,8 @@ export class Objects
         var scale_limits = this.scale_limits();
         if (new_scale >= scale_limits.min && new_scale <= scale_limits.max) {
             this._object_scale = new_scale;
-            this.objects.map(o => o.rescale(factor, 1, this.widget.viewer));
+            this.objects.map(o => o.rescale(factor, this.widget.viewer));
         }
-    }
-
-    public label_scale(factor :number) :void {
-        this.objects.map(o => { if (o.label) { o.label.set_scale(factor); o.label_adjust_position(this.widget.viewer); } });
     }
 
     public user_data(index :number) :any {
@@ -487,10 +397,6 @@ export class ObjectFactory
     }
 
     public make_outline(shape :string, outline_width :number, outline_color :any) :THREE.Object3D {
-        return null;
-    }
-
-    public make_label(widget :MapWidgetLevel1) :ObjectLabel {
         return null;
     }
 

@@ -2,6 +2,9 @@
 
 import TypingsReferences = require("build/typings-references");
 
+// to auto-compile modules
+import AmvLevel2 = require("amv-level2");
+
 // ----------------------------------------------------------------------
 
 export class Application

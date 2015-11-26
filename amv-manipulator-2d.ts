@@ -58,15 +58,15 @@ export class ScaleControl extends Control
 
 // ----------------------------------------------------------------------
 
-export class LabelScaleControl extends Control
-{
-    private static scale = 0.95;
+// export class LabelScaleControl extends Control
+// {
+//     private static scale = 0.95;
 
-    public operate(data :AmvManipulator.WheelMovement) :void {
-        var scale :number  = (data.deltaY < 0) ? LabelScaleControl.scale : (data.deltaY > 0 ? 1.0 / LabelScaleControl.scale : 1.0);
-        this.viewer.widget.objects.label_scale(scale);
-    }
-}
+//     public operate(data :AmvManipulator.WheelMovement) :void {
+//         var scale :number  = (data.deltaY < 0) ? LabelScaleControl.scale : (data.deltaY > 0 ? 1.0 / LabelScaleControl.scale : 1.0);
+//         this.viewer.widget.objects.label_scale(scale);
+//     }
+// }
 
 // ----------------------------------------------------------------------
 

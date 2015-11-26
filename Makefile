@@ -19,27 +19,21 @@ AMV_LIB = acmacs-plot-data.ts amv-level1.ts amv-level2.ts \
 	  amv-utils.ts acmacs-toolkit.ts amv-state.ts
 AMV_LESS = acmacs-toolkit.less amv.less
 AMV_TYPINGS = antigenic-map-viewer.d.ts
-AMV_FONTS = fonts/helvetiker_regular.typeface.js fonts/helvetiker_bold.typeface.js
 
 LIB_JS = jquery jquery-ui three.js require.js
 
 AMV = $(AMV_LIB) $(AMV_TEST)
 
-# ----------------------------------------------------------------------
-
-TARGET_JS = $(TS_TO_JS) $(patsubst %.js,$(DIST)/%.js,$(filter %.js,$(AMV))) $(patsubst %.json,$(DIST)/%.json,$(filter %.json,$(AMV))) $(patsubst fonts/%.js,$(DIST)/%.js,$(AMV_FONTS))
-  # $(patsubst %,$(DIST)/%.js,$(LIB_JS))
-TARGET_CSS = $(patsubst %.less,$(DIST)/%.css,$(filter %.less,$(AMV)))
-TARGET_HTML = $(patsubst %,$(DIST)/%,$(filter %.html,$(AMV)))
-
-# BUILD_TYPINGS = $(patsubst %,$(BUILD)/%.d.ts,$(LIB_TYPINGS)) $(AMV_TYPINGS)
+INSTALL_FILES = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV_LIB))) $(AMV_LESS)
 
 # ----------------------------------------------------------------------
 
-TS_TO_JS = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV)))
+DIST_JS = $(DIST)/test-3d.js $(DIST)/test-2d.js $(DIST)/amv-config.js
+DIST_JSON = $(patsubst %.json,$(DIST)/%.json,$(filter %.json,$(AMV)))
+DIST_CSS = $(patsubst %.less,$(DIST)/%.css,$(filter %.less,$(AMV)))
+DIST_HTML = $(patsubst %,$(DIST)/%,$(filter %.html,$(AMV)))
 
-INSTALL_FILES = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV_LIB))) \
-		$(AMV_LESS) $(patsubst fonts/%.js,$(DIST)/%.js,$(AMV_FONTS))
+# ----------------------------------------------------------------------
 
 VERSION = $(shell cat VERSION.txt)
 PKG_CONFIG_PATH = $(firstword $(subst :, ,$(shell pkg-config --variable pc_path pkg-config)))
@@ -49,10 +43,7 @@ PKG_CONFIG_PATH = $(firstword $(subst :, ,$(shell pkg-config --variable pc_path 
 BUILD = build
 DIST = dist
 
-all: $(TARGET_JS) $(TARGET_CSS) $(TARGET_HTML)
-	@#echo 'rebuilt  ' $?
-	@#echo 'all      ' $^
-	@#echo 'TARGET_JS' $(TARGET_JS)
+all: $(DIST_JS) $(DIST_JSON) $(DIST_CSS) $(DIST_HTML)
 
 # ----------------------------------------------------------------------
 
@@ -73,7 +64,7 @@ TYPINGS_DIR = $(EUPA_BUILD)
 
 test: all
 ifeq ($(shell uname -s),Darwin)
-	open $(TARGET_HTML)
+	open $(DIST_HTML)
 endif
 
 install: all
@@ -103,9 +94,6 @@ $(DIST)/%.js: %.js | $(DIST)
 
 $(DIST)/%.js: %.js.in | $(DIST)
 	sed 's/{REQUIRE-JQUERY-PATH}/./' $^ >$@
-
-$(DIST)/%.js: fonts/%.js | $(DIST)
-	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$(notdir $^) $@
 
 $(DIST)/%.json: %.json | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@

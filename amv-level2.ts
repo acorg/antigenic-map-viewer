@@ -16,21 +16,15 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
 
     private wrapper :JQuery;
     public map :AmvLevel1.MapWidgetLevel1;
-    private user_object_label_type :string; // user_object_label_types
     private popup_hovered :AcmacsToolkit.PopupMessage;
     private help_popup :AcmacsToolkit.PopupMessage;
     private popup_menu_items_extra :AcmacsToolkit.PopupMenuDescItem[];
-    private object_labels_shown :boolean;
 
     private static popup_hovered_message_prefix = "<ul><li>";
     private static popup_hovered_message_suffix = "</li></ul>";
     private static popup_hovered_message_infix =  "</li><li>";
 
-    private static user_object_label_types = ["Full", "Short", "Abbreviated", "Location", "Date"];
-
     constructor(container :JQuery, size :number) {
-        this.user_object_label_type = "full";
-        this.object_labels_shown = false;
         this.wrapper = $('<div class="amv-widget-wrapper">\
                             <div class="amv-level2-title">\
                               <div class="amv-level2-title-text"></div>\
@@ -39,7 +33,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
                             <div class="amv-level2-map-wrapper"></div>\
                           </div>').appendTo(container); // '<div class="amv-level2-hovered-points"></div>');
         size = this.auto_size(size);
-        $.when(AmvUtils.require_deferred(["amv-level1", "helvetiker_regular.typeface"])).done(() => {
+        $.when(AmvUtils.require_deferred(["amv-level1"])).done(() => {
             var map_container = this.wrapper.find('.amv-level2-map-wrapper');
             map_container.css({width: size, height: size});
             if (map_container.resizable) {
@@ -57,9 +51,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
             this.help_popup = (new AcmacsToolkit.PopupMessage(this.wrapper, 'amv2-help-popup')).hide_on_click();
 
             // show/hide names via popup menu
-            this.map.on("show-names:amv", (show :boolean) :void => { this.map.show_object_labels(show, "all"); this.object_labels_shown = show; });
-            // change label type via popup menu
-            this.map.on("label-type:amv", (data :any) :void => { this.user_object_label_type = data.label_type; });
+            this.map.on("show-names:amv", (show :boolean) :void => { alert("show-names?"); });
             // this.map.trigger("show-names:amv", true);
         });
 
@@ -116,22 +108,7 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     }
 
     private object_label(index :number) :string {
-        var user_data = this.map.objects.user_data(index);
         var r :string = '' + (index + 1);
-        if (user_data && user_data.names) {
-            if (user_data.names[this.user_object_label_type]) {
-                r += " " + user_data.names[this.user_object_label_type];
-            }
-            else if (this.user_object_label_type === "location" && user_data.names.country) {
-                r += " " + user_data.names.country;
-                if (user_data.names.continent) {
-                    r += " [" + user_data.names.continent + "]";
-                }
-            }
-            else if (user_data.names.full) {
-                r += " " + user_data.names.full;
-            }
-        }
         return r
     }
 
@@ -146,13 +123,11 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     }
 
     private popup_menu_items() :AcmacsToolkit.PopupMenuDescItem[] {
-        var label_menu :AcmacsToolkit.PopupMenuDescItem[] = MapWidgetLevel2.user_object_label_types.map((lt :string) => ({
-            label: lt, icon: lt.toLowerCase() === this.user_object_label_type ? "ui-icon-check" : null, event: "label-type:amv", eventNode: this.map, eventData: {label_type: lt.toLowerCase()}})) || [];
         var m :AcmacsToolkit.PopupMenuDescItem[] = [
             {label: "Reset", event: "reset:amv", eventNode: this.map},
-            {label: this.object_labels_shown ? "Hide names" : "Show names", event: "show-names:amv", eventNode: this.map, eventData: !this.object_labels_shown},
+            // {label: this.object_labels_shown ? "Hide names" : "Show names", event: "show-names:amv", eventNode: this.map, eventData: !this.object_labels_shown},
         ];
-        return m.concat(this.popup_menu_items_extra || [], [{}, {label: "Label type", title: true}], label_menu);
+        return m.concat(this.popup_menu_items_extra || []);
     }
 
     private help(e :JQueryEventObject) :void {
@@ -181,7 +156,6 @@ export function make_widget(container :JQuery, size :number, plot_data :Antigeni
         if ((<AntigenicMapViewer.PlotDataInterface>plot_data).layout) {
             var pd = new AcmacsPlotData.PlotData(<AntigenicMapViewer.PlotDataInterface>plot_data);
             widget.title(pd.title());
-            // widget.user_object_label_type = pd.default_label_type();
             pd.setup_map(widget.map);
         }
         else if ((<AntigenicMapViewer.MapStateForDrawing>plot_data).camera_looking_at) {
