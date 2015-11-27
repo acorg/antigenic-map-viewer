@@ -10,6 +10,7 @@ import AmvManipulator3d = require("amv-manipulator-3d");
 // ----------------------------------------------------------------------
 
 type Color = AntigenicMapViewer.Color;
+type Position = AntigenicMapViewer.Position;
 
 // ----------------------------------------------------------------------
 
@@ -177,7 +178,7 @@ class Grid
 
 export class MapElement extends AmvLevel1.MapElement
 {
-    public set_position(position? :Position) :void {
+    public set_position(position :Position) :void {
         if (position !== undefined && position !== null) {
             this.position.set(position[0], position[1], position[2]);
         }

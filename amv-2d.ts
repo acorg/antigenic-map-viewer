@@ -9,6 +9,7 @@ import AmvManipulator2d = require("amv-manipulator-2d");
 // ----------------------------------------------------------------------
 
 type Color = AntigenicMapViewer.Color;
+type Position = AntigenicMapViewer.Position;
 
 export type Transformation = AntigenicMapViewer.Transformation;
 
@@ -356,7 +357,7 @@ class Grid
 
 export class MapElement extends AmvLevel1.MapElement
 {
-    public set_position(position? :Position) :void {
+    public set_position(position :Position) :void {
         if (position !== undefined && position !== null) {
             this.position.set(position[0], -position[1], 0);
         }
@@ -386,7 +387,6 @@ export class Factory extends AmvLevel1.Factory
 
     constructor(number_of_objects :number) {
         super();
-        this.material = THREE.MeshBasicMaterial;
         this.ball_segments = 32;
         this.outline_width_scale = 0.005;
         this.outline_materials = {};
@@ -395,7 +395,8 @@ export class Factory extends AmvLevel1.Factory
 
     public circle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
     {
-        var body = new THREE.Mesh(this.geometries.circle, new this.material(Factory.convert_color(fill_color)));
+        var m :THREE.Material = new THREE.MeshBasicMaterial(Factory.convert_color(fill_color));
+        var body = new THREE.Mesh(this.geometries.circle, m);
         var outline = new THREE.Line(this.geometries.circle_outline, this.outline_material(outline_color, outline_width)); // <THREE.ShaderMaterial>
         var map_element = new MapElement(body, outline);
         return map_element;
@@ -423,10 +424,12 @@ export class Factory extends AmvLevel1.Factory
 
     private make_geometries() :void
     {
-        this.geometries.circle = new THREE.CircleGeometry(Factory.geometry_size / 2, this.ball_segments);
         var circle_curve = new THREE.EllipseCurve(0, 0, Factory.geometry_size / 2, Factory.geometry_size / 2, 0, Math.PI * 2, false, 0);
         var circle_path = new THREE.Path(circle_curve.getPoints(this.ball_segments));
-        this.geometries.circle_outline = circle_path.createPointsGeometry(this.ball_segments);
+        this.geometries = {
+            circle: new THREE.CircleGeometry(Factory.geometry_size / 2, this.ball_segments),
+            circle_outline: circle_path.createPointsGeometry(this.ball_segments)
+        };
     }
 
     private outline_material(outline_color :Color, outline_width :number) :THREE.LineBasicMaterial

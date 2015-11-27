@@ -17,8 +17,10 @@ type Position = AntigenicMapViewer.Position;
 
 export class MapWidgetLevel2
 {
-    private wrapper :JQuery;
     public map :AmvLevel1.MapWidgetLevel1;
+    public initialization_completed :JQueryDeferred<{}> = $.Deferred();
+
+    private wrapper :JQuery;
     private popup_hovered :AcmacsToolkit.PopupMessage;
     private help_popup :AcmacsToolkit.PopupMessage;
     private popup_menu_items_extra :AcmacsToolkit.PopupMenuDescItem[];
@@ -43,6 +45,7 @@ export class MapWidgetLevel2
             map_container.on("resize", (e :Event, ui :JQueryUI.ResizableUIParams) => this.resized(ui.size.width));
         }
         this.map = new AmvLevel1.MapWidgetLevel1(map_container, size, number_of_dimensions);
+        $.when(this.map.initialization_completed).then(() => this.initialization_completed.resolve());
         // this.map.bind_manipulators();
         this.map.render();
         // this.map.on("hover:amv", (object_indice :number[]) => this.show_hovered(object_indice));

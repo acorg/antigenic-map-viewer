@@ -12,9 +12,9 @@ declare module AntigenicMapViewer {
 
 // ----------------------------------------------------------------------
 
-    type Position = number[];
+    type Position = Array<number>; // [number, number] | [number, number, number]; // number[];
 
-    type Color = string | number | any[];
+    type Color = string | number | [number, number];
 
     type MapElementId = number;
 

@@ -13,6 +13,7 @@ import Amv2d = require("amv-2d");
 // ----------------------------------------------------------------------
 
 type Color = AntigenicMapViewer.Color;
+type Position = AntigenicMapViewer.Position;
 type MapElementId = AntigenicMapViewer.MapElementId;
 
 // ----------------------------------------------------------------------
@@ -60,6 +61,9 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     public add_circle(position :Position, size :number, fill_color :Color, outline_color :Color, outline_width :number, aspect :number, rotation :number) :MapElementId {
         var map_element = this.factory.circle(fill_color, outline_color, outline_width);
+        map_element.set_attributes(position, size, aspect, rotation);
+        this.add_to_scene(map_element);
+        console.log('add_circle', map_element);
         return -1;
     }
 
@@ -231,6 +235,13 @@ export abstract class MapElement extends THREE.Object3D
         }
     }
 
+    public set_attributes(position :Position, size :number, aspect :number, rotation :number) :void {
+        this.set_position(position);
+        this.set_scale(size);
+        this.aspect(aspect);
+        this.set_rotation(rotation);
+    }
+
     public abstract set_position(position :Position) :void;
     public abstract set_rotation(rotation :number) :number;
 
@@ -260,8 +271,6 @@ export abstract class MapElement extends THREE.Object3D
 
 export abstract class Factory
 {
-    protected material :typeof THREE.Material;
-
     public abstract circle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
     public abstract add_box(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
     public abstract add_triangle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
@@ -270,24 +279,23 @@ export abstract class Factory
 
     protected static convert_color(source :Color) :THREE.MeshBasicMaterialParameters {
         var material_color :THREE.MeshBasicMaterialParameters;
-        if ($.type(source) === "string") {
+        if (typeof source === "string") {
             if (source === "transparent") {
                 material_color = {transparent: true, opacity: 0};
             }
             else {
-                material_color = {transparent: false, color: (new THREE.Color(<string>source)).getHex(), opacity: 1};
+                material_color = {transparent: false, color: (new THREE.Color(source)).getHex(), opacity: 1};
             }
         }
-        else if ($.type(source) === "array") {
-            material_color = {transparent: true, opacity: <number>source[1], color: (new THREE.Color(<number>source[0])).getHex()};
+        else if (typeof source === "array") {
+            material_color = {transparent: true, opacity: source[1], color: (new THREE.Color(source[0])).getHex()};
         }
-        else if ($.type(source) === "number") {
-            material_color = {transparent: false, color: (new THREE.Color(<number>source)).getHex(), opacity: 1};
+        else if (typeof source === "number") {
+            material_color = {transparent: false, color: (new THREE.Color(source)).getHex(), opacity: 1};
         }
         // console.log('convert_color', JSON.stringify(material_color));
         return material_color;
     }
-
 }
 
 // ----------------------------------------------------------------------
