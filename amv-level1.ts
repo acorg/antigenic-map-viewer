@@ -15,6 +15,7 @@ import Amv2d = require("amv-2d");
 type Color = AntigenicMapViewer.Color;
 type Position = AntigenicMapViewer.Position;
 type MapElementId = AntigenicMapViewer.MapElementId;
+type MapElementAttributes = AntigenicMapViewer.MapElementAttributes;
 
 // ----------------------------------------------------------------------
 
@@ -59,28 +60,35 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     // ----------------------------------------------------------------------
 
-    public add_circle(position :Position, size :number, fill_color :Color, outline_color :Color, outline_width :number, aspect :number, rotation :number) :MapElementId {
-        var map_element = this.factory.circle(fill_color, outline_color, outline_width);
-        map_element.set_attributes(position, size, aspect, rotation);
+    public add_circle(attrs: MapElementAttributes) :MapElementId {
+        return this.add_map_element(this.factory.circle(attrs.fill_color || "transparent", attrs.outline_color || "black", attrs.outline_width || 1), attrs);
+    }
+
+    public add_box(attrs: MapElementAttributes) :MapElementId {
+        return -1;
+    }
+
+    public add_triangle(attrs: MapElementAttributes) :MapElementId {
+        return -1;
+    }
+
+    private add_map_element(map_element :MapElement, attrs :MapElementAttributes) :MapElementId {
+        map_element.set_attributes(attrs.position, attrs.size || 1, attrs.aspect || 1, attrs.rotation || 0);
+        // perhaps keep a list of map elements of this kind (or list of ids?)
         this.add_to_scene(map_element);
-        console.log('add_circle', map_element);
-        return -1;
+        return map_element.id;
     }
 
-    public add_box(position :Position, size :number, fill_color :Color, outline_color :Color, outline_width :number, aspect :number, rotation :number) :MapElementId {
-        return -1;
-    }
+    // public add_line(position1 :Position, position2 :Position, width :number, color :Color) :MapElementId {
+    //     throw "not implemented";
+    // }
 
-    public add_triangle(position :Position, size :number, fill_color :Color, outline_color :Color, outline_width :number, aspect :number, rotation :number) :MapElementId {
-        return -1;
-    }
+    // public add_arrow(position1 :Position, position2 :Position, width :number, color :Color, arrow_width :number, arrow_length :number) :MapElementId {
+    //     throw "not implemented";
+    // }
 
-    public add_line(position1 :Position, position2 :Position, width :number, color :Color) :MapElementId {
-        throw "not implemented";
-    }
-
-    public add_arrow(position1 :Position, position2 :Position, width :number, color :Color, arrow_width :number, arrow_length :number) :MapElementId {
-        throw "not implemented";
+    public find_map_element(map_element_id :MapElementId) :MapElement {
+        return <MapElement>this.scene.getObjectById(map_element_id);
     }
 
     // ----------------------------------------------------------------------

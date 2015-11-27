@@ -28,6 +28,19 @@ declare module AntigenicMapViewer {
 
 // ----------------------------------------------------------------------
 
+    interface MapElementAttributes
+    {
+        position :Position;
+        size? :number;
+        fill_color? :Color;
+        outline_color? :Color;
+        outline_width? :number;
+        aspect? :number;
+        rotation? :number;
+    }
+
+// ----------------------------------------------------------------------
+
     type Transformation = [[number, number], [number, number]];
 
 // ----------------------------------------------------------------------
