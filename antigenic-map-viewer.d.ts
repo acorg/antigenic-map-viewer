@@ -12,10 +12,23 @@ declare module AntigenicMapViewer {
 
 // ----------------------------------------------------------------------
 
-    interface TriggeringEvent {
+    type Position = number[];
+
+    type Color = string | number | any[];
+
+    type MapElementId = number;
+
+// ----------------------------------------------------------------------
+
+    interface TriggeringEvent
+    {
         trigger(event :string, data :any) :void;
         on(event :string, callback: (data :any) => void) :JQuery;
     }
+
+// ----------------------------------------------------------------------
+
+    type Transformation = [[number, number], [number, number]];
 
 // ----------------------------------------------------------------------
 
@@ -34,8 +47,6 @@ declare module AntigenicMapViewer {
 //     }
 
 //     type PlotDataLayout = number[][];
-
-//     type PlotDataTransformation = [[number, number], [number, number]];
 
 //     interface PlotDataStyles
 //     {

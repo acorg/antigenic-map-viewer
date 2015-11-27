@@ -13,8 +13,8 @@ export class Application
     public run() :void {
         console.log('=========== amv-test 4d ========== ' + new Date() + " ===========");
         $.when(Amv.start()).then(function (amv2: any) {
-            var widget1 = new amv2.MapWidgetLevel2($('body'));
-            widget1.title(["joap"]);
+            var widget1 = new amv2.MapWidgetLevel2($('body'), null, 2);
+            widget1.title(["TITLE-TITLE"]);
         });
     }
 }

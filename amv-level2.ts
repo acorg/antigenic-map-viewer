@@ -10,10 +10,13 @@ import AcmacsToolkit = require("acmacs-toolkit");
 
 // ----------------------------------------------------------------------
 
+type Color = AntigenicMapViewer.Color;
+type Position = AntigenicMapViewer.Position;
+
+// ----------------------------------------------------------------------
+
 export class MapWidgetLevel2
 {
-    public initialization_completed :JQueryDeferred<{}> = $.Deferred();
-
     private wrapper :JQuery;
     public map :AmvLevel1.MapWidgetLevel1;
     private popup_hovered :AcmacsToolkit.PopupMessage;
@@ -21,34 +24,36 @@ export class MapWidgetLevel2
     private popup_menu_items_extra :AcmacsToolkit.PopupMenuDescItem[];
 
     private static wrapper_html = '<div class="amv-widget-wrapper"><div class="amv-level2-title"><div class="amv-level2-title-text"></div><table class="amv-level2-title-buttons"><tr></tr></table></div><div class="amv-level2-map-wrapper"></div></div>';
-    private static popup_hovered_message_prefix = "<ul><li>";
-    private static popup_hovered_message_suffix = "</li></ul>";
-    private static popup_hovered_message_infix =  "</li><li>";
+    // private static popup_hovered_message_prefix = "<ul><li>";
+    // private static popup_hovered_message_suffix = "</li></ul>";
+    // private static popup_hovered_message_infix =  "</li><li>";
 
-    constructor(container :JQuery, size? :number) {
+    constructor(container :JQuery, size :number, number_of_dimensions :number) {
+        if (number_of_dimensions !== 2 && number_of_dimensions !== 3) {
+            throw "Invalid number of dimensions: " + number_of_dimensions;
+        }
         this.wrapper = $(MapWidgetLevel2.wrapper_html).appendTo(container);
         size = this.auto_size(size);
-        $.when(Amv.require_deferred(["amv-level1"])).done(() => {
-            var map_container = this.wrapper.find('.amv-level2-map-wrapper');
-            map_container.css({width: size, height: size});
-            if (map_container.resizable) {
-                // resizable is not loaded in the printable context for unclear reason (and it is not needed there anyway)
-                map_container.resizable({aspectRatio: 1.0, minWidth: 100});
-                map_container.on("resize", (e :Event, ui :JQueryUI.ResizableUIParams) => this.resized(ui.size.width));
-            }
-            this.map = new AmvLevel1.MapWidgetLevel1(map_container, size);
-            this.initialization_completed.resolve();
-            this.map.bind_manipulators();
-            this.map.render();
-            this.map.on("hover:amv", (object_indice :number[]) => this.show_hovered(object_indice));
-            this.resized(size);
-            this.popup_hovered = new AcmacsToolkit.PopupMessage(map_container);
-            this.help_popup = (new AcmacsToolkit.PopupMessage(this.wrapper, 'amv2-help-popup')).hide_on_click();
 
-            // show/hide names via popup menu
-            this.map.on("show-names:amv", (show :boolean) :void => { alert("show-names?"); });
-            // this.map.trigger("show-names:amv", true);
-        });
+        var map_container = this.wrapper.find('.amv-level2-map-wrapper');
+        map_container.css({width: size, height: size});
+        if (map_container.resizable) {
+            // resizable is not loaded in the printable context for unclear reason (and it is not needed there anyway)
+            map_container.resizable({aspectRatio: 1.0, minWidth: 100});
+            map_container.on("resize", (e :Event, ui :JQueryUI.ResizableUIParams) => this.resized(ui.size.width));
+        }
+        this.map = new AmvLevel1.MapWidgetLevel1(map_container, size, number_of_dimensions);
+        // this.map.bind_manipulators();
+        this.map.render();
+        // this.map.on("hover:amv", (object_indice :number[]) => this.show_hovered(object_indice));
+        this.resized(size);
+
+        this.popup_hovered = new AcmacsToolkit.PopupMessage(map_container);
+        this.help_popup = (new AcmacsToolkit.PopupMessage(this.wrapper, 'amv2-help-popup')).hide_on_click();
+
+        // show/hide names via popup menu
+        this.map.on("show-names:amv", (show :boolean) :void => { alert("show-names?"); });
+        // this.map.trigger("show-names:amv", true);
 
         // buttons
         $('<td><div class="ui-icon ui-icon-help" title="Help"></div></td>').appendTo(this.wrapper.find('.amv-level2-title-buttons tr')).on('click', (e :JQueryEventObject) => this.help(e));
@@ -59,12 +64,12 @@ export class MapWidgetLevel2
         if (!!this.map) {
             this.map.destroy();
         }
-        if (!!this.popup_hovered) {
-            this.popup_hovered.destroy();
-        }
-        if (!!this.help_popup) {
-            this.help_popup.destroy();
-        }
+        // if (!!this.popup_hovered) {
+        //     this.popup_hovered.destroy();
+        // }
+        // if (!!this.help_popup) {
+        //     this.help_popup.destroy();
+        // }
     }
 
     public title(title? :string[]) :void {
@@ -79,35 +84,35 @@ export class MapWidgetLevel2
 
     // ----------------------------------------------------------------------
 
-    public add_popup_menu_items(items :AcmacsToolkit.PopupMenuDescItem[]) :void {
-        this.popup_menu_items_extra = (this.popup_menu_items_extra || []).concat((items || []).map(function (elt) { if (!elt.eventNode) {elt = $.extend({eventNode: this}, elt); } return elt; }, this));
-    }
+    // public add_popup_menu_items(items :AcmacsToolkit.PopupMenuDescItem[]) :void {
+    //     this.popup_menu_items_extra = (this.popup_menu_items_extra || []).concat((items || []).map(function (elt) { if (!elt.eventNode) {elt = $.extend({eventNode: this}, elt); } return elt; }, this));
+    // }
 
-    public on(event :string, callback: (data :any) => void) :JQuery {
-        return this.wrapper.on(event, (e :Event, data :any) => callback(data));
-    }
+    // public on(event :string, callback: (data :any) => void) :JQuery {
+    //     return this.wrapper.on(event, (e :Event, data :any) => callback(data));
+    // }
 
-    public trigger(event :string, data :any) :void {
-        this.wrapper.trigger(event, data);
-    }
+    // public trigger(event :string, data :any) :void {
+    //     this.wrapper.trigger(event, data);
+    // }
 
-    private show_hovered(indice :number[]) :void {
-        if (indice.length) {
-            this.popup_hovered.show(MapWidgetLevel2.popup_hovered_message_prefix
-                                    //+ indice.map((index :number) => this._plot_data.label_of(index, this.user_object_label_type)).join(MapWidgetLevel2.popup_hovered_message_infix)
-                                    + indice.map((index :number) => this.object_label(index)).join(MapWidgetLevel2.popup_hovered_message_infix)
-                                    + MapWidgetLevel2.popup_hovered_message_suffix,
-                                   {left: this.wrapper.find('.amv-level2-map-wrapper').width()});
-        }
-        else {
-            this.popup_hovered.hide();
-        }
-    }
+    // private show_hovered(indice :number[]) :void {
+    //     if (indice.length) {
+    //         this.popup_hovered.show(MapWidgetLevel2.popup_hovered_message_prefix
+    //                                 //+ indice.map((index :number) => this._plot_data.label_of(index, this.user_object_label_type)).join(MapWidgetLevel2.popup_hovered_message_infix)
+    //                                 + indice.map((index :number) => this.object_label(index)).join(MapWidgetLevel2.popup_hovered_message_infix)
+    //                                 + MapWidgetLevel2.popup_hovered_message_suffix,
+    //                                {left: this.wrapper.find('.amv-level2-map-wrapper').width()});
+    //     }
+    //     else {
+    //         this.popup_hovered.hide();
+    //     }
+    // }
 
-    private object_label(index :number) :string {
-        var r :string = '' + (index + 1);
-        return r
-    }
+    // private object_label(index :number) :string {
+    //     var r :string = '' + (index + 1);
+    //     return r
+    // }
 
     private resized(size :number) :void {
         this.map.size(size);
@@ -128,7 +133,8 @@ export class MapWidgetLevel2
     }
 
     private help(e :JQueryEventObject) :void {
-        this.help_popup.show(this.map.help_text())
+        alert("help!");
+        // this.help_popup.show(this.map.help_text())
     }
 
     private auto_size(size :number) :number {

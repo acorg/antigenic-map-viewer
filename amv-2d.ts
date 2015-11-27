@@ -8,7 +8,9 @@ import AmvManipulator2d = require("amv-manipulator-2d");
 
 // ----------------------------------------------------------------------
 
-export type Transformation = AntigenicMapViewer.PlotDataTransformation;
+type Color = AntigenicMapViewer.Color;
+
+export type Transformation = AntigenicMapViewer.Transformation;
 
 // ----------------------------------------------------------------------
 
@@ -53,7 +55,7 @@ export class Viewer extends AmvLevel1.Viewer
         super(widget);
         this.viewport_initial = null;
         this.camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0, DrawingOrderNS.maximum + 2);
-        widget.add(this.camera);
+        widget.add_to_scene(this.camera);
         this.grid = new Grid(this, 0);
         this.on("widget-resized:amv", (size :number) => this.update_resolution(size));
     }
@@ -76,7 +78,7 @@ export class Viewer extends AmvLevel1.Viewer
     }
 
     public reset() :void {
-        this.widget.reset_objects();
+        // this.widget.reset_objects();
         this.camera.up.copy(Viewer.camera_up);
         this.camera.position.set(0, 0, DrawingOrderNS.maximum + 1);
         this.camera_look_at(AmvLevel1.Viewer.const_vector3_zero);
@@ -85,7 +87,7 @@ export class Viewer extends AmvLevel1.Viewer
             this.transform(this._initial_transformation);
         }
         else {
-            this.widget.reorient_objects();
+            // this.widget.reorient_objects();
         }
         this.camera_update();
     }
@@ -99,7 +101,7 @@ export class Viewer extends AmvLevel1.Viewer
             camera.top = viewport.cy + hsize;
             camera.bottom = viewport.cy - hsize;
             camera.updateProjectionMatrix();
-            this.widget.reorient_objects();
+            // this.widget.reorient_objects();
             this.grid.reset(grid_full_reset);
             this.update_resolution();
         }
@@ -157,7 +159,7 @@ export class Viewer extends AmvLevel1.Viewer
 
     public transform(transformation :Transformation) :void {
         if (transformation !== null && transformation !== undefined) {
-            $.when(this.widget.objects_created && this.widget.initialization_completed).done(() => {
+            $.when(/* this.widget.objects_created && */ this.widget.initialization_completed).done(() => {
                 var m = new THREE.Matrix4();
                 m.elements[0] = transformation[0][0];
                 m.elements[1] = transformation[0][1];
@@ -165,7 +167,7 @@ export class Viewer extends AmvLevel1.Viewer
                 m.elements[5] = transformation[1][1];
                 var m4 = this.get_m4().multiply(m);
                 var q = this._set_m4(m4);
-                this.widget.reorient_objects();
+                // this.widget.reorient_objects();
 
                 var viewport = this.viewport();
                 var viewport_center = new THREE.Vector3(viewport.cx, viewport.cy, 0).applyQuaternion(q.inverse());
@@ -188,14 +190,14 @@ export class Viewer extends AmvLevel1.Viewer
     public get_m4() :THREE.Matrix4 {
         return new THREE.Matrix4().compose(this._translation_for_m4(),
                                            new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up),
-                                           new THREE.Vector3((<Objects>this.widget.objects).flip_state() ? -1 : 1, 1, 1));
+                                           new THREE.Vector3(/*(<Objects>this.widget.objects).flip_state()*/ false ? -1 : 1, 1, 1));
     }
 
     private _set_m4(m4 :THREE.Matrix4) {
         var t = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();
         m4.decompose(t, q, s);
         this.camera.up.copy(Viewer.camera_up).applyQuaternion(q).normalize();
-        (<Objects>this.widget.objects).flip_set(s.x < 0);
+        // (<Objects>this.widget.objects).flip_set(s.x < 0);
         this.camera_update();
         return q;
     }
@@ -207,39 +209,39 @@ export class Viewer extends AmvLevel1.Viewer
 
     public objects_updated() :void {
         super.objects_updated();
-        if (!this.viewport_initial) {
-            var objects_viewport = (<Objects>this.widget.objects).viewport();
-            if (!objects_viewport) {
-                var center = this.widget.objects.center();
-                objects_viewport = {cx: center.x, cy: center.y, size: Math.ceil(this.widget.objects.diameter() + 0.5)};
-            }
-            this.viewport_initial = this.viewport(objects_viewport);
-        }
-        else {
-            this.grid.reset(false);
-        }
-        $.when(this.widget.initialization_completed).done(() => this.update_resolution());
+        // if (!this.viewport_initial) {
+        //     var objects_viewport = (<Objects>this.widget.objects).viewport();
+        //     if (!objects_viewport) {
+        //         var center = this.widget.objects.center();
+        //         objects_viewport = {cx: center.x, cy: center.y, size: Math.ceil(this.widget.objects.diameter() + 0.5)};
+        //     }
+        //     this.viewport_initial = this.viewport(objects_viewport);
+        // }
+        // else {
+        //     this.grid.reset(false);
+        // }
+        // $.when(this.widget.initialization_completed).done(() => this.update_resolution());
     }
 
-    // Returns node triggering events
-    public bind_manipulators(widget :AmvLevel1.MapWidgetLevel1) :void {
-        $.when(Amv.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
-            this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv",
-                                                    "wheel:alt:amv", "wheel:shift:amv", "wheel:shift-alt:amv", "drag:shift:amv", "key::amv",
-                                                    "move::amv", //"drag::amv", "wheel:shift-alt:amv"
-                                                   ]);
+    // // Returns node triggering events
+    // public bind_manipulators(widget :AmvLevel1.MapWidgetLevel1) :void {
+    //     $.when(Amv.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
+    //         this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv",
+    //                                                 "wheel:alt:amv", "wheel:shift:amv", "wheel:shift-alt:amv", "drag:shift:amv", "key::amv",
+    //                                                 "move::amv", //"drag::amv", "wheel:shift-alt:amv"
+    //                                                ]);
 
-            this.rotate_control = new AmvManipulator2d.RotateControl(this, "wheel:ctrl:amv");
-            this.fliph_control = new AmvManipulator2d.FlipControl(this, true, "left:alt:amv");
-            this.flipv_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
-            this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv");
-            this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv");
-            // this.label_scale_control = new AmvManipulator2d.LabelScaleControl(this, "wheel:shift-alt:amv");
-            this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
-            this.key_control = new AmvManipulator2d.KeyControl(this, "key::amv");
-            this.hover_control = new AmvManipulator2d.HoverControl(this, "move::amv"); // triggers "hover:amv" on this.element
-        });
-    }
+    //         this.rotate_control = new AmvManipulator2d.RotateControl(this, "wheel:ctrl:amv");
+    //         this.fliph_control = new AmvManipulator2d.FlipControl(this, true, "left:alt:amv");
+    //         this.flipv_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
+    //         this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv");
+    //         this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv");
+    //         // this.label_scale_control = new AmvManipulator2d.LabelScaleControl(this, "wheel:shift-alt:amv");
+    //         this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
+    //         this.key_control = new AmvManipulator2d.KeyControl(this, "key::amv");
+    //         this.hover_control = new AmvManipulator2d.HoverControl(this, "move::amv"); // triggers "hover:amv" on this.element
+    //     });
+    // }
 
     public keypress(key :number) {
         switch (key) {
@@ -256,7 +258,7 @@ export class Viewer extends AmvLevel1.Viewer
             this.viewport_rotate(Math.PI / 2);
             break;
         case 45:               // -
-            this.widget.objects.object_scale(1.0);
+            // this.widget.objects.object_scale(1.0);
             break;
         default:
             console.log('keypress', key);
@@ -307,7 +309,7 @@ class Grid
     constructor(public viewer :Viewer, private position_z :number) {
         this.grid = new THREE.Object3D();
         this.base_vertice = null;
-        this.viewer.widget.add(this.grid);
+        this.viewer.widget.add_to_scene(this.grid);
         this.grid.position.set(0, 0, this.position_z);
         this.grid.lookAt(this.viewer.camera.position);
     }
@@ -352,11 +354,20 @@ class Grid
 
 // ----------------------------------------------------------------------
 
-export class Object extends AmvLevel1.Object
+export class MapElement extends AmvLevel1.MapElement
 {
-    // public destroy() {
-    //     super.destroy();
-    // }
+    public set_position(position? :Position) :void {
+        if (position !== undefined && position !== null) {
+            this.position.set(position[0], -position[1], 0);
+        }
+    }
+
+    public set_rotation(rotation :number) :number {
+        if (rotation !== undefined && rotation !== null) {
+            this.body.rotation.z = rotation;
+        }
+        return this.body.rotation.z;
+    }
 
     public set_drawing_order(drawing_order :number) {
         this.position.setZ(DrawingOrderNS.base + drawing_order * DrawingOrderNS.step);
@@ -365,98 +376,13 @@ export class Object extends AmvLevel1.Object
 
 // ----------------------------------------------------------------------
 
-export class Objects extends AmvLevel1.Objects
+export class Factory extends AmvLevel1.Factory
 {
-    private _flip :boolean;
-    private _viewport :Viewport;
-    public static object_default_size :number = 5; // in pixels, multiplied by this._object_scale
-    private event_handlers :JQuery[] = [];
-    private pixels_per_unit :number; // store old value to speed up resize()
-
-    constructor(widget :AmvLevel1.MapWidgetLevel1) {
-        super(widget);
-        this._flip = false;
-        this.event_handlers.push(widget.on("map-resolution-changed:amv", (pixels_per_unit) => this.map_resolution_changed(pixels_per_unit)));
-    }
-
-    public destroy() {
-        this.event_handlers.forEach((eh) => eh.off());
-    }
-
-    public number_of_dimensions() :number {
-        return 2;
-    }
-
-    public flip() :void {
-        const center_x = this.center().x;
-        this.objects.map(o => o.position.setX(center_x - o.position.x));
-        this._flip = !this._flip;
-    }
-
-    public flip_set(flip :boolean) :void {
-        if (flip !== this._flip) {
-            this.flip();
-        }
-    }
-
-    public flip_state() :boolean {
-        return this._flip;
-    }
-
-    public reset() :void {
-        super.reset();
-        this.flip_set(false);
-    }
-
-    public reorient() :void {
-        var quaternion = new THREE.Quaternion().setFromUnitVectors(Viewer.camera_up, this.widget.viewer.camera.up);
-        this.objects.map(o => o.rotation.setFromQuaternion(quaternion));
-    }
-
-    public viewport(viewport? :Viewport) :Viewport {
-        if (viewport) {
-            this._viewport = viewport;
-        }
-        return this._viewport;
-    }
-
-    protected scale_limits() :{min :number, max :number} {
-        var units_per_pixel = 1 / (<Viewer>this.widget.viewer).resolution();
-        return {min: units_per_pixel * 20, max: this.widget.size() * units_per_pixel};
-    }
-
-    public object_scale(factor :number) :void {
-        super.object_scale(factor);
-    }
-
-    private map_resolution_changed(pixels_per_unit :number) :void {
-        this.resize(pixels_per_unit);
-    }
-
-    private resize(pixels_per_unit :number) :void {
-        if (pixels_per_unit !== this.pixels_per_unit) {
-            var scale = Objects.object_default_size / pixels_per_unit;
-            this.objects.map(o => o.set_scale(scale));
-            this.pixels_per_unit = pixels_per_unit;
-        }
-    }
-
-    public object_factory(number_of_objects? :number) :AmvLevel1.ObjectFactory {
-        if (!this._object_factory) {
-            this._object_factory = new ObjectFactory(number_of_objects);
-        }
-        return super.object_factory(number_of_objects);
-    }
-}
-
-// ----------------------------------------------------------------------
-
-export class ObjectFactory extends AmvLevel1.ObjectFactory
-{
-    public static geometry_size :number = 1.0;
+    private static geometry_size :number = 1.0;
     private ball_segments :number; // depends on the number of objects
     private outline_width_scale :number;
-    private outline_materials :any; // color: THREE.Material
+    private outline_materials :any; // {color-outline_width: THREE.Material}
+    private geometries :any;
 
     constructor(number_of_objects :number) {
         super();
@@ -464,54 +390,52 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
         this.ball_segments = 32;
         this.outline_width_scale = 0.005;
         this.outline_materials = {};
+        this.make_geometries();
     }
 
-    public make_object() :Object {
-        return new Object();
+    public circle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
+    {
+        var body = new THREE.Mesh(this.geometries.circle, new this.material(Factory.convert_color(fill_color)));
+        var outline = new THREE.Line(this.geometries.circle_outline, this.outline_material(outline_color, outline_width)); // <THREE.ShaderMaterial>
+        var map_element = new MapElement(body, outline);
+        return map_element;
     }
 
-    public make_outline(shape :string, outline_width :number, outline_color :any) :THREE.Object3D {
-        var outline_material = this.outline_material(this.convert_color(outline_color), outline_width);
-        return new THREE.Line(this.geometries[`${shape}-outline`], <THREE.ShaderMaterial>outline_material);
+    public add_box(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
+    {
+        throw "not implemented";
     }
 
-    // adds to this.geometries
-    protected make_circle() :void {
-        this.geometries["circle"] = this.geometries["sphere"] = new THREE.CircleGeometry(ObjectFactory.geometry_size / 2, this.ball_segments);
-        var circle_curve = new THREE.EllipseCurve(0, 0, ObjectFactory.geometry_size / 2, ObjectFactory.geometry_size / 2, 0, Math.PI * 2, false, 0);
+    public add_triangle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
+    {
+        throw "not implemented";
+    }
+
+    public add_line(width :number, color :Color) :MapElement
+    {
+        throw "not implemented";
+    }
+
+    public add_arrow(width :number, color :Color, arrow_width :number, arrow_length :number) :MapElement
+    {
+        throw "not implemented";
+    }
+
+    private make_geometries() :void
+    {
+        this.geometries.circle = new THREE.CircleGeometry(Factory.geometry_size / 2, this.ball_segments);
+        var circle_curve = new THREE.EllipseCurve(0, 0, Factory.geometry_size / 2, Factory.geometry_size / 2, 0, Math.PI * 2, false, 0);
         var circle_path = new THREE.Path(circle_curve.getPoints(this.ball_segments));
-        this.geometries["circle-outline"] = this.geometries["sphere-outline"] = circle_path.createPointsGeometry(this.ball_segments);
+        this.geometries.circle_outline = circle_path.createPointsGeometry(this.ball_segments);
     }
 
-    // adds to this.geometries
-    protected make_box() :void {
-        var offset = ObjectFactory.geometry_size / 2;
-        var shape = new THREE.Shape();
-        shape.moveTo(-offset, -offset);
-        shape.lineTo(-offset,  offset);
-        shape.lineTo( offset,  offset);
-        shape.lineTo( offset, -offset);
-        shape.lineTo(-offset, -offset);
-        this.geometries["box"] = this.geometries["cube"] = new THREE.ShapeGeometry(shape);
-        this.geometries["box-outline"] = this.geometries["cube-outline"] = shape.createPointsGeometry(null);
-    }
-
-    protected make_triangle() :void {
-        var offset = ObjectFactory.geometry_size / 2;
-        var shape = new THREE.Shape();
-        shape.moveTo(-offset, -offset);
-        shape.lineTo( offset, -offset);
-        shape.lineTo(      0,  offset);
-        shape.lineTo(-offset, -offset);
-        this.geometries["triangle"] = new THREE.ShapeGeometry(shape);
-        this.geometries["triangle-outline"] = shape.createPointsGeometry(null);
-    }
-
-    private outline_material(outline_color :THREE.MeshBasicMaterialParameters, outline_width :number) :THREE.Material {
-        var key = `${outline_color.color}-${outline_width}`;
+    private outline_material(outline_color :Color, outline_width :number) :THREE.LineBasicMaterial
+    {
+        var ocolor = Factory.convert_color(outline_color);
+        var key = `${ocolor.color}-${outline_width}`;
         var outline_material :THREE.LineBasicMaterial = <THREE.LineBasicMaterial>this.outline_materials[key];
         if (!outline_material) {
-            outline_material = new THREE.LineBasicMaterial(outline_color);
+            outline_material = new THREE.LineBasicMaterial(ocolor);
             outline_material.linewidth = (outline_width === undefined || outline_width === null) ? 1.0 : outline_width;
             // outline_material.transparent = true;
             this.outline_materials[key] = outline_material;
@@ -519,5 +443,162 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
         return outline_material;
     }
 }
+
+// ----------------------------------------------------------------------
+
+// export class Objects extends AmvLevel1.Objects
+// {
+//     private _flip :boolean;
+//     private _viewport :Viewport;
+//     public static object_default_size :number = 5; // in pixels, multiplied by this._object_scale
+//     private event_handlers :JQuery[] = [];
+//     private pixels_per_unit :number; // store old value to speed up resize()
+
+//     constructor(widget :AmvLevel1.MapWidgetLevel1) {
+//         super(widget);
+//         this._flip = false;
+//         this.event_handlers.push(widget.on("map-resolution-changed:amv", (pixels_per_unit) => this.map_resolution_changed(pixels_per_unit)));
+//     }
+
+//     public destroy() {
+//         this.event_handlers.forEach((eh) => eh.off());
+//     }
+
+//     public number_of_dimensions() :number {
+//         return 2;
+//     }
+
+//     public flip() :void {
+//         const center_x = this.center().x;
+//         this.objects.map(o => o.position.setX(center_x - o.position.x));
+//         this._flip = !this._flip;
+//     }
+
+//     public flip_set(flip :boolean) :void {
+//         if (flip !== this._flip) {
+//             this.flip();
+//         }
+//     }
+
+//     public flip_state() :boolean {
+//         return this._flip;
+//     }
+
+//     public reset() :void {
+//         super.reset();
+//         this.flip_set(false);
+//     }
+
+//     public reorient() :void {
+//         var quaternion = new THREE.Quaternion().setFromUnitVectors(Viewer.camera_up, this.widget.viewer.camera.up);
+//         this.objects.map(o => o.rotation.setFromQuaternion(quaternion));
+//     }
+
+//     public viewport(viewport? :Viewport) :Viewport {
+//         if (viewport) {
+//             this._viewport = viewport;
+//         }
+//         return this._viewport;
+//     }
+
+//     protected scale_limits() :{min :number, max :number} {
+//         var units_per_pixel = 1 / (<Viewer>this.widget.viewer).resolution();
+//         return {min: units_per_pixel * 20, max: this.widget.size() * units_per_pixel};
+//     }
+
+//     public object_scale(factor :number) :void {
+//         super.object_scale(factor);
+//     }
+
+//     private map_resolution_changed(pixels_per_unit :number) :void {
+//         this.resize(pixels_per_unit);
+//     }
+
+//     private resize(pixels_per_unit :number) :void {
+//         if (pixels_per_unit !== this.pixels_per_unit) {
+//             var scale = Objects.object_default_size / pixels_per_unit;
+//             this.objects.map(o => o.set_scale(scale));
+//             this.pixels_per_unit = pixels_per_unit;
+//         }
+//     }
+
+//     public object_factory(number_of_objects? :number) :AmvLevel1.ObjectFactory {
+//         if (!this._object_factory) {
+//             this._object_factory = new ObjectFactory(number_of_objects);
+//         }
+//         return super.object_factory(number_of_objects);
+//     }
+// }
+
+// // ----------------------------------------------------------------------
+
+// export class ObjectFactory extends AmvLevel1.ObjectFactory
+// {
+//     public static geometry_size :number = 1.0;
+//     private ball_segments :number; // depends on the number of objects
+//     private outline_width_scale :number;
+//     private outline_materials :any; // color: THREE.Material
+
+//     constructor(number_of_objects :number) {
+//         super();
+//         this.material = THREE.MeshBasicMaterial;
+//         this.ball_segments = 32;
+//         this.outline_width_scale = 0.005;
+//         this.outline_materials = {};
+//     }
+
+//     public make_object() :Object {
+//         return new Object();
+//     }
+
+//     public make_outline(shape :string, outline_width :number, outline_color :any) :THREE.Object3D {
+//         var outline_material = this.outline_material(this.convert_color(outline_color), outline_width);
+//         return new THREE.Line(this.geometries[`${shape}-outline`], <THREE.ShaderMaterial>outline_material);
+//     }
+
+//     // adds to this.geometries
+//     protected make_circle() :void {
+//         this.geometries["circle"] = this.geometries["sphere"] = new THREE.CircleGeometry(ObjectFactory.geometry_size / 2, this.ball_segments);
+//         var circle_curve = new THREE.EllipseCurve(0, 0, ObjectFactory.geometry_size / 2, ObjectFactory.geometry_size / 2, 0, Math.PI * 2, false, 0);
+//         var circle_path = new THREE.Path(circle_curve.getPoints(this.ball_segments));
+//         this.geometries["circle-outline"] = this.geometries["sphere-outline"] = circle_path.createPointsGeometry(this.ball_segments);
+//     }
+
+//     // adds to this.geometries
+//     protected make_box() :void {
+//         var offset = ObjectFactory.geometry_size / 2;
+//         var shape = new THREE.Shape();
+//         shape.moveTo(-offset, -offset);
+//         shape.lineTo(-offset,  offset);
+//         shape.lineTo( offset,  offset);
+//         shape.lineTo( offset, -offset);
+//         shape.lineTo(-offset, -offset);
+//         this.geometries["box"] = this.geometries["cube"] = new THREE.ShapeGeometry(shape);
+//         this.geometries["box-outline"] = this.geometries["cube-outline"] = shape.createPointsGeometry(null);
+//     }
+
+//     protected make_triangle() :void {
+//         var offset = ObjectFactory.geometry_size / 2;
+//         var shape = new THREE.Shape();
+//         shape.moveTo(-offset, -offset);
+//         shape.lineTo( offset, -offset);
+//         shape.lineTo(      0,  offset);
+//         shape.lineTo(-offset, -offset);
+//         this.geometries["triangle"] = new THREE.ShapeGeometry(shape);
+//         this.geometries["triangle-outline"] = shape.createPointsGeometry(null);
+//     }
+
+//     private outline_material(outline_color :THREE.MeshBasicMaterialParameters, outline_width :number) :THREE.Material {
+//         var key = `${outline_color.color}-${outline_width}`;
+//         var outline_material :THREE.LineBasicMaterial = <THREE.LineBasicMaterial>this.outline_materials[key];
+//         if (!outline_material) {
+//             outline_material = new THREE.LineBasicMaterial(outline_color);
+//             outline_material.linewidth = (outline_width === undefined || outline_width === null) ? 1.0 : outline_width;
+//             // outline_material.transparent = true;
+//             this.outline_materials[key] = outline_material;
+//         }
+//         return outline_material;
+//     }
+// }
 
 // ----------------------------------------------------------------------

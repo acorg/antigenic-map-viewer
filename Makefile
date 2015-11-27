@@ -15,9 +15,9 @@ endif
 
 AMV_TEST = amv-config.js test-4d.ts test.less test-4d.html
 AMV_LIB = amv.ts amv-level1.ts amv-level2.ts \
-	  acmacs-plot-data.ts \
 	  amv-manipulator.ts amv-manipulator-2d.ts amv-manipulator-3d.ts amv-2d.ts amv-3d.ts \
 	  acmacs-toolkit.ts amv-state.ts
+	  # acmacs-plot-data.ts
 AMV_LESS = acmacs-toolkit.less amv.less
 AMV_TYPINGS = antigenic-map-viewer.d.ts
 
