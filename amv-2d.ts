@@ -2,7 +2,6 @@
 
 import TypingsReferences = require("build/typings-references");
 
-import AmvUtils = require("amv-utils");
 import AmvLevel1 = require("amv-level1");
 import AmvManipulator = require("amv-manipulator");
 import AmvManipulator2d = require("amv-manipulator-2d");
@@ -224,7 +223,7 @@ export class Viewer extends AmvLevel1.Viewer
 
     // Returns node triggering events
     public bind_manipulators(widget :AmvLevel1.MapWidgetLevel1) :void {
-        $.when(AmvUtils.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
+        $.when(Amv.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
             this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv",
                                                     "wheel:alt:amv", "wheel:shift:amv", "wheel:shift-alt:amv", "drag:shift:amv", "key::amv",
                                                     "move::amv", //"drag::amv", "wheel:shift-alt:amv"

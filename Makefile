@@ -13,10 +13,11 @@ endif
 
 # ----------------------------------------------------------------------
 
-AMV_TEST = amv-config.js test-3d.ts test.less test-3d.json test-2d.ts test-3d.html test-2d.html
-AMV_LIB = acmacs-plot-data.ts amv-level1.ts amv-level2.ts \
+AMV_TEST = amv-config.js test-4d.ts test.less test-4d.html
+AMV_LIB = amv.ts amv-level1.ts amv-level2.ts \
+	  acmacs-plot-data.ts \
 	  amv-manipulator.ts amv-manipulator-2d.ts amv-manipulator-3d.ts amv-2d.ts amv-3d.ts \
-	  amv-utils.ts acmacs-toolkit.ts amv-state.ts
+	  acmacs-toolkit.ts amv-state.ts
 AMV_LESS = acmacs-toolkit.less amv.less
 AMV_TYPINGS = antigenic-map-viewer.d.ts
 
@@ -28,7 +29,7 @@ INSTALL_FILES = $(patsubst %.ts,$(DIST)/%.js,$(filter %.ts,$(AMV_LIB))) $(AMV_LE
 
 # ----------------------------------------------------------------------
 
-DIST_JS = $(DIST)/test-3d.js $(DIST)/test-2d.js $(DIST)/amv-config.js
+DIST_JS = $(DIST)/test-4d.js $(DIST)/amv-config.js
 DIST_JSON = $(patsubst %.json,$(DIST)/%.json,$(filter %.json,$(AMV)))
 DIST_CSS = $(patsubst %.less,$(DIST)/%.css,$(filter %.less,$(AMV)))
 DIST_HTML = $(patsubst %,$(DIST)/%,$(filter %.html,$(AMV)))
@@ -59,6 +60,10 @@ include $(EUPA_MAKEFILE)
 endif
 
 TYPINGS_DIR = $(EUPA_BUILD)
+
+# ----------------------------------------------------------------------
+
+$(DIST)/test-4d.js: $(wildcard *.ts)
 
 # ----------------------------------------------------------------------
 

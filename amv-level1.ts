@@ -5,7 +5,7 @@
 // ----------------------------------------------------------------------
 
 import TypingsReferences = require("build/typings-references");
-import AmvUtils = require("amv-utils");
+import Amv = require("amv");
 import Amv3d = require("amv-3d");
 import AmvManipulator = require("amv-manipulator");
 
@@ -42,7 +42,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     }
 
     public initialize_for_dimensions(number_of_dimensions :number) :JQueryPromise<any> {
-        var amv_loaded = AmvUtils.require_deferred(['amv-' + number_of_dimensions + 'd']);
+        var amv_loaded = Amv.require_deferred(['amv-' + number_of_dimensions + 'd']);
         $.when(amv_loaded).done((Amv :typeof Amv3d) => {
             this.viewer = new Amv.Viewer(this);
             this.viewer_created.resolve();
@@ -135,7 +135,7 @@ export class Viewer implements AntigenicMapViewer.TriggeringEvent
 
     constructor(public widget :MapWidgetLevel1) {
         this.element = $(widget.domElement());
-        $.when(AmvUtils.require_deferred(['amv-manipulator'])).done(() => {
+        $.when(Amv.require_deferred(['amv-manipulator'])).done(() => {
             this.manipulator = new AmvManipulator.Manipulator(this.element);
         });
         this.on("reset:amv", () => this.reset());

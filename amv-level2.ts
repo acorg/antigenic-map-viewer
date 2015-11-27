@@ -2,15 +2,15 @@
 
 import TypingsReferences = require("build/typings-references");
 
-import AmvUtils = require("amv-utils");
-import AcmacsPlotData = require("acmacs-plot-data");
+// import AcmacsPlotData = require("acmacs-plot-data");
+import Amv = require("amv");
 import AmvLevel1 = require("amv-level1");
 import AcmacsToolkit = require("acmacs-toolkit");
-import AmvState = require("amv-state");
+// import AmvState = require("amv-state");
 
 // ----------------------------------------------------------------------
 
-export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, AntigenicMapViewer.TriggeringEvent
+export class MapWidgetLevel2
 {
     public initialization_completed :JQueryDeferred<{}> = $.Deferred();
 
@@ -20,20 +20,15 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
     private help_popup :AcmacsToolkit.PopupMessage;
     private popup_menu_items_extra :AcmacsToolkit.PopupMenuDescItem[];
 
+    private static wrapper_html = '<div class="amv-widget-wrapper"><div class="amv-level2-title"><div class="amv-level2-title-text"></div><table class="amv-level2-title-buttons"><tr></tr></table></div><div class="amv-level2-map-wrapper"></div></div>';
     private static popup_hovered_message_prefix = "<ul><li>";
     private static popup_hovered_message_suffix = "</li></ul>";
     private static popup_hovered_message_infix =  "</li><li>";
 
-    constructor(container :JQuery, size :number) {
-        this.wrapper = $('<div class="amv-widget-wrapper">\
-                            <div class="amv-level2-title">\
-                              <div class="amv-level2-title-text"></div>\
-                              <table class="amv-level2-title-buttons"><tr></tr></table>\
-                            </div>\
-                            <div class="amv-level2-map-wrapper"></div>\
-                          </div>').appendTo(container); // '<div class="amv-level2-hovered-points"></div>');
+    constructor(container :JQuery, size? :number) {
+        this.wrapper = $(MapWidgetLevel2.wrapper_html).appendTo(container);
         size = this.auto_size(size);
-        $.when(AmvUtils.require_deferred(["amv-level1"])).done(() => {
+        $.when(Amv.require_deferred(["amv-level1"])).done(() => {
             var map_container = this.wrapper.find('.amv-level2-map-wrapper');
             map_container.css({width: size, height: size});
             if (map_container.resizable) {
@@ -81,6 +76,8 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
             this.wrapper.find('.amv-level2-title-text').html("");
         }
     }
+
+    // ----------------------------------------------------------------------
 
     public add_popup_menu_items(items :AcmacsToolkit.PopupMenuDescItem[]) :void {
         this.popup_menu_items_extra = (this.popup_menu_items_extra || []).concat((items || []).map(function (elt) { if (!elt.eventNode) {elt = $.extend({eventNode: this}, elt); } return elt; }, this));
@@ -149,44 +146,44 @@ export class MapWidgetLevel2 implements AntigenicMapViewer.MapWidgetLevel2, Anti
 
 // ----------------------------------------------------------------------
 
-export function make_widget(container :JQuery, size :number, plot_data :AntigenicMapViewer.PlotDataInterface|AntigenicMapViewer.MapStateForDrawing, extra_popup_menu_items? :AcmacsToolkit.PopupMenuDescItem[]) :MapWidgetLevel2
-{
-    var widget = new MapWidgetLevel2(container, size);
-    $.when(widget.initialization_completed).done(function() {
-        if ((<AntigenicMapViewer.PlotDataInterface>plot_data).layout) {
-            var pd = new AcmacsPlotData.PlotData(<AntigenicMapViewer.PlotDataInterface>plot_data);
-            widget.title(pd.title());
-            pd.setup_map(widget.map);
-        }
-        else if ((<AntigenicMapViewer.MapStateForDrawing>plot_data).camera_looking_at) {
-            widget_restore(widget, <AntigenicMapViewer.MapStateForDrawing>plot_data);
-        }
-        else {
-            console.error('internal in make_widget');
-        }
+// export function make_widget(container :JQuery, size :number, plot_data :AntigenicMapViewer.PlotDataInterface|AntigenicMapViewer.MapStateForDrawing, extra_popup_menu_items? :AcmacsToolkit.PopupMenuDescItem[]) :MapWidgetLevel2
+// {
+//     var widget = new MapWidgetLevel2(container, size);
+//     $.when(widget.initialization_completed).done(function() {
+//         if ((<AntigenicMapViewer.PlotDataInterface>plot_data).layout) {
+//             var pd = new AcmacsPlotData.PlotData(<AntigenicMapViewer.PlotDataInterface>plot_data);
+//             widget.title(pd.title());
+//             pd.setup_map(widget.map);
+//         }
+//         else if ((<AntigenicMapViewer.MapStateForDrawing>plot_data).camera_looking_at) {
+//             widget_restore(widget, <AntigenicMapViewer.MapStateForDrawing>plot_data);
+//         }
+//         else {
+//             console.error('internal in make_widget');
+//         }
 
-        if (extra_popup_menu_items) {
-            widget.add_popup_menu_items(extra_popup_menu_items);
-        }
-    });
+//         if (extra_popup_menu_items) {
+//             widget.add_popup_menu_items(extra_popup_menu_items);
+//         }
+//     });
 
-    return widget;
-}
+//     return widget;
+// }
 
-// ----------------------------------------------------------------------
+// // ----------------------------------------------------------------------
 
-export function widget_state(widget :MapWidgetLevel2|AmvLevel1.MapWidgetLevel1) :AntigenicMapViewer.MapStateForDrawing
-{
-    var w :AmvLevel1.MapWidgetLevel1 = (widget instanceof MapWidgetLevel2) ? (<MapWidgetLevel2>widget).map : <AmvLevel1.MapWidgetLevel1>widget;
-    return AmvState.widget_state(w);
-}
+// export function widget_state(widget :MapWidgetLevel2|AmvLevel1.MapWidgetLevel1) :AntigenicMapViewer.MapStateForDrawing
+// {
+//     var w :AmvLevel1.MapWidgetLevel1 = (widget instanceof MapWidgetLevel2) ? (<MapWidgetLevel2>widget).map : <AmvLevel1.MapWidgetLevel1>widget;
+//     return AmvState.widget_state(w);
+// }
 
-// ----------------------------------------------------------------------
+// // ----------------------------------------------------------------------
 
-export function widget_restore(widget :MapWidgetLevel2|AmvLevel1.MapWidgetLevel1, state :AntigenicMapViewer.MapStateForDrawing) :void
-{
-    var w :AmvLevel1.MapWidgetLevel1 = (widget instanceof MapWidgetLevel2) ? (<MapWidgetLevel2>widget).map : <AmvLevel1.MapWidgetLevel1>widget;
-    AmvState.widget_restore(w, state);
-}
+// export function widget_restore(widget :MapWidgetLevel2|AmvLevel1.MapWidgetLevel1, state :AntigenicMapViewer.MapStateForDrawing) :void
+// {
+//     var w :AmvLevel1.MapWidgetLevel1 = (widget instanceof MapWidgetLevel2) ? (<MapWidgetLevel2>widget).map : <AmvLevel1.MapWidgetLevel1>widget;
+//     AmvState.widget_restore(w, state);
+// }
 
-// ----------------------------------------------------------------------
+// // ----------------------------------------------------------------------

@@ -13,7 +13,7 @@ export class Application
     }
 
     public run() :void {
-        require(["json!test-3d.json", "amv-level2", "css!test", "acmacs-toolkit", "acmacs-plot-data", "amv-utils"], (test_data_3d :AntigenicMapViewer.PlotDataInterface, amv :AntigenicMapViewer.MapWidget) => {
+        require(["json!test-3d.json", "amv-level2", "css!test", "acmacs-toolkit", "acmacs-plot-data"], (test_data_3d :AntigenicMapViewer.PlotDataInterface, amv :AntigenicMapViewer.MapWidget) => {
             console.log('amv-test 3d', new Date());
 
             var widget1 = amv.make_widget($('body'), null, test_data_3d);

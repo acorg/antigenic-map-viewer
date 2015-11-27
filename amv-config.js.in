@@ -10,9 +10,13 @@ require.config({
     }
 });
 
-// Chrome (40) requires loading libraries one by one, otherwise bacon does not add its function to $
-require(["jquery", "three"], function() {
-    require(["jquery-mousewheel", "jquery-ui", "css!jquery-ui"], function () {
-        require([AMV_MAIN], function(main) { (new main.Application()).run(); });
-    });
+// // Chrome (40) requires loading libraries one by one, otherwise bacon does not add its function to $
+// require(["jquery", "three"], function() {
+//     require(["jquery-mousewheel", "jquery-ui", "css!jquery-ui"], function () {
+//         require([AMV_MAIN], function(main) { (new main.Application()).run(); });
+//     });
+// });
+
+require(["jquery", AMV_MAIN], function(jq, main) {
+    (new main.Application()).run();
 });
