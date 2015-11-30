@@ -396,20 +396,22 @@ export class Factory extends AmvLevel1.Factory
     public circle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
     {
         var body = new THREE.Mesh(this.geometries.circle, this.fill_material(fill_color));
-        var outline = new THREE.Line(this.geometries.circle_outline, this.outline_material(outline_color, outline_width)); // <THREE.ShaderMaterial>
+        var outline = new THREE.Line(this.geometries.circle_outline, this.outline_material(outline_color, outline_width));
         return new MapElement(body, outline);
     }
 
     public box(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
     {
         var body = new THREE.Mesh(this.geometries.box, this.fill_material(fill_color));
-        var outline = new THREE.Line(this.geometries.box_outline, this.outline_material(outline_color, outline_width)); // <THREE.ShaderMaterial>
+        var outline = new THREE.Line(this.geometries.box_outline, this.outline_material(outline_color, outline_width));
         return new MapElement(body, outline);
     }
 
     public triangle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
     {
-        throw "not implemented";
+        var body = new THREE.Mesh(this.geometries.triangle, this.fill_material(fill_color));
+        var outline = new THREE.Line(this.geometries.triangle_outline, this.outline_material(outline_color, outline_width));
+        return new MapElement(body, outline);
     }
 
     public line(width :number, color :Color) :MapElement
@@ -436,11 +438,19 @@ export class Factory extends AmvLevel1.Factory
         box_shape.lineTo( offset, -offset);
         box_shape.lineTo(-offset, -offset);
 
+        var triangle_shape = new THREE.Shape();
+        triangle_shape.moveTo(-offset, -offset);
+        triangle_shape.lineTo( offset, -offset);
+        triangle_shape.lineTo(      0,  offset);
+        triangle_shape.lineTo(-offset, -offset);
+
         this.geometries = {
             circle: new THREE.CircleGeometry(Factory.geometry_size / 2, this.ball_segments),
             circle_outline: circle_path.createPointsGeometry(this.ball_segments),
             box: new THREE.ShapeGeometry(box_shape),
             box_outline: box_shape.createPointsGeometry(null),
+            triangle: new THREE.ShapeGeometry(triangle_shape),
+            triangle_outline: triangle_shape.createPointsGeometry(null),
         };
     }
 
@@ -557,74 +567,3 @@ export class Factory extends AmvLevel1.Factory
 // }
 
 // // ----------------------------------------------------------------------
-
-// export class ObjectFactory extends AmvLevel1.ObjectFactory
-// {
-//     public static geometry_size :number = 1.0;
-//     private ball_segments :number; // depends on the number of objects
-//     private outline_width_scale :number;
-//     private outline_materials :any; // color: THREE.Material
-
-//     constructor(number_of_objects :number) {
-//         super();
-//         this.material = THREE.MeshBasicMaterial;
-//         this.ball_segments = 32;
-//         this.outline_width_scale = 0.005;
-//         this.outline_materials = {};
-//     }
-
-//     public make_object() :Object {
-//         return new Object();
-//     }
-
-//     public make_outline(shape :string, outline_width :number, outline_color :any) :THREE.Object3D {
-//         var outline_material = this.outline_material(this.convert_color(outline_color), outline_width);
-//         return new THREE.Line(this.geometries[`${shape}-outline`], <THREE.ShaderMaterial>outline_material);
-//     }
-
-//     // adds to this.geometries
-//     protected make_circle() :void {
-//         this.geometries["circle"] = this.geometries["sphere"] = new THREE.CircleGeometry(ObjectFactory.geometry_size / 2, this.ball_segments);
-//         var circle_curve = new THREE.EllipseCurve(0, 0, ObjectFactory.geometry_size / 2, ObjectFactory.geometry_size / 2, 0, Math.PI * 2, false, 0);
-//         var circle_path = new THREE.Path(circle_curve.getPoints(this.ball_segments));
-//         this.geometries["circle-outline"] = this.geometries["sphere-outline"] = circle_path.createPointsGeometry(this.ball_segments);
-//     }
-
-//     // adds to this.geometries
-//     protected make_box() :void {
-//         var offset = ObjectFactory.geometry_size / 2;
-//         var shape = new THREE.Shape();
-//         shape.moveTo(-offset, -offset);
-//         shape.lineTo(-offset,  offset);
-//         shape.lineTo( offset,  offset);
-//         shape.lineTo( offset, -offset);
-//         shape.lineTo(-offset, -offset);
-//         this.geometries["box"] = this.geometries["cube"] = new THREE.ShapeGeometry(shape);
-//         this.geometries["box-outline"] = this.geometries["cube-outline"] = shape.createPointsGeometry(null);
-//     }
-
-//     protected make_triangle() :void {
-//         var offset = ObjectFactory.geometry_size / 2;
-//         var shape = new THREE.Shape();
-//         shape.moveTo(-offset, -offset);
-//         shape.lineTo( offset, -offset);
-//         shape.lineTo(      0,  offset);
-//         shape.lineTo(-offset, -offset);
-//         this.geometries["triangle"] = new THREE.ShapeGeometry(shape);
-//         this.geometries["triangle-outline"] = shape.createPointsGeometry(null);
-//     }
-
-//     private outline_material(outline_color :THREE.MeshBasicMaterialParameters, outline_width :number) :THREE.Material {
-//         var key = `${outline_color.color}-${outline_width}`;
-//         var outline_material :THREE.LineBasicMaterial = <THREE.LineBasicMaterial>this.outline_materials[key];
-//         if (!outline_material) {
-//             outline_material = new THREE.LineBasicMaterial(outline_color);
-//             outline_material.linewidth = (outline_width === undefined || outline_width === null) ? 1.0 : outline_width;
-//             // outline_material.transparent = true;
-//             this.outline_materials[key] = outline_material;
-//         }
-//         return outline_material;
-//     }
-// }
-
-// ----------------------------------------------------------------------
