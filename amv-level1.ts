@@ -65,11 +65,11 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     }
 
     public add_box(attrs: MapElementAttributes) :MapElementId {
-        return -1;
+        return this.add_map_element(this.factory.box(attrs.fill_color || "transparent", attrs.outline_color || "black", attrs.outline_width || 1), attrs);
     }
 
     public add_triangle(attrs: MapElementAttributes) :MapElementId {
-        return -1;
+        return this.add_map_element(this.factory.triangle(attrs.fill_color || "transparent", attrs.outline_color || "black", attrs.outline_width || 1), attrs);
     }
 
     private add_map_element(map_element :MapElement, attrs :MapElementAttributes) :MapElementId {
@@ -280,10 +280,10 @@ export abstract class MapElement extends THREE.Object3D
 export abstract class Factory
 {
     public abstract circle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
-    public abstract add_box(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
-    public abstract add_triangle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
-    public abstract add_line(width :number, color :Color) :MapElement;
-    public abstract add_arrow(width :number, color :Color, arrow_width :number, arrow_length :number) :MapElement;
+    public abstract box(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
+    public abstract triangle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
+    public abstract line(width :number, color :Color) :MapElement;
+    public abstract arrow(width :number, color :Color, arrow_width :number, arrow_length :number) :MapElement;
 
     protected static convert_color(source :Color) :THREE.MeshBasicMaterialParameters {
         var material_color :THREE.MeshBasicMaterialParameters;

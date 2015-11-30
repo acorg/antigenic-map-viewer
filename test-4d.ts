@@ -17,8 +17,8 @@ export class Application
             $.when(widget1.initialization_completed).then(function () {
                 widget1.title(["TITLE-TITLE"]);
                 var me1 = widget1.map.add_circle({position: [0, 0, 0], size: 1, fill_color: "red", outline_color: "blue", outline_width: 3});
-                var me2 = widget1.map.add_circle({position: [0.5, -0.5, 0], size: 0.3, fill_color: "green", outline_color: "pink", outline_width: 10});
-                var me3 = widget1.map.add_circle({position: [0.7, -0.7, 0], size: 0.1, fill_color: "lightblue"});
+                var me2 = widget1.map.add_box({position: [0.5, -0.5, 0], size: 0.3, fill_color: "green", outline_color: "pink", outline_width: 10});
+                var me3 = widget1.map.add_box({position: [0.7, -0.7, 0], size: 0.1, fill_color: "lightblue"});
                 console.log('me2 pos:', widget1.map.find_map_element(me2).position);
             });
         });

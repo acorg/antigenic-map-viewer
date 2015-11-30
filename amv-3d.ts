@@ -201,22 +201,22 @@ export class Factory extends AmvLevel1.Factory
         throw "not implemented";
     }
 
-    public add_box(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
+    public box(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
     {
         throw "not implemented";
     }
 
-    public add_triangle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
+    public triangle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
     {
         throw "not implemented";
     }
 
-    public add_line(width :number, color :Color) :MapElement
+    public line(width :number, color :Color) :MapElement
     {
         throw "not implemented";
     }
 
-    public add_arrow(width :number, color :Color, arrow_width :number, arrow_length :number) :MapElement
+    public arrow(width :number, color :Color, arrow_width :number, arrow_length :number) :MapElement
     {
         throw "not implemented";
     }
