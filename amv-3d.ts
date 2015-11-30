@@ -216,7 +216,7 @@ export class Factory extends AmvLevel1.Factory
         throw "not implemented";
     }
 
-    public arrow(other_end :Position, color :Color, width :number, arrow_length :number, arrow_width :number) :MapElement
+    public arrow(other_end :Position, color :Color, width :number, arrow_length :number) :MapElement
     {
         throw "not implemented";
     }

@@ -48,7 +48,6 @@ declare module AntigenicMapViewer {
 
     interface MapElementArrowAttributes extends MapElementLineAttributes
     {
-        arrow_width? :number;
         arrow_length? :number;
     }
 

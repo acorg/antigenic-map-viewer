@@ -82,14 +82,17 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     }
 
     public add_line(attrs: MapElementLineAttributes) :MapElementId {
-        var map_element = this.factory.line([attrs.position[1][0] - attrs.position[0][0], attrs.position[1][1] - attrs.position[0][1], attrs.position[1][2] - attrs.position[0][2]], attrs.color, attrs.width);
+        var map_element = this.factory.line([attrs.position[1][0] - attrs.position[0][0], attrs.position[1][1] - attrs.position[0][1], attrs.position[1][2] - attrs.position[0][2]], attrs.color || "black", attrs.width || 1);
         map_element.set_position(attrs.position[0]);
         this.add_to_scene(map_element);
         return map_element.id;
     }
 
     public add_arrow(attrs: MapElementArrowAttributes) :MapElementId {
-        throw "not implemented";
+        var map_element = this.factory.arrow([attrs.position[1][0] - attrs.position[0][0], attrs.position[1][1] - attrs.position[0][1], attrs.position[1][2] - attrs.position[0][2]], attrs.color || "black", attrs.width || 1, attrs.arrow_length || 1);
+        map_element.set_position(attrs.position[0]);
+        this.add_to_scene(map_element);
+        return map_element.id;
     }
 
     public find_map_element(map_element_id :MapElementId) :MapElement {
@@ -288,7 +291,7 @@ export abstract class Factory
     public abstract box(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
     public abstract triangle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
     public abstract line(other_end :Position, color :Color, width :number) :MapElement;
-    public abstract arrow(other_end :Position, color :Color, width :number, arrow_length :number, arrow_width :number) :MapElement;
+    public abstract arrow(other_end :Position, color :Color, width :number, arrow_length :number) :MapElement;
 
     protected static convert_color(source :Color) :THREE.MeshBasicMaterialParameters {
         var material_color :THREE.MeshBasicMaterialParameters;

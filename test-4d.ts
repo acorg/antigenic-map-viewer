@@ -20,7 +20,13 @@ export class Application
                 var me2 = widget1.map.add_box({position: [0.5, -0.5, 0], size: 0.3, fill_color: "green", outline_color: "pink", outline_width: 10});
                 var me3 = widget1.map.add_triangle({position: [0.7, -0.7, 0], size: 0.1, fill_color: "lightblue"});
                 widget1.map.add_line({position: [[0.1, -0.5, 0], [0.8, -0.1]], width: 10, color: "darkred"});
-                console.log('me2 pos:', widget1.map.find_map_element(me2).position);
+
+                widget1.map.add_arrow({position: [[0.5, -0.5, 0], [0.8, -0.6]], width: 1, color: "darkred"});
+                widget1.map.add_arrow({position: [[0.5, -0.5, 0], [0.1, -0.6]], width: 1, color: "brown"});
+                widget1.map.add_arrow({position: [[0.5, -0.5, 0], [0.8, -0.3]], width: 1, color: "darkgreen"});
+                widget1.map.add_arrow({position: [[0.5, -0.5, 0], [0.1, -0.3]], width: 10, color: "darkred"});
+
+                // console.log('me2 pos:', widget1.map.find_map_element(me2).position);
             });
         });
     }
