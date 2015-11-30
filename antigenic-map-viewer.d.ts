@@ -39,6 +39,19 @@ declare module AntigenicMapViewer {
         rotation? :number;
     }
 
+    interface MapElementLineAttributes
+    {
+        position :[Position, Position];
+        color? :Color;
+        width? :number;
+    }
+
+    interface MapElementArrowAttributes extends MapElementLineAttributes
+    {
+        arrow_width? :number;
+        arrow_length? :number;
+    }
+
 // ----------------------------------------------------------------------
 
     type Transformation = [[number, number], [number, number]];

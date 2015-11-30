@@ -16,6 +16,8 @@ type Color = AntigenicMapViewer.Color;
 type Position = AntigenicMapViewer.Position;
 type MapElementId = AntigenicMapViewer.MapElementId;
 type MapElementAttributes = AntigenicMapViewer.MapElementAttributes;
+type MapElementLineAttributes = AntigenicMapViewer.MapElementLineAttributes;
+type MapElementArrowAttributes = AntigenicMapViewer.MapElementArrowAttributes;
 
 // ----------------------------------------------------------------------
 
@@ -79,13 +81,16 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         return map_element.id;
     }
 
-    // public add_line(position1 :Position, position2 :Position, width :number, color :Color) :MapElementId {
-    //     throw "not implemented";
-    // }
+    public add_line(attrs: MapElementLineAttributes) :MapElementId {
+        var map_element = this.factory.line([attrs.position[1][0] - attrs.position[0][0], attrs.position[1][1] - attrs.position[0][1], attrs.position[1][2] - attrs.position[0][2]], attrs.color, attrs.width);
+        map_element.set_position(attrs.position[0]);
+        this.add_to_scene(map_element);
+        return map_element.id;
+    }
 
-    // public add_arrow(position1 :Position, position2 :Position, width :number, color :Color, arrow_width :number, arrow_length :number) :MapElementId {
-    //     throw "not implemented";
-    // }
+    public add_arrow(attrs: MapElementArrowAttributes) :MapElementId {
+        throw "not implemented";
+    }
 
     public find_map_element(map_element_id :MapElementId) :MapElement {
         return <MapElement>this.scene.getObjectById(map_element_id);
@@ -230,10 +235,10 @@ export class Viewer implements AntigenicMapViewer.TriggeringEvent
 
 export abstract class MapElement extends THREE.Object3D
 {
-    public body :THREE.Mesh;
+    public body :THREE.Object3D;
     public outline :THREE.Object3D;
 
-    constructor(body :THREE.Mesh, outline :THREE.Object3D) {
+    constructor(body :THREE.Object3D, outline? :THREE.Object3D) {
         super();
         this.body = body;
         this.add(body);
@@ -282,8 +287,8 @@ export abstract class Factory
     public abstract circle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
     public abstract box(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
     public abstract triangle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement;
-    public abstract line(width :number, color :Color) :MapElement;
-    public abstract arrow(width :number, color :Color, arrow_width :number, arrow_length :number) :MapElement;
+    public abstract line(other_end :Position, color :Color, width :number) :MapElement;
+    public abstract arrow(other_end :Position, color :Color, width :number, arrow_length :number, arrow_width :number) :MapElement;
 
     protected static convert_color(source :Color) :THREE.MeshBasicMaterialParameters {
         var material_color :THREE.MeshBasicMaterialParameters;

@@ -414,12 +414,15 @@ export class Factory extends AmvLevel1.Factory
         return new MapElement(body, outline);
     }
 
-    public line(width :number, color :Color) :MapElement
+    public line(other_end :Position, color :Color, width :number) :MapElement
     {
-        throw "not implemented";
+        var line_shape = new THREE.Shape();
+        line_shape.moveTo(0, 0)
+        line_shape.lineTo(other_end[0], - other_end[1])
+        return new MapElement(new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width)));
     }
 
-    public arrow(width :number, color :Color, arrow_width :number, arrow_length :number) :MapElement
+    public arrow(other_end :Position, color :Color, width :number, arrow_length :number, arrow_width :number) :MapElement
     {
         throw "not implemented";
     }
