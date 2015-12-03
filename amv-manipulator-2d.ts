@@ -52,6 +52,7 @@ export class ScaleControl extends Control
 
     public operate(data :AmvManipulator.WheelMovement) :void {
         var scale :number  = (data.deltaY < 0) ? ScaleControl.scale : (data.deltaY > 0 ? 1.0 / ScaleControl.scale : 1.0);
+        console.warn('2D ScaleControl', scale, 'NOT implemented in amv-manipulator-2d.ts');
         // this.viewer.widget.objects.object_scale(scale);
     }
 }
@@ -118,6 +119,7 @@ export class HoverControl extends Control
     public operate(data :AmvManipulator.MousePosition) :void {
         this.mouse.set((data.x / this.viewer.width()) * 2 - 1, - (data.y / this.viewer.height()) * 2 + 1);
         this.raycaster.setFromCamera(this.mouse, this.viewer.camera);
+        console.warn('2D HoverControl NOT implemented in amv-manipulator-2d.ts');
         // var intersects = this.raycaster.intersectObjects(this.viewer.widget.objects.bodies());
         // var objects :number[] = intersects.map((elt) => elt.object.userData.index || elt.object.parent.userData.index);
         // if ($(objects).not(<any>this.last).length !== 0 || $(this.last).not(<any>objects).length !== 0) {

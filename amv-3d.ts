@@ -21,14 +21,7 @@ export class Viewer extends AmvLevel1.Viewer
     private ambient_light :THREE.AmbientLight;
     private point_light :THREE.PointLight;
     private grid :Grid;
-
-    private orbit_control :AmvManipulator3d.OrbitControl;
-    private zoom_control :AmvManipulator3d.ZoomControl;
-    private scale_control :AmvManipulator3d.ScaleControl;
-    private pan_control :AmvManipulator3d.PanControl;
-    private reset_control :AmvManipulator3d.ResetControl;
-    private hover_control :AmvManipulator3d.HoverControl;
-    private fov_control :AmvManipulator3d.FovControl;
+    private controls :any = {}; // {string: AmvManipulator3d.Control}
 
     constructor(widget :AmvLevel1.MapWidgetLevel1, private initial_distance :number = 10, private initial_fov :number = 75) {
         super(widget);
@@ -115,13 +108,11 @@ export class Viewer extends AmvLevel1.Viewer
                                 <p class="footer">Click to hide this popup.</p>';
 
     public help_text() :string {
-        return Viewer.s_help_text
-              .replace("${rotate-trigger}", this.orbit_control.trigger_description())
-              .replace("${zoom-trigger}", this.zoom_control.trigger_description())
-              .replace("${scale-trigger}", this.scale_control.trigger_description())
-              .replace("${pan-trigger}", this.pan_control.trigger_description())
-              .replace("${fov-trigger}", this.fov_control.trigger_description())
-        ;
+        var r = Viewer.s_help_text;
+        ["rotate scale zoom pan fov"].forEach(function(n) {
+            r = r.replace("${" + n + "-trigger}", this.controls[n].trigger_description());
+        });
+        return r;
     }
 }
 

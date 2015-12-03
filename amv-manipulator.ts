@@ -108,10 +108,12 @@ export class Manipulator implements Object
 
     // Event is "<action>:<modifiers>:amv", e.g. "move::amv", "drag:alt:amv", "wheel:shift:amv", "key::amv"
     public make_event_generators(events :string[]) :void {
-        for (var index = 0; index < events.length; ++index) {
-            var action_modifier :string[] = events[index].split(':');
-            (<any>this)['make_generator_' + action_modifier[0]](action_modifier[1]);
-        }
+        events.forEach((event) => this.make_event_generator(event));
+    }
+
+    public make_event_generator(event :string) :void {
+        var action_modifier :string[] = event.split(':');
+        (<any>this)['make_generator_' + action_modifier[0]](action_modifier[1]);
     }
 
     private make_generator_move(modifier_desc :string) :void {

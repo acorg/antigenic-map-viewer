@@ -44,16 +44,7 @@ export class Viewer extends AmvLevel1.Viewer
     private viewport_initial :Viewport; // for reset
     private _pixels_per_unit :number;   // map resolution on screen
     private _initial_transformation :Transformation;
-
-    private rotate_control :AmvManipulator2d.RotateControl;
-    private fliph_control :AmvManipulator2d.FlipControl;
-    private flipv_control :AmvManipulator2d.FlipControl;
-    private zoom_control :AmvManipulator2d.ZoomControl;
-    private scale_control :AmvManipulator2d.ScaleControl;
-    // private label_scale_control :AmvManipulator2d.LabelScaleControl;
-    private pan_control :AmvManipulator2d.PanControl;
-    private key_control :AmvManipulator2d.KeyControl;
-    private hover_control :AmvManipulator2d.HoverControl;
+    private controls :any = {}; // {string: AmvManipulator2d.Control}
 
     constructor(widget :AmvLevel1.MapWidgetLevel1) {
         super(widget);
@@ -162,6 +153,7 @@ export class Viewer extends AmvLevel1.Viewer
     }
 
     public transform(transformation :Transformation) :void {
+        console.log('transform', transformation);
         if (transformation !== null && transformation !== undefined) {
             $.when(/* this.widget.objects_created && */ this.widget.initialization_completed).done(() => {
                 var m = new THREE.Matrix4();
@@ -232,7 +224,35 @@ export class Viewer extends AmvLevel1.Viewer
     }
 
     protected bind_manipulator(manipulator :Manipulator) :void {
-        console.log('bind_manipulator', manipulator);
+        switch (manipulator[0]) {
+        case "zoom":
+            this.controls[manipulator[0]] = new AmvManipulator2d.ZoomControl(this, manipulator[1]);
+            break;
+        case "rotate":
+            this.controls[manipulator[0]] = new AmvManipulator2d.RotateControl(this, manipulator[1]);
+            break;
+        case "fliph":
+            this.controls[manipulator[0]] = new AmvManipulator2d.FlipControl(this, true, manipulator[1]);
+            break;
+        case "flipv":
+            this.controls[manipulator[0]] = new AmvManipulator2d.FlipControl(this, false, manipulator[1]);
+            break;
+        case "element-scale":
+            this.controls[manipulator[0]] = new AmvManipulator2d.ScaleControl(this, manipulator[1]);
+            break;
+        case "element-hover":
+            this.controls[manipulator[0]] = new AmvManipulator2d.HoverControl(this, manipulator[1]);
+            break;
+        case "pan":
+            this.controls[manipulator[0]] = new AmvManipulator2d.PanControl(this, manipulator[1]);
+            break;
+        case "key":
+            this.controls[manipulator[0]] = new AmvManipulator2d.KeyControl(this, manipulator[1]);
+            break;
+        }
+        if (!!this.controls[manipulator[0]]) {
+            this.manipulator.make_event_generator(manipulator[1]);
+        }
     }
 
     // public bind_manipulators(manipulators :Manipulators) :void {
@@ -300,7 +320,7 @@ export class Viewer extends AmvLevel1.Viewer
     private static s_help_text = '<p class="title">Help</p>\
                                 <ul>\
                                   <li>Zoom - <span class="mouse-action">${zoom-trigger}</span></li>\
-                                  <li>Point size - <span class="mouse-action">${scale-trigger}</span></li>\
+                                  <li>Point size - <span class="mouse-action">${element-scale-trigger}</span></li>\
                                   <!-- <li>Label size - <span class="mouse-action">${label-scale-trigger}</span></li> -->\
                                   <li>Rotate - <span class="mouse-action">${rotate-trigger}</span></li>\
                                   <li>Flip horizontally - <span class="mouse-action">${fliph-trigger}</span></li>\
@@ -311,15 +331,11 @@ export class Viewer extends AmvLevel1.Viewer
                                 <p class="footer">Click to hide this popup.</p>';
 
     public help_text() :string {
-        return Viewer.s_help_text
-              .replace("${rotate-trigger}", this.rotate_control.trigger_description())
-              .replace("${fliph-trigger}", this.fliph_control.trigger_description())
-              .replace("${flipv-trigger}", this.flipv_control.trigger_description())
-              .replace("${scale-trigger}", this.scale_control.trigger_description())
-              // .replace("${label-scale-trigger}", this.label_scale_control.trigger_description())
-              .replace("${zoom-trigger}", this.zoom_control.trigger_description())
-              .replace("${pan-trigger}", this.pan_control.trigger_description())
-        ;
+        var r = Viewer.s_help_text;
+        ["rotate fliph flipv elemet-scale zoom pan"].forEach(function(n) {
+            r = r.replace("${" + n + "-trigger}", this.controls[n].trigger_description());
+        });
+        return r;
     }
 }
 
