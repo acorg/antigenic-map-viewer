@@ -186,8 +186,7 @@ export abstract class Viewer implements AntigenicMapViewer.TriggeringEvent
         this.on("reset:amv", () => this.reset());
     }
 
-    public reset() :void {
-    }
+    public abstract reset() :void;
 
     public bind_manipulators(manipulators :Manipulators) :void {
         $.when(Amv.require_deferred(['amv-manipulator', this.manipulator_implementation_module()])).done(() => {

@@ -53,6 +53,7 @@ export class Viewer extends AmvLevel1.Viewer
         widget.add_to_scene(this.camera);
         this.grid = new Grid(this, 0);
         this.on("widget-resized:amv", (size :number) => this.update_resolution(size));
+        this.reset();
     }
 
     // collects current state of the viewer: transformation matrix and viewport
@@ -78,7 +79,7 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera.position.set(0, 0, DrawingOrderNS.maximum + 1);
         this.camera_look_at(AmvLevel1.Viewer.const_vector3_zero);
         this.viewport(this.viewport_initial);
-        if (this._initial_transformation !== null && this._initial_transformation !== undefined) {
+        if (!!this._initial_transformation) {
             this.transform(this._initial_transformation);
         }
         else {
@@ -153,7 +154,6 @@ export class Viewer extends AmvLevel1.Viewer
     }
 
     public transform(transformation :Transformation) :void {
-        console.log('transform', transformation);
         if (transformation !== null && transformation !== undefined) {
             $.when(/* this.widget.objects_created && */ this.widget.initialization_completed).done(() => {
                 var m = new THREE.Matrix4();

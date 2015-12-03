@@ -26,6 +26,9 @@ export class Application
                 widget1.map.add_arrow({position: [[0.5, -0.5, 0], [0.8, -0.3]], width: 1, color: "darkgreen"});
                 widget1.map.add_arrow({position: [[0.5, -0.5, 0], [0.1, -0.3]], width: 10, color: "darkred"});
 
+                widget1.map.viewer.viewport({cx: 0, cy: 0, size: 5});
+
+                console.log('viewport', widget1.map.viewer.viewport());
                 // console.log('me2 pos:', widget1.map.find_map_element(me2).position);
             });
         });
