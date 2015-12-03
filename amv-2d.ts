@@ -2,6 +2,7 @@
 
 import TypingsReferences = require("build/typings-references");
 
+import Amv = require("amv");
 import AmvLevel1 = require("amv-level1");
 import AmvManipulator = require("amv-manipulator");
 import AmvManipulator2d = require("amv-manipulator-2d");
@@ -10,6 +11,8 @@ import AmvManipulator2d = require("amv-manipulator-2d");
 
 type Color = AntigenicMapViewer.Color;
 type Position = AntigenicMapViewer.Position;
+type Manipulators = AntigenicMapViewer.Manipulators;
+type Manipulator = AntigenicMapViewer.Manipulator;
 
 export type Transformation = AntigenicMapViewer.Transformation;
 
@@ -224,23 +227,46 @@ export class Viewer extends AmvLevel1.Viewer
         // $.when(this.widget.initialization_completed).done(() => this.update_resolution());
     }
 
-    // // Returns node triggering events
-    // public bind_manipulators(widget :AmvLevel1.MapWidgetLevel1) :void {
-    //     $.when(Amv.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
-    //         this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv",
-    //                                                 "wheel:alt:amv", "wheel:shift:amv", "wheel:shift-alt:amv", "drag:shift:amv", "key::amv",
-    //                                                 "move::amv", //"drag::amv", "wheel:shift-alt:amv"
-    //                                                ]);
+    protected manipulator_implementation_module() :string {
+        return "amv-manipulator-2d";
+    }
 
-    //         this.rotate_control = new AmvManipulator2d.RotateControl(this, "wheel:ctrl:amv");
-    //         this.fliph_control = new AmvManipulator2d.FlipControl(this, true, "left:alt:amv");
-    //         this.flipv_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
-    //         this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv");
-    //         this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv");
-    //         // this.label_scale_control = new AmvManipulator2d.LabelScaleControl(this, "wheel:shift-alt:amv");
-    //         this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
-    //         this.key_control = new AmvManipulator2d.KeyControl(this, "key::amv");
-    //         this.hover_control = new AmvManipulator2d.HoverControl(this, "move::amv"); // triggers "hover:amv" on this.element
+    protected bind_manipulator(manipulator :Manipulator) :void {
+        console.log('bind_manipulator', manipulator);
+    }
+
+    // public bind_manipulators(manipulators :Manipulators) :void {
+    //     $.when(Amv.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
+    //         if (typeof manipulators === "string") {
+    //             if (manipulators === "all") {
+    //                 manipulators = Amv.AllManipulators;
+    //             }
+    //             else {
+    //                 throw `Unrecognized manipulators value: {manipulators}`;
+    //             }
+    //         }
+    //         if (typeof manipulators === "array") {
+    //             if (!this.manipulator) {
+    //                 this.manipulator = new AmvManipulator.Manipulator(this.element);
+    //             }
+    //             this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv",
+    //                                                     "wheel:alt:amv", "wheel:shift:amv", "wheel:shift-alt:amv", "drag:shift:amv", "key::amv",
+    //                                                     "move::amv", //"drag::amv", "wheel:shift-alt:amv"
+    //                                                    ]);
+
+    //             this.rotate_control = new AmvManipulator2d.RotateControl(this, "wheel:ctrl:amv");
+    //             this.fliph_control = new AmvManipulator2d.FlipControl(this, true, "left:alt:amv");
+    //             this.flipv_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
+    //             this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv");
+    //             this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv");
+    //             // this.label_scale_control = new AmvManipulator2d.LabelScaleControl(this, "wheel:shift-alt:amv");
+    //             this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
+    //             this.key_control = new AmvManipulator2d.KeyControl(this, "key::amv");
+    //             this.hover_control = new AmvManipulator2d.HoverControl(this, "move::amv"); // triggers "hover:amv" on this.element
+    //         }
+    //         else {
+    //             throw `Unrecognized manipulators value: {manipulators}`;
+    //         }
     //     });
     // }
 

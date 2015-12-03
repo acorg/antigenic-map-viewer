@@ -12,6 +12,7 @@ import AcmacsToolkit = require("acmacs-toolkit");
 
 type Color = AntigenicMapViewer.Color;
 type Position = AntigenicMapViewer.Position;
+type Manipulators = AntigenicMapViewer.Manipulators;
 
 // ----------------------------------------------------------------------
 
@@ -30,7 +31,7 @@ export class MapWidgetLevel2
     // private static popup_hovered_message_suffix = "</li></ul>";
     // private static popup_hovered_message_infix =  "</li><li>";
 
-    constructor(container :JQuery, size :number, number_of_dimensions :number) {
+    constructor(container :JQuery, size :number, number_of_dimensions :number, manipulators :Manipulators = "all") {
         if (number_of_dimensions !== 2 && number_of_dimensions !== 3) {
             throw "Invalid number of dimensions: " + number_of_dimensions;
         }
@@ -46,7 +47,7 @@ export class MapWidgetLevel2
         }
         this.map = new AmvLevel1.MapWidgetLevel1(map_container, size, number_of_dimensions);
         $.when(this.map.initialization_completed).then(() => this.initialization_completed.resolve());
-        // this.map.bind_manipulators();
+        this.map.bind_manipulators(manipulators);
         this.map.render();
         // this.map.on("hover:amv", (object_indice :number[]) => this.show_hovered(object_indice));
         this.resized(size);

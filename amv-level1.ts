@@ -8,12 +8,14 @@ import TypingsReferences = require("build/typings-references");
 import Amv = require("amv");
 import Amv3d = require("amv-3d");
 import Amv2d = require("amv-2d");
-// import AmvManipulator = require("amv-manipulator");
+import AmvManipulator = require("amv-manipulator");
 
 // ----------------------------------------------------------------------
 
 type Color = AntigenicMapViewer.Color;
 type Position = AntigenicMapViewer.Position;
+type Manipulators = AntigenicMapViewer.Manipulators;
+type Manipulator = AntigenicMapViewer.Manipulator;
 type MapElementId = AntigenicMapViewer.MapElementId;
 type MapElementAttributes = AntigenicMapViewer.MapElementAttributes;
 type MapElementLineAttributes = AntigenicMapViewer.MapElementLineAttributes;
@@ -114,9 +116,9 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         $.when(this.viewer_created).done(really_render);
     }
 
-    // public bind_manipulators() :void {
-    //     $.when(this.viewer_created).done(() => { this.viewer.bind_manipulators(this) });
-    // }
+    public bind_manipulators(manipulators :Manipulators) :void {
+        $.when(this.viewer_created).done(() => this.viewer.bind_manipulators(manipulators));
+    }
 
     public on(event :string, callback: (data :any) => void) :JQuery {
         $.when(this.viewer_created).done(() => {
@@ -169,29 +171,49 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
 // ----------------------------------------------------------------------
 
-export class Viewer implements AntigenicMapViewer.TriggeringEvent
+export abstract class Viewer implements AntigenicMapViewer.TriggeringEvent
 {
     public static const_vector3_zero = new THREE.Vector3();
 
     public camera :THREE.Camera;
     public camera_looking_at :THREE.Vector3;
-//     public manipulator :AmvManipulator.Manipulator;
+    public manipulator :AmvManipulator.Manipulator;
 
     protected element :JQuery;
 
     constructor(public widget :MapWidgetLevel1) {
         this.element = $(widget.domElement());
-        // $.when(Amv.require_deferred(['amv-manipulator'])).done(() => {
-        //     this.manipulator = new AmvManipulator.Manipulator(this.element);
-        // });
         this.on("reset:amv", () => this.reset());
     }
 
     public reset() :void {
     }
 
-//     public bind_manipulators(widget :MapWidgetLevel1) :void {
-//     }
+    public bind_manipulators(manipulators :Manipulators) :void {
+        $.when(Amv.require_deferred(['amv-manipulator', this.manipulator_implementation_module()])).done(() => {
+            if (typeof manipulators === "string") {
+                if (manipulators === "all") {
+                    manipulators = Amv.AllManipulators;
+                }
+                else {
+                    throw `Unrecognized manipulators value: ${manipulators}`;
+                }
+            }
+            if (typeof manipulators === "object") {
+                if (!this.manipulator) {
+                    this.manipulator = new AmvManipulator.Manipulator(this.element);
+                }
+                manipulators.forEach((m :Manipulator) => this.bind_manipulator(m));
+            }
+            else {
+                throw `Unrecognized manipulators value: ${manipulators} (type: ${typeof manipulators})`;
+            }
+        });
+    }
+
+    protected abstract manipulator_implementation_module() :string;
+
+    protected abstract bind_manipulator(manipulator :Manipulator) :void;
 
     public on(event :string, callback: (data :any) => void) :JQuery {
         return this.element.on(event, (e :Event, data :any) => callback(data));

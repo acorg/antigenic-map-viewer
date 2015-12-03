@@ -11,6 +11,8 @@ import AmvManipulator3d = require("amv-manipulator-3d");
 
 type Color = AntigenicMapViewer.Color;
 type Position = AntigenicMapViewer.Position;
+type Manipulators = AntigenicMapViewer.Manipulators;
+type Manipulator = AntigenicMapViewer.Manipulator;
 
 // ----------------------------------------------------------------------
 
@@ -63,8 +65,14 @@ export class Viewer extends AmvLevel1.Viewer
         this.grid.position();
     }
 
-    // // Returns node triggering events
-    // public bind_manipulators(widget :AmvLevel1.MapWidgetLevel1) :void {
+    protected manipulator_implementation_module() :string {
+        return "amv-manipulator-3d";
+    }
+
+    protected bind_manipulator(manipulator :Manipulator) :void {
+    }
+
+    // public bind_manipulators(manipulators :Manipulators) :void {
     //     $.when(Amv.require_deferred(['amv-manipulator', 'amv-manipulator-3d'])).done(() => {
     //         this.manipulator.make_event_generators(["move::amv", "drag::amv", "drag:shift:amv", "wheel:shift:amv", "wheel:alt:amv", "wheel:shift-alt:amv", "key::amv"]);
 

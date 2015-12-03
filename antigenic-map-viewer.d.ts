@@ -18,6 +18,9 @@ declare module AntigenicMapViewer {
 
     type MapElementId = number;
 
+    type Manipulator = [string, string]; // see amv.ts
+    type Manipulators = string | Array<Manipulator>;
+
 // ----------------------------------------------------------------------
 
     interface TriggeringEvent
