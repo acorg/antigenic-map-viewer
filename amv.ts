@@ -33,12 +33,30 @@ export function start() :JQueryPromise<any>
 
 // ----------------------------------------------------------------------
 
-export function require_deferred(modules :string[]) :JQueryPromise<any> {
+export function require_deferred(modules :string[]) :JQueryPromise<any>
+{
     var deferred :JQueryDeferred<any> = $.Deferred();
     require(modules, function () {
         deferred.resolve.apply(deferred, arguments);
     });
     return deferred.promise();
+}
+
+// ----------------------------------------------------------------------
+
+export function LOG(...args : any[]) :void
+{
+    console.log(args.map(function (e :any) :string {
+        if (typeof e === "string") {
+            return e;
+        }
+        else if (typeof e === "number") {
+            return '' + e + ' ';
+        }
+        else {
+            return JSON.stringify(e) + ' ';
+        }
+    }).join(""));
 }
 
 // ----------------------------------------------------------------------

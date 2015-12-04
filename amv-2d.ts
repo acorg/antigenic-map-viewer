@@ -56,13 +56,13 @@ export class Viewer extends AmvLevel1.Viewer
         this.reset();
     }
 
-    // collects current state of the viewer: transformation matrix and viewport
-    public state() :void {
-        var transformation = this.transformation();
-        console.log('state: transformation', JSON.stringify(transformation));
-        var viewport = this.viewport();
-        console.log('state: viewport', JSON.stringify(viewport));
-    }
+    // // collects current state of the viewer: transformation matrix and viewport
+    // public state() :void {
+    //     var transformation = this.transformation();
+    //     console.log('state: transformation', JSON.stringify(transformation));
+    //     var viewport = this.viewport();
+    //     console.log('state: viewport', JSON.stringify(viewport));
+    // }
 
     public initial_transformation(transformation :Transformation) :void {
         if (transformation !== null && transformation !== undefined) {
@@ -186,14 +186,14 @@ export class Viewer extends AmvLevel1.Viewer
     public get_m4() :THREE.Matrix4 {
         return new THREE.Matrix4().compose(this._translation_for_m4(),
                                            new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up),
-                                           new THREE.Vector3(/*(<Objects>this.widget.objects).flip_state()*/ false ? -1 : 1, 1, 1));
+                                           new THREE.Vector3(this.widget.map_elements_flip() ? -1 : 1, 1, 1));
     }
 
     private _set_m4(m4 :THREE.Matrix4) {
         var t = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();
         m4.decompose(t, q, s);
         this.camera.up.copy(Viewer.camera_up).applyQuaternion(q).normalize();
-        // (<Objects>this.widget.objects).flip_set(s.x < 0);
+        this.widget.map_elements_flip(s.x < 0);
         this.camera_update();
         return q;
     }
@@ -295,9 +295,9 @@ export class Viewer extends AmvLevel1.Viewer
         case 114:               // r
             this.reset();
             break;
-        case 115:               // s
-            this.state();
-            break;
+        // case 115:               // s
+        //     this.state();
+        //     break;
         case 116:               // t
             this.transform([[-1, 0], [0, 1]]);
             break;

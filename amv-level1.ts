@@ -27,7 +27,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 {
     public viewer :Viewer;
     public factory :Factory;
-    // public objects :Objects;
+    private map_elements :MapElements;
     public scene :THREE.Scene;
 
     private renderer :THREE.WebGLRenderer;
@@ -45,6 +45,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         this.renderer.setClearColor(0xFFFFFF)
         container.append(this.renderer.domElement)
         this.initialize_for_dimensions(number_of_dimensions);
+        this.map_elements = new MapElements();
     }
 
     public destroy() :void {
@@ -80,6 +81,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         map_element.set_attributes(attrs.position, attrs.size || 1, attrs.aspect || 1, attrs.rotation || 0);
         // perhaps keep a list of map elements of this kind (or list of ids?)
         this.add_to_scene(map_element);
+        this.map_elements.main.push(map_element);
         return map_element.id;
     }
 
@@ -87,6 +89,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         var map_element = this.factory.line([attrs.position[1][0] - attrs.position[0][0], attrs.position[1][1] - attrs.position[0][1], attrs.position[1][2] - attrs.position[0][2]], attrs.color || "black", attrs.width || 1);
         map_element.set_position(attrs.position[0]);
         this.add_to_scene(map_element);
+        this.map_elements.arrows.push(map_element);
         return map_element.id;
     }
 
@@ -94,11 +97,19 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         var map_element = this.factory.arrow([attrs.position[1][0] - attrs.position[0][0], attrs.position[1][1] - attrs.position[0][1], attrs.position[1][2] - attrs.position[0][2]], attrs.color || "black", attrs.width || 1, attrs.arrow_length || 1);
         map_element.set_position(attrs.position[0]);
         this.add_to_scene(map_element);
+        this.map_elements.arrows.push(map_element);
         return map_element.id;
     }
 
     public find_map_element(map_element_id :MapElementId) :MapElement {
         return <MapElement>this.scene.getObjectById(map_element_id);
+    }
+
+    public map_elements_flip(flip? :boolean) :boolean {
+        if (flip !== undefined && flip !== null) {
+            this.map_elements.flip(flip);
+        }
+        return this.map_elements.flip();
     }
 
     // ----------------------------------------------------------------------
@@ -249,9 +260,7 @@ export abstract class Viewer implements AntigenicMapViewer.TriggeringEvent
 //         this.element.trigger(event, args);
 //     }
 
-//     public help_text() :string {
-//         throw "override in derived";
-//     }
+    public abstract help_text() :string;
 
 }
 
@@ -302,6 +311,56 @@ export abstract class MapElement extends THREE.Object3D
         }
         return this.body.scale.x / this.body.scale.y;
     }
+}
+
+// ----------------------------------------------------------------------
+
+export class MapElements
+{
+    public main :MapElement[] = [];
+    public arrows :MapElement[] = [];
+
+    private _flip :boolean = false;
+    private _center :THREE.Vector3;
+    private _diameter :number;
+
+    public flip(flip? :boolean) :boolean {
+        if (flip !== undefined && flip !== null && flip !== this._flip) {
+            this.do_flip();
+        }
+        return this._flip;
+    }
+
+    public do_flip() :void {
+        const center_x = this.center().x;
+        this.main.map(o => o.position.setX(center_x - o.position.x));
+        this.arrows.map(o => o.position.setX(center_x - o.position.x));
+        this._flip = !this._flip;
+    }
+
+    public center(center? :THREE.Vector3|number[]) :THREE.Vector3 {
+        if (center !== undefined && center !== null) {
+            if (center instanceof THREE.Vector3) {
+                this._center = center.clone();
+            }
+            else {
+                this._center = (new THREE.Vector3()).fromArray(<number[]>center);
+            }
+        }
+        else {
+            this.calculate_bounding_sphere();
+        }
+        return this._center;
+    }
+
+    private calculate_bounding_sphere() :void {
+        var point_max = new THREE.Vector3(-Infinity, -Infinity, -Infinity);
+        var point_min = new THREE.Vector3(Infinity, Infinity, Infinity);
+        this.main.forEach((obj) => { var pos = obj.position; point_max.max(pos); point_min.min(pos); });
+        this._center = (new THREE.Vector3()).addVectors(point_min, point_max).divideScalar(2);
+        this._diameter = (new THREE.Vector3()).subVectors(point_min, point_max).length();
+    }
+
 }
 
 // ----------------------------------------------------------------------
