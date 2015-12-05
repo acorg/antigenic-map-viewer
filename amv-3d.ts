@@ -185,9 +185,9 @@ export class MapElement extends AmvLevel1.MapElement
 
     public set_rotation(rotation :number) :number {
         if (rotation !== undefined && rotation !== null) {
-            this.body.rotation.z = rotation;
+            this.rotation.z = rotation;
         }
-        return this.body.rotation.z;
+        return this.rotation.z;
     }
 
     public min_max_position(point_min :THREE.Vector3, point_max: THREE.Vector3) :void {

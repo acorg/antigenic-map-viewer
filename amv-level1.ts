@@ -268,17 +268,9 @@ export abstract class Viewer implements AntigenicMapViewer.TriggeringEvent
 
 export abstract class MapElement extends THREE.Object3D
 {
-    public body :THREE.Object3D;
-    public outline :THREE.Object3D;
-
-    constructor(body :THREE.Object3D, outline? :THREE.Object3D) {
+    constructor(content :THREE.Object3D[]) {
         super();
-        this.body = body;
-        this.add(body);
-        this.outline = outline;
-        if (outline) {
-            this.body.add(outline);
-        }
+        content.forEach((e) => this.add(e));
     }
 
     public set_attributes(position :Position, size :number, aspect :number, rotation :number) :void {
@@ -294,22 +286,22 @@ export abstract class MapElement extends THREE.Object3D
     public set_scale(size :number) :number {
         // scale.x and scale.z are affected by aspect
         if (size !== undefined && size !== null) {
-            this.rescale(size / this.body.scale.y);
+            this.rescale(size / this.scale.y);
         }
-        return this.body.scale.y;
+        return this.scale.y;
     }
 
     public rescale(scale :number) :void {
-        this.body.scale.multiplyScalar(scale);
+        this.scale.multiplyScalar(scale);
     }
 
     public aspect(aspect :number) :number {
         // scale.x and scale.z are affected by aspect
         if (aspect !== undefined && aspect !== null) {
-            this.body.scale.x = this.body.scale.y * aspect;
-            this.body.scale.z = this.body.scale.z * aspect;
+            this.scale.x = this.scale.y * aspect;
+            this.scale.z = this.scale.z * aspect;
         }
-        return this.body.scale.x / this.body.scale.y;
+        return this.scale.x / this.scale.y;
     }
 
     public abstract min_max_position(point_min :THREE.Vector3, point_max: THREE.Vector3) :void;
@@ -352,7 +344,7 @@ export class MapElements
                 this._center = (new THREE.Vector3()).fromArray(<number[]>center);
             }
         }
-        else {
+        else if (!this._center) {
             this.calculate_bounding_sphere();
         }
         return this._center;

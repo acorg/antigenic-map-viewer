@@ -9,6 +9,8 @@ import AmvManipulator2d = require("amv-manipulator-2d");
 
 // ----------------------------------------------------------------------
 
+const PI_2 = Math.PI / 2;
+
 type Color = AntigenicMapViewer.Color;
 type Position = AntigenicMapViewer.Position;
 type Manipulators = AntigenicMapViewer.Manipulators;
@@ -407,9 +409,9 @@ export abstract class MapElement extends AmvLevel1.MapElement
 
     public set_rotation(rotation :number) :number {
         if (rotation !== undefined && rotation !== null) {
-            this.body.rotation.z = rotation;
+            this.rotation.z = rotation;
         }
-        return this.body.rotation.z;
+        return this.rotation.z;
     }
 
     public set_drawing_order(drawing_order :number) {
@@ -425,22 +427,23 @@ export class MapElementPoint extends MapElement
     }
 
     public view_flip(center_x :number) :void {
-        this.position.setX(center_x - this.position.x);
+        // this.position.setX(center_x - this.position.x);
+        this.position.setX(- this.position.x);
     }
 }
 
 export class MapElementLine extends MapElement
 {
+    private static _flip_matrix :THREE.Matrix4 = (new THREE.Matrix4()).scale(new THREE.Vector3(-1, 1, 1));
+
     public min_max_position(point_min :THREE.Vector3, point_max: THREE.Vector3) :void {
         point_max.max(this.position);
         point_min.min(this.position);
     }
 
     public view_flip(center_x :number) :void {
-        this.position.setX(center_x - this.position.x);
-        var geometry = <THREE.Geometry>(<THREE.Line>this.body).geometry;
-        geometry.vertices.forEach(function (v: THREE.Vector3) { v.setX(center_x - v.x); });
-        geometry.verticesNeedUpdate = true;
+        // this.position.setX(center_x - this.position.x);
+        this.applyMatrix(MapElementLine._flip_matrix);
     }
 }
 
@@ -464,21 +467,21 @@ export class Factory extends AmvLevel1.Factory
     {
         var body = new THREE.Mesh(this.geometries.circle, this.fill_material(fill_color));
         var outline = new THREE.Line(this.geometries.circle_outline, this.outline_material(outline_color, outline_width));
-        return new MapElementPoint(body, outline);
+        return new MapElementPoint([body, outline]);
     }
 
     public box(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
     {
         var body = new THREE.Mesh(this.geometries.box, this.fill_material(fill_color));
         var outline = new THREE.Line(this.geometries.box_outline, this.outline_material(outline_color, outline_width));
-        return new MapElementPoint(body, outline);
+        return new MapElementPoint([body, outline]);
     }
 
     public triangle(fill_color :Color, outline_color :Color, outline_width :number) :MapElement
     {
         var body = new THREE.Mesh(this.geometries.triangle, this.fill_material(fill_color));
         var outline = new THREE.Line(this.geometries.triangle_outline, this.outline_material(outline_color, outline_width));
-        return new MapElementPoint(body, outline);
+        return new MapElementPoint([body, outline]);
     }
 
     public line(other_end :Position, color :Color, width :number) :MapElement
@@ -486,42 +489,41 @@ export class Factory extends AmvLevel1.Factory
         var line_shape = new THREE.Shape();
         line_shape.moveTo(0, 0)
         line_shape.lineTo(other_end[0], - other_end[1])
-        return new MapElementLine(new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width)));
+        return new MapElementLine([new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width))]);
     }
 
     public arrow(other_end :Position, color :Color, width :number, arrow_length :number) :MapElement
     {
-        const pi_2 = Math.PI / 2;
         const alen = arrow_length * 0.05; // this.outline_width_scale;
         const awid = alen / 2;
         var sign = other_end[0] < 0 ? 1.0 : -1.0;
-        var angle = Math.abs(other_end[0]) < 1e-10 ? -pi_2 : Math.atan(- other_end[1] / other_end[0]);
+        var angle = Math.abs(other_end[0]) < 1e-10 ? -PI_2 : Math.atan(- other_end[1] / other_end[0]);
+        // middle of the bottom of the arrow head
         var x2 = other_end[0] + sign * alen * Math.cos(angle);
         var y2 = - other_end[1] + sign * alen * Math.sin(angle);
-        var x3 = x2 + sign * awid * Math.cos(angle + pi_2) * 0.5;
-        var y3 = y2 + sign * awid * Math.sin(angle + pi_2) * 0.5;
-        var x4 = x2 + sign * awid * Math.cos(angle - pi_2) * 0.5;
-        var y4 = y2 + sign * awid * Math.sin(angle - pi_2) * 0.5;
+        // corners of the bottom of the arrow head
+        var x3 = x2 + sign * awid * Math.cos(angle + PI_2) * 0.5;
+        var y3 = y2 + sign * awid * Math.sin(angle + PI_2) * 0.5;
+        var x4 = x2 + sign * awid * Math.cos(angle - PI_2) * 0.5;
+        var y4 = y2 + sign * awid * Math.sin(angle - PI_2) * 0.5;
 
         var line_shape = new THREE.Shape();
         line_shape.moveTo(0, 0);
         line_shape.lineTo(x2, y2);
 
-        // var arrow_shape = new THREE.Shape();
-        // arrow_shape.moveTo(other_end[0], - other_end[1]);
-        // arrow_shape.lineTo(x3, y3);
-        // arrow_shape.lineTo(x4, y4);
-        // arrow_shape.lineTo(other_end[0], - other_end[1]);
-
-        // return new MapElementLine(new THREE.Mesh(new THREE.ShapeGeometry(arrow_shape), this.fill_material(color)), new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width)));
-
         line_shape.lineTo(x3, y3);
         line_shape.lineTo(other_end[0], - other_end[1]);
         line_shape.lineTo(x4, y4);
         line_shape.lineTo(x2, y2);
-        // line_shape.lineTo(0, 0);
+        var outline = new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width));
 
-        return new MapElementLine(new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width)));
+        var arrow_shape = new THREE.Shape();
+        arrow_shape.moveTo(other_end[0], - other_end[1]);
+        arrow_shape.lineTo(x3, y3);
+        arrow_shape.lineTo(x4, y4);
+        var fill = new THREE.Mesh(new THREE.ShapeGeometry(arrow_shape), this.fill_material(color, THREE.DoubleSide));
+
+        return new MapElementLine([fill, outline]);
     }
 
     private make_geometries() :void
@@ -554,12 +556,13 @@ export class Factory extends AmvLevel1.Factory
         };
     }
 
-    private fill_material(fill_color :Color) :THREE.MeshBasicMaterial
+    private fill_material(fill_color :Color, side :THREE.Side = THREE.FrontSide) :THREE.MeshBasicMaterial
     {
-        var key = `${fill_color}`;
+        var key = `${fill_color}-${side}`;
         var fill_material :THREE.MeshBasicMaterial = <THREE.MeshBasicMaterial>this.fill_materials[key];
         if (!fill_material) {
             fill_material = new THREE.MeshBasicMaterial(Factory.convert_color(fill_color));
+            fill_material.side = side;
             // fill_material.transparent = true;
             this.fill_materials[key] = fill_material;
         }
