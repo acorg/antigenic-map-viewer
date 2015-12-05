@@ -81,7 +81,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         map_element.set_attributes(attrs.position, attrs.size || 1, attrs.aspect || 1, attrs.rotation || 0);
         // perhaps keep a list of map elements of this kind (or list of ids?)
         this.add_to_scene(map_element);
-        this.map_elements.main.push(map_element);
+        this.map_elements.add(map_element);
         return map_element.id;
     }
 
@@ -89,7 +89,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         var map_element = this.factory.line([attrs.position[1][0] - attrs.position[0][0], attrs.position[1][1] - attrs.position[0][1], attrs.position[1][2] - attrs.position[0][2]], attrs.color || "black", attrs.width || 1);
         map_element.set_position(attrs.position[0]);
         this.add_to_scene(map_element);
-        this.map_elements.arrows.push(map_element);
+        this.map_elements.add(map_element);
         return map_element.id;
     }
 
@@ -97,7 +97,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         var map_element = this.factory.arrow([attrs.position[1][0] - attrs.position[0][0], attrs.position[1][1] - attrs.position[0][1], attrs.position[1][2] - attrs.position[0][2]], attrs.color || "black", attrs.width || 1, attrs.arrow_length || 1);
         map_element.set_position(attrs.position[0]);
         this.add_to_scene(map_element);
-        this.map_elements.arrows.push(map_element);
+        this.map_elements.add(map_element);
         return map_element.id;
     }
 
@@ -311,18 +311,24 @@ export abstract class MapElement extends THREE.Object3D
         }
         return this.body.scale.x / this.body.scale.y;
     }
+
+    public abstract min_max_position(point_min :THREE.Vector3, point_max: THREE.Vector3) :void;
+    public abstract view_flip(center_x :number) :void;
 }
 
 // ----------------------------------------------------------------------
 
 export class MapElements
 {
-    public main :MapElement[] = [];
-    public arrows :MapElement[] = [];
+    private elements :MapElement[] = [];
 
     private _flip :boolean = false;
     private _center :THREE.Vector3;
     private _diameter :number;
+
+    public add(map_element :MapElement) :void {
+        this.elements.push(map_element);
+    }
 
     public flip(flip? :boolean) :boolean {
         if (flip !== undefined && flip !== null && flip !== this._flip) {
@@ -332,10 +338,9 @@ export class MapElements
     }
 
     public do_flip() :void {
-        const center_x = this.center().x;
-        this.main.map(o => o.position.setX(center_x - o.position.x));
-        this.arrows.map(o => o.position.setX(center_x - o.position.x));
         this._flip = !this._flip;
+        const center_x = this.center().x;
+        this.elements.map(o => o.view_flip(center_x));
     }
 
     public center(center? :THREE.Vector3|number[]) :THREE.Vector3 {
@@ -356,7 +361,7 @@ export class MapElements
     private calculate_bounding_sphere() :void {
         var point_max = new THREE.Vector3(-Infinity, -Infinity, -Infinity);
         var point_min = new THREE.Vector3(Infinity, Infinity, Infinity);
-        this.main.forEach((obj) => { var pos = obj.position; point_max.max(pos); point_min.min(pos); });
+        this.elements.forEach(function (obj :MapElement) { obj.min_max_position(point_min, point_max); });
         this._center = (new THREE.Vector3()).addVectors(point_min, point_max).divideScalar(2);
         this._diameter = (new THREE.Vector3()).subVectors(point_min, point_max).length();
     }
@@ -548,29 +553,10 @@ export abstract class Factory
 //         return {min: 0.01, max: 100};
 //     }
 
-//     private calculate_bounding_sphere() :void {
-//         // var geometry = new THREE.Geometry();
-//         // geometry.vertices = this.objects.map((obj) => obj.position());
-//         // geometry.computeBoundingSphere();
-//         // this._diameter = geometry.boundingSphere.radius * 2;
-//         // this._center = (<any>geometry.boundingSphere).center;
-//         // console.log('calculate_bounding_sphere1', JSON.stringify(this._center), this._diameter);
-
-//         var point_max = new THREE.Vector3(-Infinity, -Infinity, -Infinity);
-//         var point_min = new THREE.Vector3(Infinity, Infinity, Infinity);
-//         this.objects.forEach((obj) => { var pos = obj.position; point_max.max(pos); point_min.min(pos); });
-//         this._center = (new THREE.Vector3()).addVectors(point_min, point_max).divideScalar(2);
-//         this._diameter = (new THREE.Vector3()).subVectors(point_min, point_max).length();
-//         // console.log('calculate_bounding_sphere2', JSON.stringify(this._center), this._diameter);
-//     }
-
 //     public number_of_dimensions() :number {
 //         return 0;               // override in derived
 //     }
 
-//     public object_factory(number_of_objects? :number) :ObjectFactory { // override in derived
-//         return this._object_factory;
-//     }
 // }
 
 // // ----------------------------------------------------------------------
