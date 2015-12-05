@@ -17,6 +17,8 @@ export class Application
             $.when(widget1.initialization_completed).then(function () {
                 widget1.title(["TITLE-TITLE"]);
 
+                widget1.map.add_triangle({position: [0, 0, 0], size: 0.1, fill_color: "transparent", outline_color: "orange"});
+
                 //var me1 = widget1.map.add_circle({position: [0, 0, 0], size: 0.2, fill_color: "red", outline_color: "blue", outline_width: 3});
                 var me1 = widget1.map.add_circle({position: [-1, -1, 0], size: 0.2, fill_color: "#FF8080", outline_color: "blue", outline_width: 3});
                 widget1.map.add_arrow({position: [[-1, 0, 0], [-1.5, -1, 0]], width: 1, arrow_length: 10, color: "black"});

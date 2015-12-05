@@ -195,7 +195,7 @@ export class MapElement extends AmvLevel1.MapElement
         point_min.min(this.position);
     }
 
-    public view_flip(center_x :number) :void {
+    public view_flip() :void {
         console.warn('MapElement.view_flip: cannot flip in 3d');
     }
 }

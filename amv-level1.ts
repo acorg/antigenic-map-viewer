@@ -305,7 +305,7 @@ export abstract class MapElement extends THREE.Object3D
     }
 
     public abstract min_max_position(point_min :THREE.Vector3, point_max: THREE.Vector3) :void;
-    public abstract view_flip(center_x :number) :void;
+    public abstract view_flip() :void;
 }
 
 // ----------------------------------------------------------------------
@@ -331,8 +331,7 @@ export class MapElements
 
     public do_flip() :void {
         this._flip = !this._flip;
-        const center_x = this.center().x;
-        this.elements.map(o => o.view_flip(center_x));
+        this.elements.map(o => o.view_flip());
     }
 
     public center(center? :THREE.Vector3|number[]) :THREE.Vector3 {

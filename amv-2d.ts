@@ -38,6 +38,21 @@ export interface Viewport
 
 // ----------------------------------------------------------------------
 
+class M4Decomposed
+{
+    public t :THREE.Vector3;
+    public q :THREE.Quaternion;
+    public s :THREE.Vector3;
+
+    constructor(m4 :THREE.Matrix4) {
+        this.t = new THREE.Vector3();
+        this.q = new THREE.Quaternion();
+        this.s = new THREE.Vector3();
+        m4.decompose(this.t, this.q, this.s);
+    }
+}
+
+
 export class Viewer extends AmvLevel1.Viewer
 {
     public static camera_up = new THREE.Vector3(0, 1, 0);
@@ -163,13 +178,17 @@ export class Viewer extends AmvLevel1.Viewer
                 m.elements[1] = transformation[0][1];
                 m.elements[4] = transformation[1][0];
                 m.elements[5] = transformation[1][1];
+                var initial_flip = this.widget.map_elements_flip();
                 var m4 = this.get_m4().multiply(m);
-                var q = this._set_m4(m4);
+                var m4d = this._set_m4(m4);
                 // this.widget.reorient_objects();
 
                 var viewport = this.viewport();
-                var viewport_center = new THREE.Vector3(viewport.cx, viewport.cy, 0).applyQuaternion(q.inverse());
-                this.viewport_move_to(viewport_center);
+                var viewport_center = new THREE.Vector3(viewport.cx, viewport.cy, 0).applyQuaternion(m4d.q.inverse());
+                // if (initial_flip !== (m4d.s.x < 0))
+                //     viewport_center.setX(- viewport_center.x);
+                Amv.LOG('tr', [viewport.cx, viewport.cy], '=>', [viewport_center.x, viewport_center.y], m4d.s);
+                // this.viewport_move_to(viewport_center);
             });
         }
     }
@@ -185,19 +204,22 @@ export class Viewer extends AmvLevel1.Viewer
         return new THREE.Vector3((camera.left + camera.right) / 2, (camera.bottom + camera.top) / 2, 0);
     }
 
+    private _quaternion_for_m4() :THREE.Quaternion {
+        return new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up);
+    }
+
     public get_m4() :THREE.Matrix4 {
         return new THREE.Matrix4().compose(this._translation_for_m4(),
-                                           new THREE.Quaternion().setFromUnitVectors(this.camera.up, Viewer.camera_up),
+                                           this._quaternion_for_m4(),
                                            new THREE.Vector3(this.widget.map_elements_flip() ? -1 : 1, 1, 1));
     }
 
-    private _set_m4(m4 :THREE.Matrix4) {
-        var t = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();
-        m4.decompose(t, q, s);
-        this.camera.up.copy(Viewer.camera_up).applyQuaternion(q).normalize();
-        this.widget.map_elements_flip(s.x < 0);
+    private _set_m4(m4 :THREE.Matrix4) :M4Decomposed {
+        var m4d = new M4Decomposed(m4);
+        this.camera.up.copy(Viewer.camera_up).applyQuaternion(m4d.q).normalize();
+        this.widget.map_elements_flip(m4d.s.x < 0);
         this.camera_update();
-        return q;
+        return m4d;
     }
 
     public camera_update() :void {
@@ -256,41 +278,6 @@ export class Viewer extends AmvLevel1.Viewer
             this.manipulator.make_event_generator(manipulator[1]);
         }
     }
-
-    // public bind_manipulators(manipulators :Manipulators) :void {
-    //     $.when(Amv.require_deferred(['amv-manipulator', 'amv-manipulator-2d'])).done(() => {
-    //         if (typeof manipulators === "string") {
-    //             if (manipulators === "all") {
-    //                 manipulators = Amv.AllManipulators;
-    //             }
-    //             else {
-    //                 throw `Unrecognized manipulators value: {manipulators}`;
-    //             }
-    //         }
-    //         if (typeof manipulators === "array") {
-    //             if (!this.manipulator) {
-    //                 this.manipulator = new AmvManipulator.Manipulator(this.element);
-    //             }
-    //             this.manipulator.make_event_generators(["wheel:ctrl:amv", "left:alt:amv", "left:shift-alt:amv",
-    //                                                     "wheel:alt:amv", "wheel:shift:amv", "wheel:shift-alt:amv", "drag:shift:amv", "key::amv",
-    //                                                     "move::amv", //"drag::amv", "wheel:shift-alt:amv"
-    //                                                    ]);
-
-    //             this.rotate_control = new AmvManipulator2d.RotateControl(this, "wheel:ctrl:amv");
-    //             this.fliph_control = new AmvManipulator2d.FlipControl(this, true, "left:alt:amv");
-    //             this.flipv_control = new AmvManipulator2d.FlipControl(this, false, "left:shift-alt:amv");
-    //             this.zoom_control = new AmvManipulator2d.ZoomControl(this, "wheel:shift:amv");
-    //             this.scale_control = new AmvManipulator2d.ScaleControl(this, "wheel:alt:amv");
-    //             // this.label_scale_control = new AmvManipulator2d.LabelScaleControl(this, "wheel:shift-alt:amv");
-    //             this.pan_control = new AmvManipulator2d.PanControl(this, "drag:shift:amv");
-    //             this.key_control = new AmvManipulator2d.KeyControl(this, "key::amv");
-    //             this.hover_control = new AmvManipulator2d.HoverControl(this, "move::amv"); // triggers "hover:amv" on this.element
-    //         }
-    //         else {
-    //             throw `Unrecognized manipulators value: {manipulators}`;
-    //         }
-    //     });
-    // }
 
     public keypress(key :number) {
         switch (key) {
@@ -426,8 +413,7 @@ export class MapElementPoint extends MapElement
         point_min.min(this.position);
     }
 
-    public view_flip(center_x :number) :void {
-        // this.position.setX(center_x - this.position.x);
+    public view_flip() :void {
         this.position.setX(- this.position.x);
     }
 }
@@ -441,8 +427,8 @@ export class MapElementLine extends MapElement
         point_min.min(this.position);
     }
 
-    public view_flip(center_x :number) :void {
-        // this.position.setX(center_x - this.position.x);
+    public view_flip() :void {
+        // this.position.setX( - this.position.x);
         this.applyMatrix(MapElementLine._flip_matrix);
     }
 }
@@ -510,11 +496,10 @@ export class Factory extends AmvLevel1.Factory
         var line_shape = new THREE.Shape();
         line_shape.moveTo(0, 0);
         line_shape.lineTo(x2, y2);
-
-        line_shape.lineTo(x3, y3);
-        line_shape.lineTo(other_end[0], - other_end[1]);
-        line_shape.lineTo(x4, y4);
-        line_shape.lineTo(x2, y2);
+        // line_shape.lineTo(x3, y3);
+        // line_shape.lineTo(other_end[0], - other_end[1]);
+        // line_shape.lineTo(x4, y4);
+        // line_shape.lineTo(x2, y2);
         var outline = new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width));
 
         var arrow_shape = new THREE.Shape();
