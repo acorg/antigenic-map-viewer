@@ -178,17 +178,12 @@ export class Viewer extends AmvLevel1.Viewer
                 m.elements[1] = transformation[0][1];
                 m.elements[4] = transformation[1][0];
                 m.elements[5] = transformation[1][1];
-                var initial_flip = this.widget.map_elements_flip();
-                var m4 = this.get_m4().multiply(m);
-                var m4d = this._set_m4(m4);
+                this._set_m4(this.get_m4().multiply(m));
                 // this.widget.reorient_objects();
 
                 var viewport = this.viewport();
-                var viewport_center = new THREE.Vector3(viewport.cx, viewport.cy, 0).applyQuaternion(m4d.q.inverse());
-                // if (initial_flip !== (m4d.s.x < 0))
-                //     viewport_center.setX(- viewport_center.x);
-                Amv.LOG('tr', [viewport.cx, viewport.cy], '=>', [viewport_center.x, viewport_center.y], m4d.s);
-                // this.viewport_move_to(viewport_center);
+                var viewport_center = new THREE.Vector3(viewport.cx, viewport.cy, 0).applyMatrix4(m);
+                this.viewport_move_to(viewport_center);
             });
         }
     }
