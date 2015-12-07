@@ -24,8 +24,8 @@ export class Application
                 widget1.map.add_arrow({position: [[-1, 0, 0], [-1.5, -1, 0]], width: 1, arrow_length: 10, color: "black"});
                 widget1.map.add_arrow({position: [[-0.5, 0, 0], [1, -1, 0]], width: 1, arrow_length: 10, color: "green"});
 
-                // var me2 = widget1.map.add_box({position: [0.5, -0.5, 0], size: 0.3, fill_color: "green", outline_color: "pink", outline_width: 10});
-                // // widget1.map.add_arrow({position: [[0, 0, 0], [0.5, -0.5, 0]], width: 1, color: "darkred"});
+                var me2 = widget1.map.add_box({position: [0.5, -0.5, 0], size: 0.3, fill_color: "green", outline_color: "pink", outline_width: 10});
+                widget1.map.add_arrow({position: [[0, 0, 0], [0.5, -0.5, 0]], width: 1, color: "darkred"});
 
                 // var me3 = widget1.map.add_triangle({position: [0.1, -0.7, 0], size: 0.1, fill_color: "lightblue"});
                 // // widget1.map.add_arrow({position: [[0.1, -0.7, 0], [-1, -1, 0]], width: 1, color: "darkred"});

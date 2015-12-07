@@ -55,7 +55,7 @@ class M4Decomposed
 
 export class Viewer extends AmvLevel1.Viewer
 {
-    public static camera_up = new THREE.Vector3(0, 1, 0);
+    // public static camera_up = new THREE.Vector3(0, 1, 0);
 
     private grid :Grid;
     private viewport_initial :Viewport; // for reset
@@ -91,16 +91,15 @@ export class Viewer extends AmvLevel1.Viewer
     }
 
     public reset() :void {
-        // this.widget.reset_objects();
+        super.reset();
         this.camera.up.copy(Viewer.camera_up);
         this.camera.position.set(0, 0, DrawingOrderNS.maximum + 1);
-        this.camera_look_at(AmvLevel1.Viewer.const_vector3_zero);
         this.viewport(this.viewport_initial);
         if (!!this._initial_transformation) {
             this.transform(this._initial_transformation);
         }
         else {
-            // this.widget.reorient_objects();
+            this.widget.map_elements_view_rotated();
         }
         this.camera_update();
     }
@@ -114,7 +113,6 @@ export class Viewer extends AmvLevel1.Viewer
             camera.top = viewport.cy + hsize;
             camera.bottom = viewport.cy - hsize;
             camera.updateProjectionMatrix();
-            // this.widget.reorient_objects();
             this.grid.reset(grid_full_reset);
             this.update_resolution();
         }
@@ -132,6 +130,7 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera_update();
         var tr = this._translation_for_m4().applyQuaternion(quaternion.inverse());
         this.viewport({cx: tr.x, cy: tr.y}, true);
+        this.widget.map_elements_view_rotated();
     }
 
     public viewport_zoom(factor :number) :void {
@@ -179,11 +178,13 @@ export class Viewer extends AmvLevel1.Viewer
                 m.elements[4] = transformation[1][0];
                 m.elements[5] = transformation[1][1];
                 this._set_m4(this.get_m4().multiply(m));
-                // this.widget.reorient_objects();
+                this.widget.map_elements_view_rotated();
 
                 var viewport = this.viewport();
                 var viewport_center = new THREE.Vector3(viewport.cx, viewport.cy, 0).applyMatrix4(m);
-                this.viewport_move_to(viewport_center);
+                if (viewport_center.x !== viewport.cx || viewport_center.y !== viewport.cy) {
+                    this.viewport_move_to(viewport_center, true);
+                }
             });
         }
     }
@@ -411,6 +412,10 @@ export class MapElementPoint extends MapElement
     public view_flip() :void {
         this.position.setX(- this.position.x);
     }
+
+    public view_rotated(quaternion :THREE.Quaternion) :void {
+        this.rotation.setFromQuaternion(quaternion)
+    }
 }
 
 export class MapElementLine extends MapElement
@@ -425,6 +430,24 @@ export class MapElementLine extends MapElement
     public view_flip() :void {
         // this.position.setX( - this.position.x);
         this.applyMatrix(MapElementLine._flip_matrix);
+    }
+
+    public view_rotated(quaternion :THREE.Quaternion) :void {
+    }
+
+    public rescale(scale :number) :void {
+        // lines and arrows are not scalable
+    }
+
+}
+
+// ----------------------------------------------------------------------
+
+export class MapElements extends AmvLevel1.MapElements
+{
+    protected scale_limits(widget :AmvLevel1.MapWidgetLevel1) :{min :number, max :number} {
+        var units_per_pixel = 1 / (<Viewer>widget.viewer).resolution();
+        return {min: units_per_pixel * 20, max: widget.size() * units_per_pixel};
     }
 }
 
@@ -587,30 +610,8 @@ export class Factory extends AmvLevel1.Factory
 //         return 2;
 //     }
 
-//     public flip() :void {
-//         const center_x = this.center().x;
-//         this.objects.map(o => o.position.setX(center_x - o.position.x));
-//         this._flip = !this._flip;
-//     }
-
-//     public flip_set(flip :boolean) :void {
-//         if (flip !== this._flip) {
-//             this.flip();
-//         }
-//     }
-
 //     public flip_state() :boolean {
 //         return this._flip;
-//     }
-
-//     public reset() :void {
-//         super.reset();
-//         this.flip_set(false);
-//     }
-
-//     public reorient() :void {
-//         var quaternion = new THREE.Quaternion().setFromUnitVectors(Viewer.camera_up, this.widget.viewer.camera.up);
-//         this.objects.map(o => o.rotation.setFromQuaternion(quaternion));
 //     }
 
 //     public viewport(viewport? :Viewport) :Viewport {
@@ -618,11 +619,6 @@ export class Factory extends AmvLevel1.Factory
 //             this._viewport = viewport;
 //         }
 //         return this._viewport;
-//     }
-
-//     protected scale_limits() :{min :number, max :number} {
-//         var units_per_pixel = 1 / (<Viewer>this.widget.viewer).resolution();
-//         return {min: units_per_pixel * 20, max: this.widget.size() * units_per_pixel};
 //     }
 
 //     public object_scale(factor :number) :void {
@@ -641,12 +637,6 @@ export class Factory extends AmvLevel1.Factory
 //         }
 //     }
 
-//     public object_factory(number_of_objects? :number) :AmvLevel1.ObjectFactory {
-//         if (!this._object_factory) {
-//             this._object_factory = new ObjectFactory(number_of_objects);
-//         }
-//         return super.object_factory(number_of_objects);
-//     }
 // }
 
 // // ----------------------------------------------------------------------

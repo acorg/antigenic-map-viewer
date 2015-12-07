@@ -37,9 +37,8 @@ export class Viewer extends AmvLevel1.Viewer
     }
 
     public reset() :void {
-        // this.widget.reset_objects();
+        super.reset();
         this.camera.position.set(0, 0, this.initial_distance);
-        this.camera_look_at(AmvLevel1.Viewer.const_vector3_zero);
         this.camera_fov(this.initial_fov);
         this.camera_update();
     }
@@ -198,6 +197,15 @@ export class MapElement extends AmvLevel1.MapElement
     public view_flip() :void {
         console.warn('MapElement.view_flip: cannot flip in 3d');
     }
+
+    public view_rotated(quaternion :THREE.Quaternion) :void {
+    }
+}
+
+// ----------------------------------------------------------------------
+
+export class MapElements extends AmvLevel1.MapElements
+{
 }
 
 // ----------------------------------------------------------------------

@@ -45,12 +45,11 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         this.renderer.setClearColor(0xFFFFFF)
         container.append(this.renderer.domElement)
         this.initialize_for_dimensions(number_of_dimensions);
-        this.map_elements = new MapElements();
     }
 
     public destroy() :void {
         this.event_handlers.forEach((eh) => eh.off());
-        // this.objects && this.objects.destroy();
+        this.map_elements && this.map_elements.destroy();
     }
 
     private initialize_for_dimensions(number_of_dimensions :number) :void {
@@ -58,8 +57,8 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         $.when(amv_loaded).done((Amv :typeof Amv3d) => {
             this.viewer = new Amv.Viewer(this);
             this.factory = new Amv.Factory();
+            this.map_elements = new Amv.MapElements();
             this.viewer_created.resolve();
-            // this.objects = new Amv.Objects(this);
         });
     }
 
@@ -112,6 +111,23 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         return this.map_elements.flip();
     }
 
+    public map_elements_view_rotated() :void {
+        $.when(this.viewer_created).done(() => {
+            var quaternion = new THREE.Quaternion().setFromUnitVectors(Viewer.camera_up, this.viewer.camera.up);
+            this.map_elements.view_rotated(quaternion);
+        });
+    }
+
+    public map_elements_scale(scale :number) :void {
+        this.map_elements.scale(scale, this);
+    }
+
+    public map_elements_reset() :void {
+        $.when(this.viewer_created).done(() => {
+            this.map_elements.reset(this);
+        });
+    }
+
     // ----------------------------------------------------------------------
 
     public render() :void {
@@ -150,12 +166,6 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     //     }
     // }
 
-    // public reorient_objects() :void {
-    //     if (this.objects) {
-    //         this.objects.reorient();
-    //     }
-    // }
-
     // in pixels
     public size(size? :number) :number {
         // console.log('widget size', size, this._size);
@@ -185,6 +195,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 export abstract class Viewer implements AntigenicMapViewer.TriggeringEvent
 {
     public static const_vector3_zero = new THREE.Vector3();
+    public static camera_up = new THREE.Vector3(0, 1, 0);
 
     public camera :THREE.Camera;
     public camera_looking_at :THREE.Vector3;
@@ -197,7 +208,10 @@ export abstract class Viewer implements AntigenicMapViewer.TriggeringEvent
         this.on("reset:amv", () => this.reset());
     }
 
-    public abstract reset() :void;
+    public reset() :void {
+        this.widget.map_elements_reset();
+        this.camera_look_at(Viewer.const_vector3_zero);
+    }
 
     public bind_manipulators(manipulators :Manipulators) :void {
         $.when(Amv.require_deferred(['amv-manipulator', this.manipulator_implementation_module()])).done(() => {
@@ -273,6 +287,9 @@ export abstract class MapElement extends THREE.Object3D
         content.forEach((e) => this.add(e));
     }
 
+    public destroy() {
+    }
+
     public set_attributes(position :Position, size :number, aspect :number, rotation :number) :void {
         this.set_position(position);
         this.set_scale(size);
@@ -306,6 +323,7 @@ export abstract class MapElement extends THREE.Object3D
 
     public abstract min_max_position(point_min :THREE.Vector3, point_max: THREE.Vector3) :void;
     public abstract view_flip() :void;
+    public abstract view_rotated(quaternion :THREE.Quaternion) :void;
 }
 
 // ----------------------------------------------------------------------
@@ -317,6 +335,18 @@ export class MapElements
     private _flip :boolean = false;
     private _center :THREE.Vector3;
     private _diameter :number;
+    protected _scale :number = 1.0;     // keep current scale to be able to reset
+
+    public destroy() :void {
+        this.elements.forEach((o) => o.destroy());
+    }
+
+    public reset(widget :MapWidgetLevel1) :void {
+        this.flip(false);
+        if (this._scale !== 1.0) {
+            this.scale(1.0 / this._scale, widget);
+        }
+    }
 
     public add(map_element :MapElement) :void {
         this.elements.push(map_element);
@@ -332,6 +362,19 @@ export class MapElements
     public do_flip() :void {
         this._flip = !this._flip;
         this.elements.map(o => o.view_flip());
+    }
+
+    public view_rotated(quaternion :THREE.Quaternion) :void {
+        this.elements.map(o => o.view_rotated(quaternion));
+    }
+
+    public scale(factor :number, widget :MapWidgetLevel1) :void {
+        var new_scale = this._scale * factor;
+        var scale_limits = this.scale_limits(widget);
+        if (new_scale >= scale_limits.min && new_scale <= scale_limits.max) {
+            this._scale = new_scale;
+            this.elements.map(o => o.rescale(factor));
+        }
     }
 
     public center(center? :THREE.Vector3|number[]) :THREE.Vector3 {
@@ -355,6 +398,10 @@ export class MapElements
         this.elements.forEach(function (obj :MapElement) { obj.min_max_position(point_min, point_max); });
         this._center = (new THREE.Vector3()).addVectors(point_min, point_max).divideScalar(2);
         this._diameter = (new THREE.Vector3()).subVectors(point_min, point_max).length();
+    }
+
+    protected scale_limits(widget :MapWidgetLevel1) :{min :number, max :number} {
+        return {min: 0.01, max: 100};
     }
 
 }
@@ -418,9 +465,6 @@ export abstract class Factory
 //     public body :THREE.Mesh;
 //     public outline :THREE.Object3D;
 
-//     public destroy() {
-//     }
-
 //     public set_body(body :THREE.Mesh, outline :THREE.Object3D) :void {
 //         // if (this.body) {
 //         //     this.remove(this.body);
@@ -434,10 +478,6 @@ export abstract class Factory
 //         if (this.outline) {
 //             this.body.add(this.outline);
 //         }
-//     }
-
-//     public rescale(object_factor :number, viewer :Viewer) :void {
-//         this.body.scale.multiplyScalar(object_factor);
 //     }
 
 //     public set_scale(object_scale :number) :void {
@@ -475,7 +515,6 @@ export abstract class Factory
 
 //     private _center :THREE.Vector3;
 //     private _diameter :number;
-//     protected _object_scale :number;     // keep current scale to be able to reset
 
 //     protected _object_factory :ObjectFactory;
 
@@ -492,11 +531,6 @@ export abstract class Factory
 //         return this.objects.map((obj) => obj.body);
 //     }
 
-//     public reset() :void {
-//         if (this._object_scale !== 1.0) {
-//             this.object_scale(1.0 / this._object_scale);
-//         }
-//     }
 
 //     // 2d
 //     public reorient() :void {
@@ -527,21 +561,8 @@ export abstract class Factory
 //         return this._center;
 //     }
 
-//     public object_scale(factor :number) :void {
-//         var new_scale = this._object_scale * factor;
-//         var scale_limits = this.scale_limits();
-//         if (new_scale >= scale_limits.min && new_scale <= scale_limits.max) {
-//             this._object_scale = new_scale;
-//             this.objects.map(o => o.rescale(factor, this.widget.viewer));
-//         }
-//     }
-
 //     public user_data(index :number) :any {
 //         return this.objects[index].user_data();
-//     }
-
-//     protected scale_limits() :{min :number, max :number} {
-//         return {min: 0.01, max: 100};
 //     }
 
 //     public number_of_dimensions() :number {
