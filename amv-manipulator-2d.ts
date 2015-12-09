@@ -1,3 +1,5 @@
+// -*- Typescript -*-
+
 "use strict";
 
 import TypingsReferences = require("build/typings-references");

@@ -1,3 +1,5 @@
+// -*- Typescript -*-
+
 "use strict";
 
 import TypingsReferences = require("build/typings-references");
@@ -459,7 +461,7 @@ export class MapElements extends AmvLevel1.MapElements
     public resolution_changed(pixels_per_unit :number) :void {
         // this.elements.map(o => o.resolution_changed(pixels_per_unit));
         if (pixels_per_unit !== this.pixels_per_unit) {
-            var scale = MapElements.default_size / pixels_per_unit;
+            var scale = MapElements.default_size / pixels_per_unit * this._scale;
             this.elements.map(o => o.set_scale(scale));
             this.pixels_per_unit = pixels_per_unit;
         }
