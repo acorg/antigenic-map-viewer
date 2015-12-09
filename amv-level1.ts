@@ -1,3 +1,5 @@
+// -*- Typescript -*-
+
 "use strict";
 
 // ----------------------------------------------------------------------
@@ -120,6 +122,10 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     public map_elements_scale(scale :number) :void {
         this.map_elements.scale(scale, this);
+    }
+
+    public map_elements_resolution_changed(resolution :number) :void {
+        this.map_elements.resolution_changed(resolution);
     }
 
     public map_elements_reset() :void {
@@ -328,9 +334,9 @@ export abstract class MapElement extends THREE.Object3D
 
 // ----------------------------------------------------------------------
 
-export class MapElements
+export abstract class MapElements
 {
-    private elements :MapElement[] = [];
+    protected elements :MapElement[] = [];
 
     private _flip :boolean = false;
     private _center :THREE.Vector3;
@@ -376,6 +382,8 @@ export class MapElements
             this.elements.map(o => o.rescale(factor));
         }
     }
+
+    public abstract resolution_changed(pixels_per_unit :number) :void;
 
     public center(center? :THREE.Vector3|number[]) :THREE.Vector3 {
         if (center !== undefined && center !== null) {

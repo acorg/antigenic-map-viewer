@@ -206,6 +206,9 @@ export class MapElement extends AmvLevel1.MapElement
 
 export class MapElements extends AmvLevel1.MapElements
 {
+    public resolution_changed(pixels_per_unit :number) :void {
+        console.warn('MapElements.resolution_changed: NA in 3d');
+    }
 }
 
 // ----------------------------------------------------------------------

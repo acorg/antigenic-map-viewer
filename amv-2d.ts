@@ -162,7 +162,8 @@ export class Viewer extends AmvLevel1.Viewer
         }
         var camera = <THREE.OrthographicCamera>this.camera;
         this._pixels_per_unit = widget_size / (camera.right - camera.left);
-        this.trigger("map-resolution-changed:amv", this._pixels_per_unit);
+        this.widget.map_elements_resolution_changed(this._pixels_per_unit);
+        // this.trigger("map-resolution-changed:amv", this._pixels_per_unit);
     }
 
     public resolution() :number { // pixels per unit
@@ -416,6 +417,9 @@ export class MapElementPoint extends MapElement
     public view_rotated(quaternion :THREE.Quaternion) :void {
         this.rotation.setFromQuaternion(quaternion)
     }
+
+    public resolution_changed(resolution :number) :void {
+    }
 }
 
 export class MapElementLine extends MapElement
@@ -438,16 +442,27 @@ export class MapElementLine extends MapElement
     public rescale(scale :number) :void {
         // lines and arrows are not scalable
     }
-
 }
 
 // ----------------------------------------------------------------------
 
 export class MapElements extends AmvLevel1.MapElements
 {
+    private pixels_per_unit :number; // store old value to speed up resize()
+    public static default_size :number = 20; // in pixels, multiplied by this._object_scale
+
     protected scale_limits(widget :AmvLevel1.MapWidgetLevel1) :{min :number, max :number} {
         var units_per_pixel = 1 / (<Viewer>widget.viewer).resolution();
         return {min: units_per_pixel * 20, max: widget.size() * units_per_pixel};
+    }
+
+    public resolution_changed(pixels_per_unit :number) :void {
+        // this.elements.map(o => o.resolution_changed(pixels_per_unit));
+        if (pixels_per_unit !== this.pixels_per_unit) {
+            var scale = MapElements.default_size / pixels_per_unit;
+            this.elements.map(o => o.set_scale(scale));
+            this.pixels_per_unit = pixels_per_unit;
+        }
     }
 }
 
