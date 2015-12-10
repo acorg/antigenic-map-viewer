@@ -306,10 +306,10 @@ export abstract class MapElement extends THREE.Object3D
     public abstract set_position(position :Position) :void;
     public abstract set_rotation(rotation :number) :number;
 
-    public set_scale(size :number) :number {
+    public set_scale(scale :number) :number {
         // scale.x and scale.z are affected by aspect
-        if (size !== undefined && size !== null) {
-            this.rescale(size / this.scale.y);
+        if (scale !== undefined && scale !== null) {
+            this.rescale(scale / this.scale.y);
         }
         return this.scale.y;
     }
@@ -317,6 +317,8 @@ export abstract class MapElement extends THREE.Object3D
     public rescale(scale :number) :void {
         this.scale.multiplyScalar(scale);
     }
+
+    public abstract resolution_changed_scale(scale :number, all_elements_scale :number) :void;
 
     public aspect(aspect :number) :number {
         // scale.x and scale.z are affected by aspect

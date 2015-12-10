@@ -420,13 +420,22 @@ export class MapElementPoint extends MapElement
         this.rotation.setFromQuaternion(quaternion)
     }
 
-    public resolution_changed(resolution :number) :void {
+    public resolution_changed_scale(scale :number, all_elements_scale :number) :void {
+        this.scale.multiplyScalar(scale * all_elements_scale / this.scale.y);
     }
 }
 
 export class MapElementLine extends MapElement
 {
     private static _flip_matrix :THREE.Matrix4 = (new THREE.Matrix4()).scale(new THREE.Vector3(-1, 1, 1));
+    public static arrow_head_default_size :number = 1; // in pixels
+
+    private _arrow_head :THREE.Object3D;
+
+    constructor(content :{arrow_head? :THREE.Object3D, line :THREE.Object3D}) {
+        super([content.arrow_head, content.line].filter(function (e :THREE.Object3D) { return e !== null && e !== undefined; }));
+        this._arrow_head = content.arrow_head;
+    }
 
     public min_max_position(point_min :THREE.Vector3, point_max: THREE.Vector3) :void {
         point_max.max(this.position);
@@ -444,6 +453,13 @@ export class MapElementLine extends MapElement
     public rescale(scale :number) :void {
         // lines and arrows are not scalable
     }
+
+    public resolution_changed_scale(scale :number, all_elements_scale :number) :void {
+        if (this._arrow_head !== null && this._arrow_head !== undefined) {
+            this._arrow_head.scale.multiplyScalar(scale * MapElementLine.arrow_head_default_size / this._arrow_head.scale.y);
+            // console.log('resolution_changed_scale', scale, this._arrow_head.scale.x, this._arrow_head.scale.y);
+        }
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -459,10 +475,9 @@ export class MapElements extends AmvLevel1.MapElements
     }
 
     public resolution_changed(pixels_per_unit :number) :void {
-        // this.elements.map(o => o.resolution_changed(pixels_per_unit));
         if (pixels_per_unit !== this.pixels_per_unit) {
-            var scale = MapElements.default_size / pixels_per_unit * this._scale;
-            this.elements.map(o => o.set_scale(scale));
+            var scale = MapElements.default_size / pixels_per_unit;
+            this.elements.map(o => o.resolution_changed_scale(scale, this._scale));
             this.pixels_per_unit = pixels_per_unit;
         }
     }
@@ -510,40 +525,34 @@ export class Factory extends AmvLevel1.Factory
         var line_shape = new THREE.Shape();
         line_shape.moveTo(0, 0)
         line_shape.lineTo(other_end[0], - other_end[1])
-        return new MapElementLine([new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width))]);
+        return new MapElementLine({line: new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width))});
     }
 
     public arrow(other_end :Position, color :Color, width :number, arrow_length :number) :MapElement
     {
-        const alen = arrow_length * 0.05; // this.outline_width_scale;
-        const awid = alen / 2;
+        const awid = arrow_length / 2;
         var sign = other_end[0] < 0 ? 1.0 : -1.0;
         var angle = Math.abs(other_end[0]) < 1e-10 ? -PI_2 : Math.atan(- other_end[1] / other_end[0]);
         // middle of the bottom of the arrow head
-        var x2 = other_end[0] + sign * alen * Math.cos(angle);
-        var y2 = - other_end[1] + sign * alen * Math.sin(angle);
-        // corners of the bottom of the arrow head
-        var x3 = x2 + sign * awid * Math.cos(angle + PI_2) * 0.5;
-        var y3 = y2 + sign * awid * Math.sin(angle + PI_2) * 0.5;
-        var x4 = x2 + sign * awid * Math.cos(angle - PI_2) * 0.5;
-        var y4 = y2 + sign * awid * Math.sin(angle - PI_2) * 0.5;
+        var x2 = other_end[0]; // + sign * arrow_length * Math.cos(angle) * 0.1;
+        var y2 = - other_end[1]; // + sign * arrow_length * Math.sin(angle) * 0.1;
 
         var line_shape = new THREE.Shape();
         line_shape.moveTo(0, 0);
         line_shape.lineTo(x2, y2);
-        // line_shape.lineTo(x3, y3);
-        // line_shape.lineTo(other_end[0], - other_end[1]);
-        // line_shape.lineTo(x4, y4);
-        // line_shape.lineTo(x2, y2);
-        var outline = new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width));
+        var arrow_line = new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width));
 
+        var arrow_bottom_middle = [sign * arrow_length * Math.cos(angle), sign * arrow_length * Math.sin(angle)];
+        var arrow_bottom = [arrow_bottom_middle[0] + sign * awid * Math.cos(angle + PI_2) * 0.5, arrow_bottom_middle[1] + sign * awid * Math.sin(angle + PI_2) * 0.5,
+                            arrow_bottom_middle[0] + sign * awid * Math.cos(angle - PI_2) * 0.5, arrow_bottom_middle[1] + sign * awid * Math.sin(angle - PI_2) * 0.5];
         var arrow_shape = new THREE.Shape();
-        arrow_shape.moveTo(other_end[0], - other_end[1]);
-        arrow_shape.lineTo(x3, y3);
-        arrow_shape.lineTo(x4, y4);
-        var fill = new THREE.Mesh(new THREE.ShapeGeometry(arrow_shape), this.fill_material(color, THREE.DoubleSide));
+        arrow_shape.moveTo(0, 0);
+        arrow_shape.lineTo(arrow_bottom[0], arrow_bottom[1]);
+        arrow_shape.lineTo(arrow_bottom[2], arrow_bottom[3]);
+        var arrow_head = new THREE.Mesh(new THREE.ShapeGeometry(arrow_shape), this.fill_material(color, THREE.DoubleSide));
+        arrow_head.position.set(other_end[0], - other_end[1], 0);
 
-        return new MapElementLine([fill, outline]);
+        return new MapElementLine({arrow_head: arrow_head, line: arrow_line});
     }
 
     private make_geometries() :void
