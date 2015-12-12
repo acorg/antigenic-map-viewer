@@ -46,6 +46,12 @@ export function require_deferred(modules :string[]) :JQueryPromise<any>
 
 // ----------------------------------------------------------------------
 
+export function object3d_filter_out_null(e :THREE.Object3D, index :number, array :THREE.Object3D[]) :boolean {
+    return e !== null && e !== undefined;
+}
+
+// ----------------------------------------------------------------------
+
 export function LOG(...args : any[]) :void
 {
     console.log(args.map(function (e :any) :string {

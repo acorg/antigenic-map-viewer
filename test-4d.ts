@@ -49,6 +49,10 @@ export class Application
 
                 widget1.map.viewer.viewport({cx: 0, cy: 0, size: 5});
 
+                widget1.map.on("hover:amv", function (data :number[]) {
+                    console.log('Hover', JSON.stringify(data), data.map(function(e :number) { return widget1.map.find_map_element(e); }));
+                });
+
                 console.log('viewport', widget1.map.viewer.viewport());
                 // console.log('me2 pos:', widget1.map.find_map_element(me2).position);
             });

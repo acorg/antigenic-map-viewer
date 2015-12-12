@@ -120,13 +120,12 @@ export class HoverControl extends Control
     public operate(data :AmvManipulator.MousePosition) :void {
         this.mouse.set((data.x / this.viewer.width()) * 2 - 1, - (data.y / this.viewer.height()) * 2 + 1);
         this.raycaster.setFromCamera(this.mouse, this.viewer.camera);
-        console.warn('2D HoverControl NOT implemented in amv-manipulator-2d.ts');
-        // var intersects = this.raycaster.intersectObjects(this.viewer.widget.objects.bodies());
-        // var objects :number[] = intersects.map((elt) => elt.object.userData.index || elt.object.parent.userData.index);
-        // if ($(objects).not(<any>this.last).length !== 0 || $(this.last).not(<any>objects).length !== 0) {
-        //     this.viewer.trigger_on_element("hover:amv", [objects]);
-        //     this.last = objects;
-        // }
+        var intersects = this.raycaster.intersectObjects(this.viewer.widget.map_elements_for_intersect());
+        var ids :number[] = intersects.map((elt :THREE.Intersection) => elt.object.userData.id);
+        if ($(ids).not(<any>this.last).length !== 0 || $(this.last).not(<any>ids).length !== 0) {
+            this.viewer.trigger_on_element("hover:amv", [ids]);
+            this.last = ids;
+        }
     }
 }
 

@@ -407,6 +407,10 @@ export abstract class MapElement extends AmvLevel1.MapElement
 
 export class MapElementPoint extends MapElement
 {
+    constructor(content :THREE.Object3D[]) {
+        super(content, 0);
+    }
+
     public min_max_position(point_min :THREE.Vector3, point_max: THREE.Vector3) :void {
         point_max.max(this.position);
         point_min.min(this.position);
@@ -433,7 +437,7 @@ export class MapElementLine extends MapElement
     private _arrow_head :THREE.Object3D;
 
     constructor(content :{arrow_head? :THREE.Object3D, line :THREE.Object3D}) {
-        super([content.arrow_head, content.line].filter(function (e :THREE.Object3D) { return e !== null && e !== undefined; }));
+        super([content.arrow_head, content.line].filter(Amv.object3d_filter_out_null));
         this._arrow_head = content.arrow_head;
     }
 

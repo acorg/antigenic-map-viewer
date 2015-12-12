@@ -83,6 +83,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         // perhaps keep a list of map elements of this kind (or list of ids?)
         this.add_to_scene(map_element);
         this.map_elements.add(map_element);
+        map_element.set_id();
         return map_element.id;
     }
 
@@ -91,6 +92,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         map_element.set_position(attrs.position[0]);
         this.add_to_scene(map_element);
         this.map_elements.add(map_element);
+        map_element.set_id();
         return map_element.id;
     }
 
@@ -99,6 +101,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         map_element.set_position(attrs.position[0]);
         this.add_to_scene(map_element);
         this.map_elements.add(map_element);
+        map_element.set_id();
         return map_element.id;
     }
 
@@ -134,6 +137,10 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
         });
     }
 
+    public map_elements_for_intersect() :THREE.Object3D[] {
+        return this.map_elements.for_intersect();
+    }
+
     // ----------------------------------------------------------------------
 
     public render() :void {
@@ -155,7 +162,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     public on(event :string, callback: (data :any) => void) :JQuery {
         $.when(this.viewer_created).done(() => {
-            // this.event_handlers.push(this.viewer.on(event, callback));
+            this.event_handlers.push(this.viewer.on(event, callback));
         });
         return $();
     }
@@ -276,9 +283,9 @@ export abstract class Viewer implements AntigenicMapViewer.TriggeringEvent
         return this.element.height();
     }
 
-//     public trigger_on_element(event :string, args :any[]) :void {
-//         this.element.trigger(event, args);
-//     }
+    public trigger_on_element(event :string, args :any[]) :void {
+        this.element.trigger(event, args);
+    }
 
     public abstract help_text() :string;
 
@@ -288,9 +295,12 @@ export abstract class Viewer implements AntigenicMapViewer.TriggeringEvent
 
 export abstract class MapElement extends THREE.Object3D
 {
-    constructor(content :THREE.Object3D[]) {
+    protected _body :THREE.Object3D;
+
+    constructor(content :THREE.Object3D[], body_index? :number) {
         super();
         content.forEach((e) => this.add(e));
+        this._body = (body_index !== null && body_index !== undefined) ? content[body_index] : null;
     }
 
     public destroy() {
@@ -329,6 +339,16 @@ export abstract class MapElement extends THREE.Object3D
         return this.scale.x / this.scale.y;
     }
 
+    public body() :THREE.Object3D {
+        return this._body;
+    }
+
+    public set_id() :void {
+        if (this._body) {
+            this._body.userData.id = this.id;
+        }
+    }
+
     public abstract min_max_position(point_min :THREE.Vector3, point_max: THREE.Vector3) :void;
     public abstract view_flip() :void;
     public abstract view_rotated(quaternion :THREE.Quaternion) :void;
@@ -358,6 +378,10 @@ export abstract class MapElements
 
     public add(map_element :MapElement) :void {
         this.elements.push(map_element);
+    }
+
+    public for_intersect() :THREE.Object3D[] {
+        return this.elements.map(function (e :MapElement) { return e.body(); }).filter(Amv.object3d_filter_out_null);
     }
 
     public flip(flip? :boolean) :boolean {
