@@ -428,8 +428,8 @@ export class MapElementPoint extends MapElement
         this.rotation.setFromQuaternion(quaternion)
     }
 
-    public resolution_changed_scale(scale :number, all_elements_scale :number) :void {
-        this.scale.multiplyScalar(scale * all_elements_scale / this.scale.y);
+    public resolution_changed_scale(scale :number) :void {
+        this.scale.multiplyScalar(scale); // * all_elements_scale); // / this.scale.y);
     }
 
     public for_intersect() :THREE.Object3D {
@@ -466,7 +466,7 @@ export class MapElementLine extends MapElement
         // lines and arrows are not scalable
     }
 
-    public resolution_changed_scale(scale :number, all_elements_scale :number) :void {
+    public resolution_changed_scale(scale :number) :void {
         if (this._arrow_head !== null && this._arrow_head !== undefined) {
             this._arrow_head.scale.multiplyScalar(scale * MapElementLine.arrow_head_default_size / this._arrow_head.scale.y);
             // console.log('resolution_changed_scale', scale, this._arrow_head.scale.x, this._arrow_head.scale.y);
@@ -482,20 +482,24 @@ export class MapElementLine extends MapElement
 
 export class MapElements extends AmvLevel1.MapElements
 {
-    private pixels_per_unit :number; // store old value to speed up resize()
+    private pixels_per_unit :number; // store old value to speed up resolution_changed()
     public static default_size :number = 20; // in pixels, multiplied by this._object_scale
 
     protected scale_limits(widget :AmvLevel1.MapWidgetLevel1) :{min :number, max :number} {
-        var units_per_pixel = 1 / (<Viewer>widget.viewer).resolution();
-        return {min: units_per_pixel * 20, max: widget.size() * units_per_pixel};
+        var units_per_pixel = 1 / this.pixels_per_unit;
+        //console.log('scale_limits', widget.size(), widget.size() * units_per_pixel);
+        // return {min: 1.0 / (units_per_pixel * MapElements.default_size), max: widget.size() * units_per_pixel};
+        return {min: 1 / this.pixels_per_unit, max: widget.size() * units_per_pixel};
     }
 
     public resolution_changed(pixels_per_unit :number) :void {
-        if (pixels_per_unit !== this.pixels_per_unit) {
-            var scale = MapElements.default_size / pixels_per_unit;
-            this.elements.map(o => o.resolution_changed_scale(scale, this._scale));
+        if (!this.pixels_per_unit) {
             this.pixels_per_unit = pixels_per_unit;
+            this._scale = MapElements.default_size / pixels_per_unit;
+            this.elements.map(o => o.resolution_changed_scale(this._scale));
         }
+        this.elements.map(o => o.resolution_changed_scale(this.pixels_per_unit / pixels_per_unit));
+        this.pixels_per_unit = pixels_per_unit;
     }
 }
 
@@ -505,7 +509,7 @@ export class Factory extends AmvLevel1.Factory
 {
     private static geometry_size :number = 1.0;
     private ball_segments :number = 32; // depends on the number of objects
-    private outline_width_scale :number = 0.005;
+    // private outline_width_scale :number = 0.005;
     private fill_materials :any = {}; // {fill_color: THREE.MeshBasicMaterial}
     private outline_materials :any = {}; // {outline_color-outline_width: THREE.LineBasicMaterial}
     private geometries :any;

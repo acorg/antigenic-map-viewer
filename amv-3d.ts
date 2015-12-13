@@ -205,7 +205,7 @@ export class MapElement extends AmvLevel1.MapElement
     public view_rotated(quaternion :THREE.Quaternion) :void {
     }
 
-    public resolution_changed_scale(scale :number, all_elements_scale :number) :void {
+    public resolution_changed_scale(scale :number) :void {
     }
 
     public for_intersect() :THREE.Object3D {

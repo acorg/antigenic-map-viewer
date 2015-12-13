@@ -322,10 +322,11 @@ export abstract class MapElement extends THREE.Object3D
     }
 
     public rescale(scale :number) :void {
+        var o = this.scale.y;
         this.scale.multiplyScalar(scale);
     }
 
-    public abstract resolution_changed_scale(scale :number, all_elements_scale :number) :void;
+    public abstract resolution_changed_scale(scale :number) :void;
 
     public aspect(aspect :number) :number {
         // scale.x and scale.z are affected by aspect
@@ -397,10 +398,16 @@ export abstract class MapElements
     public scale(factor :number, widget :MapWidgetLevel1) :void {
         var new_scale = this._scale * factor;
         var scale_limits = this.scale_limits(widget);
-        if (new_scale >= scale_limits.min && new_scale <= scale_limits.max) {
-            this._scale = new_scale;
-            this.elements.map(o => o.rescale(factor));
+        // Amv.LOG('new_scale ', new_scale, 'factor ', factor, '_scale ', this._scale, 'limits ', scale_limits);
+        if (new_scale < scale_limits.min) {
+            new_scale = scale_limits.min;
         }
+        else if (new_scale > scale_limits.max) {
+            new_scale = scale_limits.max;
+        }
+        factor = new_scale / this._scale;
+        this._scale = new_scale;
+        this.elements.map(o => o.rescale(factor));
     }
 
     public abstract resolution_changed(pixels_per_unit :number) :void;
