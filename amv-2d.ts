@@ -407,8 +407,12 @@ export abstract class MapElement extends AmvLevel1.MapElement
 
 export class MapElementPoint extends MapElement
 {
+    private _for_intersect : THREE.Object3D;
+
     constructor(content :THREE.Object3D[]) {
-        super(content, 0);
+        super(content);
+        this._for_intersect = content[0];
+        this._for_intersect.userData.root = this;
     }
 
     public min_max_position(point_min :THREE.Vector3, point_max: THREE.Vector3) :void {
@@ -426,6 +430,10 @@ export class MapElementPoint extends MapElement
 
     public resolution_changed_scale(scale :number, all_elements_scale :number) :void {
         this.scale.multiplyScalar(scale * all_elements_scale / this.scale.y);
+    }
+
+    public for_intersect() :THREE.Object3D {
+        return this._for_intersect;
     }
 }
 
@@ -463,6 +471,10 @@ export class MapElementLine extends MapElement
             this._arrow_head.scale.multiplyScalar(scale * MapElementLine.arrow_head_default_size / this._arrow_head.scale.y);
             // console.log('resolution_changed_scale', scale, this._arrow_head.scale.x, this._arrow_head.scale.y);
         }
+    }
+
+    public for_intersect() :THREE.Object3D {
+        return null;
     }
 }
 

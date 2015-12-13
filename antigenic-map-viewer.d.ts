@@ -16,7 +16,7 @@ declare module AntigenicMapViewer {
 
     type Color = string | number | [number, number];
 
-    type MapElementId = number;
+    // type MapElementId = number;
 
     type Manipulator = [string, string]; // see amv.ts
     type Manipulators = string | Array<Manipulator>;

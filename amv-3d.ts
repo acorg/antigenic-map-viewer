@@ -84,7 +84,7 @@ export class Viewer extends AmvLevel1.Viewer
     //         this.hover_control = new AmvManipulator3d.HoverControl(this, "move::amv"); // triggers "hover:amv" on this.element
     //         this.fov_control = new AmvManipulator3d.FovControl(this, "wheel:shift-alt:amv");
 
-    //         // this.element.on("hover:amv", (e :Event, object_indice :number[]) => console.log('hover', JSON.stringify(object_indice)));
+    //         // this.element.on("hover:amv", (e :Event, objects :THREE.Object3D[]) => console.log('hover', JSON.stringify(objects)));
     //     });
     // }
 
@@ -178,6 +178,8 @@ class Grid
 
 export class MapElement extends AmvLevel1.MapElement
 {
+    private _for_intersect : THREE.Object3D;
+
     public set_position(position :Position) :void {
         if (position !== undefined && position !== null) {
             this.position.set(position[0], position[1], position[2]);
@@ -204,6 +206,10 @@ export class MapElement extends AmvLevel1.MapElement
     }
 
     public resolution_changed_scale(scale :number, all_elements_scale :number) :void {
+    }
+
+    public for_intersect() :THREE.Object3D {
+        return this._for_intersect;
     }
 }
 

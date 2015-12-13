@@ -49,8 +49,8 @@ export class Application
 
                 widget1.map.viewer.viewport({cx: 0, cy: 0, size: 5});
 
-                widget1.map.on("hover:amv", function (data :number[]) {
-                    console.log('Hover', JSON.stringify(data), data.map(function(e :number) { return widget1.map.find_map_element(e); }));
+                widget1.map.on("hover:amv", function (data :THREE.Object3D[]) {
+                    console.log('Hover', JSON.stringify(data.map(function(e :THREE.Object3D) { return e.id; })));
                 });
 
                 console.log('viewport', widget1.map.viewer.viewport());

@@ -49,7 +49,7 @@ export class MapWidgetLevel2
         $.when(this.map.initialization_completed).then(() => this.initialization_completed.resolve());
         this.map.bind_manipulators(manipulators);
         this.map.render();
-        // this.map.on("hover:amv", (object_indice :number[]) => this.show_hovered(object_indice));
+        // this.map.on("hover:amv", (objects :THREE.Object3D[]) => this.show_hovered(objects));
         this.resized(size);
 
         this.popup_hovered = new AcmacsToolkit.PopupMessage(map_container);

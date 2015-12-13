@@ -109,7 +109,7 @@ export class HoverControl extends Control
 {
     private raycaster :THREE.Raycaster;
     private mouse :THREE.Vector2;
-    private last :number[];
+    private _last :THREE.Object3D[];
 
     constructor(viewer :AmvLevel1.Viewer, event :string) {
         super(viewer, event);
@@ -121,10 +121,10 @@ export class HoverControl extends Control
         this.mouse.set((data.x / this.viewer.width()) * 2 - 1, - (data.y / this.viewer.height()) * 2 + 1);
         this.raycaster.setFromCamera(this.mouse, this.viewer.camera);
         var intersects = this.raycaster.intersectObjects(this.viewer.widget.map_elements_for_intersect());
-        var ids :number[] = intersects.map((elt :THREE.Intersection) => elt.object.userData.id);
-        if ($(ids).not(<any>this.last).length !== 0 || $(this.last).not(<any>ids).length !== 0) {
-            this.viewer.trigger_on_element("hover:amv", [ids]);
-            this.last = ids;
+        var objects :THREE.Object3D[] = intersects.map((elt :THREE.Intersection) => elt.object.userData.root);
+        if ($(objects).not(<any>this._last).length !== 0 || $(this._last).not(<any>objects).length !== 0) {
+            this.viewer.trigger_on_element("hover:amv", [objects]);
+            this._last = objects;
         }
     }
 }

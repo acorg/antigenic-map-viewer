@@ -18,7 +18,7 @@ type Color = AntigenicMapViewer.Color;
 type Position = AntigenicMapViewer.Position;
 type Manipulators = AntigenicMapViewer.Manipulators;
 type Manipulator = AntigenicMapViewer.Manipulator;
-type MapElementId = AntigenicMapViewer.MapElementId;
+// type MapElementId = AntigenicMapViewer.MapElementId;
 type MapElementAttributes = AntigenicMapViewer.MapElementAttributes;
 type MapElementLineAttributes = AntigenicMapViewer.MapElementLineAttributes;
 type MapElementArrowAttributes = AntigenicMapViewer.MapElementArrowAttributes;
@@ -66,48 +66,48 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
 
     // ----------------------------------------------------------------------
 
-    public add_circle(attrs: MapElementAttributes) :MapElementId {
+    public add_circle(attrs: MapElementAttributes) :MapElement {
         return this.add_map_element(this.factory.circle(attrs.fill_color || "transparent", attrs.outline_color || "black", attrs.outline_width || 1), attrs);
     }
 
-    public add_box(attrs: MapElementAttributes) :MapElementId {
+    public add_box(attrs: MapElementAttributes) :MapElement {
         return this.add_map_element(this.factory.box(attrs.fill_color || "transparent", attrs.outline_color || "black", attrs.outline_width || 1), attrs);
     }
 
-    public add_triangle(attrs: MapElementAttributes) :MapElementId {
+    public add_triangle(attrs: MapElementAttributes) :MapElement {
         return this.add_map_element(this.factory.triangle(attrs.fill_color || "transparent", attrs.outline_color || "black", attrs.outline_width || 1), attrs);
     }
 
-    private add_map_element(map_element :MapElement, attrs :MapElementAttributes) :MapElementId {
+    private add_map_element(map_element :MapElement, attrs :MapElementAttributes) :MapElement {
         map_element.set_attributes(attrs.position, attrs.size || 1, attrs.aspect || 1, attrs.rotation || 0);
         // perhaps keep a list of map elements of this kind (or list of ids?)
         this.add_to_scene(map_element);
         this.map_elements.add(map_element);
-        map_element.set_id();
-        return map_element.id;
+        //map_element.set_id();
+        return map_element;
     }
 
-    public add_line(attrs: MapElementLineAttributes) :MapElementId {
+    public add_line(attrs: MapElementLineAttributes) :MapElement {
         var map_element = this.factory.line([attrs.position[1][0] - attrs.position[0][0], attrs.position[1][1] - attrs.position[0][1], attrs.position[1][2] - attrs.position[0][2]], attrs.color || "black", attrs.width || 1);
         map_element.set_position(attrs.position[0]);
         this.add_to_scene(map_element);
         this.map_elements.add(map_element);
-        map_element.set_id();
-        return map_element.id;
+        //map_element.set_id();
+        return map_element;
     }
 
-    public add_arrow(attrs: MapElementArrowAttributes) :MapElementId {
+    public add_arrow(attrs: MapElementArrowAttributes) :MapElement {
         var map_element = this.factory.arrow([attrs.position[1][0] - attrs.position[0][0], attrs.position[1][1] - attrs.position[0][1], attrs.position[1][2] - attrs.position[0][2]], attrs.color || "black", attrs.width || 1, attrs.arrow_length || 1);
         map_element.set_position(attrs.position[0]);
         this.add_to_scene(map_element);
         this.map_elements.add(map_element);
-        map_element.set_id();
-        return map_element.id;
+        //map_element.set_id();
+        return map_element;
     }
 
-    public find_map_element(map_element_id :MapElementId) :MapElement {
-        return <MapElement>this.scene.getObjectById(map_element_id);
-    }
+    // public find_map_element(map_element_id :MapElementId) :MapElement {
+    //     return <MapElement>this.scene.getObjectById(map_element_id);
+    // }
 
     public map_elements_flip(flip? :boolean) :boolean {
         if (flip !== undefined && flip !== null) {
@@ -295,12 +295,9 @@ export abstract class Viewer implements AntigenicMapViewer.TriggeringEvent
 
 export abstract class MapElement extends THREE.Object3D
 {
-    protected _body :THREE.Object3D;
-
-    constructor(content :THREE.Object3D[], body_index? :number) {
+    constructor(content :THREE.Object3D[]) {
         super();
         content.forEach((e) => this.add(e));
-        this._body = (body_index !== null && body_index !== undefined) ? content[body_index] : null;
     }
 
     public destroy() {
@@ -339,19 +336,10 @@ export abstract class MapElement extends THREE.Object3D
         return this.scale.x / this.scale.y;
     }
 
-    public body() :THREE.Object3D {
-        return this._body;
-    }
-
-    public set_id() :void {
-        if (this._body) {
-            this._body.userData.id = this.id;
-        }
-    }
-
     public abstract min_max_position(point_min :THREE.Vector3, point_max: THREE.Vector3) :void;
     public abstract view_flip() :void;
     public abstract view_rotated(quaternion :THREE.Quaternion) :void;
+    public abstract for_intersect() :THREE.Object3D;
 }
 
 // ----------------------------------------------------------------------
@@ -364,6 +352,7 @@ export abstract class MapElements
     private _center :THREE.Vector3;
     private _diameter :number;
     protected _scale :number = 1.0;     // keep current scale to be able to reset
+    private _for_intersect :THREE.Object3D[] = [];
 
     public destroy() :void {
         this.elements.forEach((o) => o.destroy());
@@ -378,10 +367,15 @@ export abstract class MapElements
 
     public add(map_element :MapElement) :void {
         this.elements.push(map_element);
+        var fi = map_element.for_intersect();
+        if (!!fi) {
+            this._for_intersect.push(fi);
+        }
     }
 
     public for_intersect() :THREE.Object3D[] {
-        return this.elements.map(function (e :MapElement) { return e.body(); }).filter(Amv.object3d_filter_out_null);
+        // return this.elements.map(function (e :MapElement) { return e.body(); }).filter(Amv.object3d_filter_out_null);
+        return this._for_intersect;
     }
 
     public flip(flip? :boolean) :boolean {
