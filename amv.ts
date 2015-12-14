@@ -56,7 +56,12 @@ export function LOG(...args : any[]) :void
 {
     console.log(args.map(function (e :any) :string {
         if (typeof e === "string") {
-            return e;
+            if (" \n\t".indexOf(e.slice(-1)) === -1) {
+                return e + " ";
+            }
+            else {
+                return e;
+            }
         }
         else if (typeof e === "number") {
             return '' + e + ' ';
@@ -65,6 +70,30 @@ export function LOG(...args : any[]) :void
             return JSON.stringify(e) + ' ';
         }
     }).join(""));
+}
+
+// ----------------------------------------------------------------------
+
+export function LOGS(...args : any[]) :void
+{
+    args.push("\n", StackTrace());
+    LOG.apply(this, args);
+}
+
+// ----------------------------------------------------------------------
+
+export function LOGIF(condition :boolean, ...args : any[]) :void
+{
+    if (condition) {
+        LOG.apply(this, args);
+    }
+}
+
+// ----------------------------------------------------------------------
+
+export function StackTrace() :string
+{
+    return (<any>new Error()).stack;
 }
 
 // ----------------------------------------------------------------------

@@ -15,7 +15,7 @@ export class Application
     public run() :void {
         console.log('=========== amv-test 4d ========== ' + new Date() + " ===========");
         $.when(Amv.start()).then(function (amv2: any) {
-            var widget1 = new amv2.MapWidgetLevel2($('body'), null, 2);
+            var widget1 = new amv2.Widget($('body'), null, 2);
             $.when(widget1.initialization_completed).then(function () {
                 widget1.title(["TITLE-TITLE"]);
 
@@ -34,7 +34,7 @@ export class Application
                 widget1.map.viewer.viewport({cx: 0, cy: 0, size: 5});
 
                 widget1.map.on("hover:amv", function (data :THREE.Object3D[]) {
-                    console.log('Hover', JSON.stringify(data.map(function(e :THREE.Object3D) { return e.id; })));
+                    //console.log('Hover', JSON.stringify(data.map(function(e :THREE.Object3D) { return e.id; })));
                 });
 
                 console.log('viewport', widget1.map.viewer.viewport());

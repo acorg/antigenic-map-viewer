@@ -9,7 +9,7 @@ import Amv3d = require("amv-3d");
 
 // ----------------------------------------------------------------------
 
-export function widget_state(widget :AmvLevel1.MapWidgetLevel1) :AntigenicMapViewer.MapStateForDrawing
+export function widget_state(widget :AmvLevel1.Widget) :AntigenicMapViewer.MapStateForDrawing
 {
     var number_of_dimensions = widget.objects.number_of_dimensions();
     var state :AntigenicMapViewer.MapStateForDrawing = {
@@ -28,7 +28,7 @@ export function widget_state(widget :AmvLevel1.MapWidgetLevel1) :AntigenicMapVie
 
 // ----------------------------------------------------------------------
 
-export function widget_restore(widget :AmvLevel1.MapWidgetLevel1, state :AntigenicMapViewer.MapStateForDrawing) :void
+export function widget_restore(widget :AmvLevel1.Widget, state :AntigenicMapViewer.MapStateForDrawing) :void
 {
     var number_of_dimensions = state.number_of_dimensions;
     widget.initialize_for_dimensions(number_of_dimensions);
@@ -96,7 +96,7 @@ function object_state(obj :AmvLevel1.Object) :AntigenicMapViewer.ObjectState
 
 // ----------------------------------------------------------------------
 
-function restore_objects(widget :AmvLevel1.MapWidgetLevel1, state :AntigenicMapViewer.ObjectState[]) :void
+function restore_objects(widget :AmvLevel1.Widget, state :AntigenicMapViewer.ObjectState[]) :void
 {
     var factory = widget.object_factory();
     for (var i = 0; i < state.length; ++i) {

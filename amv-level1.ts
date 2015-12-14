@@ -25,7 +25,24 @@ type MapElementArrowAttributes = AntigenicMapViewer.MapElementArrowAttributes;
 
 // ----------------------------------------------------------------------
 
-export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
+export class ScaleLimits
+{
+    constructor(private min :number, private max :number) {}
+
+    public fix(scale :number) :number {
+        if (scale < this.min) {
+            scale = this.min;
+        }
+        else if (scale > this.max) {
+            scale = this.max;
+        }
+        return scale;
+    }
+}
+
+// ----------------------------------------------------------------------
+
+export class Widget implements AntigenicMapViewer.TriggeringEvent
 {
     public viewer :Viewer;
     public factory :Factory;
@@ -128,7 +145,7 @@ export class MapWidgetLevel1 implements AntigenicMapViewer.TriggeringEvent
     }
 
     public map_elements_resolution_changed(resolution :number) :void {
-        this.map_elements.resolution_changed(resolution);
+        this.map_elements.resolution_changed(resolution, this);
     }
 
     public map_elements_reset() :void {
@@ -216,7 +233,7 @@ export abstract class Viewer implements AntigenicMapViewer.TriggeringEvent
 
     protected element :JQuery;
 
-    constructor(public widget :MapWidgetLevel1) {
+    constructor(public widget :Widget) {
         this.element = $(widget.domElement());
         this.on("reset:amv", () => this.reset());
     }
@@ -322,7 +339,6 @@ export abstract class MapElement extends THREE.Object3D
     }
 
     public rescale(scale :number) :void {
-        var o = this.scale.y;
         this.scale.multiplyScalar(scale);
     }
 
@@ -354,12 +370,13 @@ export abstract class MapElements
     private _diameter :number;
     protected _scale :number = 1.0;     // keep current scale to be able to reset
     private _for_intersect :THREE.Object3D[] = [];
+    protected _scale_limits :ScaleLimits;
 
     public destroy() :void {
         this.elements.forEach((o) => o.destroy());
     }
 
-    public reset(widget :MapWidgetLevel1) :void {
+    public reset(widget :Widget) :void {
         this.flip(false);
         if (this._scale !== 1.0) {
             this.scale(1.0 / this._scale, widget);
@@ -375,7 +392,6 @@ export abstract class MapElements
     }
 
     public for_intersect() :THREE.Object3D[] {
-        // return this.elements.map(function (e :MapElement) { return e.body(); }).filter(Amv.object3d_filter_out_null);
         return this._for_intersect;
     }
 
@@ -395,22 +411,14 @@ export abstract class MapElements
         this.elements.map(o => o.view_rotated(quaternion));
     }
 
-    public scale(factor :number, widget :MapWidgetLevel1) :void {
-        var new_scale = this._scale * factor;
-        var scale_limits = this.scale_limits(widget);
-        // Amv.LOG('new_scale ', new_scale, 'factor ', factor, '_scale ', this._scale, 'limits ', scale_limits);
-        if (new_scale < scale_limits.min) {
-            new_scale = scale_limits.min;
-        }
-        else if (new_scale > scale_limits.max) {
-            new_scale = scale_limits.max;
-        }
+    public scale(factor :number, widget :Widget) :void {
+        const new_scale = this._scale_limits.fix(this._scale * factor);
         factor = new_scale / this._scale;
         this._scale = new_scale;
         this.elements.map(o => o.rescale(factor));
     }
 
-    public abstract resolution_changed(pixels_per_unit :number) :void;
+    public abstract resolution_changed(pixels_per_unit :number, widget :Widget) :void;
 
     public center(center? :THREE.Vector3|number[]) :THREE.Vector3 {
         if (center !== undefined && center !== null) {
@@ -434,11 +442,6 @@ export abstract class MapElements
         this._center = (new THREE.Vector3()).addVectors(point_min, point_max).divideScalar(2);
         this._diameter = (new THREE.Vector3()).subVectors(point_min, point_max).length();
     }
-
-    protected scale_limits(widget :MapWidgetLevel1) :{min :number, max :number} {
-        return {min: 0.01, max: 100};
-    }
-
 }
 
 // ----------------------------------------------------------------------
@@ -553,7 +556,7 @@ export abstract class Factory
 
 //     protected _object_factory :ObjectFactory;
 
-//     constructor(protected widget :MapWidgetLevel1) {
+//     constructor(protected widget :Widget) {
 //         this.objects = [];
 //         this._object_scale = 1.0;
 //     }

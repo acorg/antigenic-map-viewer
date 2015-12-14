@@ -65,7 +65,7 @@ export class Viewer extends AmvLevel1.Viewer
     private _initial_transformation :Transformation;
     private controls :any = {}; // {string: AmvManipulator2d.Control}
 
-    constructor(widget :AmvLevel1.MapWidgetLevel1) {
+    constructor(widget :AmvLevel1.Widget) {
         super(widget);
         this.viewport_initial = null;
         this.camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0, DrawingOrderNS.maximum + 2);
@@ -280,12 +280,16 @@ export class Viewer extends AmvLevel1.Viewer
 
     public keypress(key :number) {
         switch (key) {
+        case 97:               // a
+            this.widget.map_elements_scale(1.1);
+            break;
         case 114:               // r
             this.reset();
             break;
-        // case 115:               // s
-        //     this.state();
-        //     break;
+        case 115:               // s
+            this.widget.map_elements_scale(0.9);
+            // this.state();
+            break;
         case 116:               // t
             this.transform([[-1, 0], [0, 1]]);
             break;
@@ -429,7 +433,7 @@ export class MapElementPoint extends MapElement
     }
 
     public resolution_changed_scale(scale :number) :void {
-        this.scale.multiplyScalar(scale); // * all_elements_scale); // / this.scale.y);
+        this.scale.multiplyScalar(scale);
     }
 
     public for_intersect() :THREE.Object3D {
@@ -483,19 +487,15 @@ export class MapElementLine extends MapElement
 export class MapElements extends AmvLevel1.MapElements
 {
     private pixels_per_unit :number; // store old value to speed up resolution_changed()
-    public static default_size :number = 20; // in pixels, multiplied by this._object_scale
+    public static default_size :number = 20; // in pixels
+    public static min_size :number = 5;      // in pixels
+    public static max_size :number = 0.2;    // proportion of widget size
 
-    protected scale_limits(widget :AmvLevel1.MapWidgetLevel1) :{min :number, max :number} {
-        var units_per_pixel = 1 / this.pixels_per_unit;
-        //console.log('scale_limits', widget.size(), widget.size() * units_per_pixel);
-        // return {min: 1.0 / (units_per_pixel * MapElements.default_size), max: widget.size() * units_per_pixel};
-        return {min: 1 / this.pixels_per_unit, max: widget.size() * units_per_pixel};
-    }
-
-    public resolution_changed(pixels_per_unit :number) :void {
+    public resolution_changed(pixels_per_unit :number, widget :AmvLevel1.Widget) :void {
         if (!this.pixels_per_unit) {
             this.pixels_per_unit = pixels_per_unit;
             this._scale = MapElements.default_size / pixels_per_unit;
+            this._scale_limits = new AmvLevel1.ScaleLimits(MapElements.min_size / pixels_per_unit, widget.size() * MapElements.max_size / pixels_per_unit);
             this.elements.map(o => o.resolution_changed_scale(this._scale));
         }
         this.elements.map(o => o.resolution_changed_scale(this.pixels_per_unit / pixels_per_unit));
@@ -642,7 +642,7 @@ export class Factory extends AmvLevel1.Factory
 //     private event_handlers :JQuery[] = [];
 //     private pixels_per_unit :number; // store old value to speed up resize()
 
-//     constructor(widget :AmvLevel1.MapWidgetLevel1) {
+//     constructor(widget :AmvLevel1.Widget) {
 //         super(widget);
 //         this._flip = false;
 //         this.event_handlers.push(widget.on("map-resolution-changed:amv", (pixels_per_unit) => this.map_resolution_changed(pixels_per_unit)));
