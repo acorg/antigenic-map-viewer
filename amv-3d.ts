@@ -205,6 +205,9 @@ export class MapElement extends AmvLevel1.MapElement
     public view_rotated(quaternion :THREE.Quaternion) :void {
     }
 
+    public resolution_constructed(pixels_per_unit :number) :void {
+    }
+
     public resolution_changed_scale(scale :number) :void {
     }
 

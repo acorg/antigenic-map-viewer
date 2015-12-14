@@ -97,10 +97,8 @@ export class Widget implements AntigenicMapViewer.TriggeringEvent
 
     private add_map_element(map_element :MapElement, attrs :MapElementAttributes) :MapElement {
         map_element.set_attributes(attrs.position, attrs.size || 1, attrs.aspect || 1, attrs.rotation || 0);
-        // perhaps keep a list of map elements of this kind (or list of ids?)
         this.add_to_scene(map_element);
         this.map_elements.add(map_element);
-        //map_element.set_id();
         return map_element;
     }
 
@@ -109,7 +107,6 @@ export class Widget implements AntigenicMapViewer.TriggeringEvent
         map_element.set_position(attrs.position[0]);
         this.add_to_scene(map_element);
         this.map_elements.add(map_element);
-        //map_element.set_id();
         return map_element;
     }
 
@@ -118,13 +115,9 @@ export class Widget implements AntigenicMapViewer.TriggeringEvent
         map_element.set_position(attrs.position[0]);
         this.add_to_scene(map_element);
         this.map_elements.add(map_element);
-        //map_element.set_id();
+        Amv.LOG('add_arrow ', map_element.id, map_element.scale.y);
         return map_element;
     }
-
-    // public find_map_element(map_element_id :MapElementId) :MapElement {
-    //     return <MapElement>this.scene.getObjectById(map_element_id);
-    // }
 
     public map_elements_flip(flip? :boolean) :boolean {
         if (flip !== undefined && flip !== null) {
@@ -343,6 +336,7 @@ export abstract class MapElement extends THREE.Object3D
     }
 
     public abstract resolution_changed_scale(scale :number) :void;
+    public abstract resolution_constructed(pixels_per_unit :number) :void;
 
     public aspect(aspect :number) :number {
         // scale.x and scale.z are affected by aspect

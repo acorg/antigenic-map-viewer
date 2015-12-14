@@ -412,6 +412,7 @@ export abstract class MapElement extends AmvLevel1.MapElement
 export class MapElementPoint extends MapElement
 {
     private _for_intersect : THREE.Object3D;
+    public static default_size :number = 20; // in pixels
 
     constructor(content :THREE.Object3D[]) {
         super(content);
@@ -432,6 +433,10 @@ export class MapElementPoint extends MapElement
         this.rotation.setFromQuaternion(quaternion)
     }
 
+    public resolution_constructed(pixels_per_unit :number) :void {
+        this.scale.multiplyScalar(MapElementPoint.default_size / pixels_per_unit);
+    }
+
     public resolution_changed_scale(scale :number) :void {
         this.scale.multiplyScalar(scale);
     }
@@ -444,7 +449,7 @@ export class MapElementPoint extends MapElement
 export class MapElementLine extends MapElement
 {
     private static _flip_matrix :THREE.Matrix4 = (new THREE.Matrix4()).scale(new THREE.Vector3(-1, 1, 1));
-    public static arrow_head_default_size :number = 1; // in pixels
+    public static arrow_head_default_size :number = 10; // in pixels
 
     private _arrow_head :THREE.Object3D;
 
@@ -470,10 +475,13 @@ export class MapElementLine extends MapElement
         // lines and arrows are not scalable
     }
 
+    public resolution_constructed(pixels_per_unit :number) :void {
+        this._arrow_head && this._arrow_head.scale.multiplyScalar(MapElementPoint.default_size / pixels_per_unit);
+    }
+
     public resolution_changed_scale(scale :number) :void {
-        if (this._arrow_head !== null && this._arrow_head !== undefined) {
-            this._arrow_head.scale.multiplyScalar(scale * MapElementLine.arrow_head_default_size / this._arrow_head.scale.y);
-            // console.log('resolution_changed_scale', scale, this._arrow_head.scale.x, this._arrow_head.scale.y);
+        if (!!this._arrow_head) {
+            this._arrow_head.scale.multiplyScalar(scale);
         }
     }
 
@@ -487,16 +495,16 @@ export class MapElementLine extends MapElement
 export class MapElements extends AmvLevel1.MapElements
 {
     private pixels_per_unit :number; // store old value to speed up resolution_changed()
-    public static default_size :number = 20; // in pixels
     public static min_size :number = 5;      // in pixels
     public static max_size :number = 0.2;    // proportion of widget size
 
     public resolution_changed(pixels_per_unit :number, widget :AmvLevel1.Widget) :void {
         if (!this.pixels_per_unit) {
             this.pixels_per_unit = pixels_per_unit;
-            this._scale = MapElements.default_size / pixels_per_unit;
-            this._scale_limits = new AmvLevel1.ScaleLimits(MapElements.min_size / pixels_per_unit, widget.size() * MapElements.max_size / pixels_per_unit);
-            this.elements.map(o => o.resolution_changed_scale(this._scale));
+            this._scale = 1 / pixels_per_unit;
+            this._scale_limits = new AmvLevel1.ScaleLimits(MapElements.min_size / pixels_per_unit / MapElementPoint.default_size,
+                                                           widget.size() * MapElements.max_size / pixels_per_unit / MapElementPoint.default_size);
+            this.elements.map(o => o.resolution_constructed(pixels_per_unit));
         }
         this.elements.map(o => o.resolution_changed_scale(this.pixels_per_unit / pixels_per_unit));
         this.pixels_per_unit = pixels_per_unit;
@@ -542,26 +550,25 @@ export class Factory extends AmvLevel1.Factory
 
     public line(other_end :Position, color :Color, width :number) :MapElement
     {
-        var line_shape = new THREE.Shape();
-        line_shape.moveTo(0, 0)
-        line_shape.lineTo(other_end[0], - other_end[1])
-        return new MapElementLine({line: new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width))});
+        return new MapElementLine({line: this._line(other_end, color, width)});
     }
 
     public arrow(other_end :Position, color :Color, width :number, arrow_length :number) :MapElement
     {
+        return new MapElementLine({arrow_head: this._arrow_head(other_end, color, arrow_length), line: this._line(other_end, color, width)});
+    }
+
+    private _line(other_end :Position, color :Color, width :number) :THREE.Line {
+        var line_shape = new THREE.Shape();
+        line_shape.moveTo(0, 0);
+        line_shape.lineTo(other_end[0], - other_end[1]);
+        return new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width));
+    }
+
+    private _arrow_head(other_end :Position, color :Color, arrow_length :number) :THREE.Mesh {
         const awid = arrow_length / 2;
         var sign = other_end[0] < 0 ? 1.0 : -1.0;
         var angle = Math.abs(other_end[0]) < 1e-10 ? -PI_2 : Math.atan(- other_end[1] / other_end[0]);
-        // middle of the bottom of the arrow head
-        var x2 = other_end[0]; // + sign * arrow_length * Math.cos(angle) * 0.1;
-        var y2 = - other_end[1]; // + sign * arrow_length * Math.sin(angle) * 0.1;
-
-        var line_shape = new THREE.Shape();
-        line_shape.moveTo(0, 0);
-        line_shape.lineTo(x2, y2);
-        var arrow_line = new THREE.Line(line_shape.createPointsGeometry(null), this.outline_material(color, width));
-
         var arrow_bottom_middle = [sign * arrow_length * Math.cos(angle), sign * arrow_length * Math.sin(angle)];
         var arrow_bottom = [arrow_bottom_middle[0] + sign * awid * Math.cos(angle + PI_2) * 0.5, arrow_bottom_middle[1] + sign * awid * Math.sin(angle + PI_2) * 0.5,
                             arrow_bottom_middle[0] + sign * awid * Math.cos(angle - PI_2) * 0.5, arrow_bottom_middle[1] + sign * awid * Math.sin(angle - PI_2) * 0.5];
@@ -571,8 +578,7 @@ export class Factory extends AmvLevel1.Factory
         arrow_shape.lineTo(arrow_bottom[2], arrow_bottom[3]);
         var arrow_head = new THREE.Mesh(new THREE.ShapeGeometry(arrow_shape), this.fill_material(color, THREE.DoubleSide));
         arrow_head.position.set(other_end[0], - other_end[1], 0);
-
-        return new MapElementLine({arrow_head: arrow_head, line: arrow_line});
+        return arrow_head;
     }
 
     private make_geometries() :void
