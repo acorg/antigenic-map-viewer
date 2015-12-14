@@ -31,7 +31,7 @@ export class Application
                 widget1.map.add_line({position: [[1, -0.5, 0], [2, -0.5, 0]], width: 10, color: "yellow"});
                 widget1.map.add_line({position: [[1, -0.5, 0], [2, 0.5, 0]], width: 10, color: "yellow"});
 
-                widget1.map.viewer.viewport({cx: 0, cy: 0, size: 5});
+                widget1.map.viewer.viewport_init({cx: 0, cy: 0, size: 5});
 
                 widget1.map.on("hover:amv", function (data :THREE.Object3D[]) {
                     console.log('Hover', JSON.stringify(data.map(function(e :THREE.Object3D) { return e.id; })));

@@ -60,14 +60,14 @@ export class Viewer extends AmvLevel1.Viewer
     // public static camera_up = new THREE.Vector3(0, 1, 0);
 
     private grid :Grid;
-    private viewport_initial :Viewport; // for reset
+    private _viewport_initial :Viewport; // for reset
     private _pixels_per_unit :number;   // map resolution on screen
     private _initial_transformation :Transformation;
     private controls :any = {}; // {string: AmvManipulator2d.Control}
 
     constructor(widget :AmvLevel1.Widget) {
         super(widget);
-        this.viewport_initial = null;
+        this._viewport_initial = null;
         this.camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0, DrawingOrderNS.maximum + 2);
         widget.add_to_scene(this.camera);
         this.grid = new Grid(this, 0);
@@ -96,7 +96,9 @@ export class Viewer extends AmvLevel1.Viewer
         super.reset();
         this.camera.up.copy(Viewer.camera_up);
         this.camera.position.set(0, 0, DrawingOrderNS.maximum + 1);
-        this.viewport(this.viewport_initial);
+        if (!!this._viewport_initial) {
+            this.viewport_set(this._viewport_initial);
+        }
         if (!!this._initial_transformation) {
             this.transform(this._initial_transformation);
         }
@@ -106,18 +108,15 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera_update();
     }
 
-    public viewport(viewport? :Viewport, grid_full_reset :boolean = false) :Viewport {
+    // ----------------------------------------------------------------------
+
+    public viewport_init(viewport :Viewport) :void {
+        this.viewport_set(viewport);
+        this._viewport_initial = $.extend({}, viewport);
+    }
+
+    public viewport() :Viewport {
         var camera = <THREE.OrthographicCamera>this.camera;
-        if (viewport) {
-            var hsize = (viewport.size ? viewport.size : (camera.right - camera.left)) / 2;
-            camera.left = viewport.cx - hsize;
-            camera.right = viewport.cx + hsize;
-            camera.top = viewport.cy + hsize;
-            camera.bottom = viewport.cy - hsize;
-            camera.updateProjectionMatrix();
-            this.grid.reset(grid_full_reset);
-            this.update_resolution();
-        }
         return {cx: (camera.left + camera.right) / 2, cy: (camera.bottom + camera.top) / 2, size: camera.right - camera.left};
     }
 
@@ -131,7 +130,7 @@ export class Viewer extends AmvLevel1.Viewer
         this.camera.up.applyQuaternion(quaternion).normalize();
         this.camera_update();
         var tr = this._translation_for_m4().applyQuaternion(quaternion.inverse());
-        this.viewport({cx: tr.x, cy: tr.y}, true);
+        this.viewport_set({cx: tr.x, cy: tr.y}, true);
         this.widget.map_elements_view_rotated();
     }
 
@@ -139,7 +138,7 @@ export class Viewer extends AmvLevel1.Viewer
         var viewport = this.viewport();
         if ((factor < 1 && viewport.size > 1) || (factor > 1 && viewport.size < 100)) {
             viewport.size *= factor;
-            this.viewport(viewport);
+            this.viewport_set(viewport);
         }
     }
 
@@ -155,8 +154,22 @@ export class Viewer extends AmvLevel1.Viewer
 
     public viewport_move_to(new_center :THREE.Vector3, grid_full_reset :boolean = false) :void {
         var camera = <THREE.OrthographicCamera>this.camera;
-        this.viewport({cx: new_center.x, cy: new_center.y, size: camera.right - camera.left}, grid_full_reset);
+        this.viewport_set({cx: new_center.x, cy: new_center.y, size: camera.right - camera.left}, grid_full_reset);
     }
+
+    protected viewport_set(viewport :Viewport, grid_full_reset :boolean = false) :void {
+        var camera = <THREE.OrthographicCamera>this.camera;
+        var hsize = (viewport.size ? viewport.size : (camera.right - camera.left)) / 2;
+        camera.left = viewport.cx - hsize;
+        camera.right = viewport.cx + hsize;
+        camera.top = viewport.cy + hsize;
+        camera.bottom = viewport.cy - hsize;
+        camera.updateProjectionMatrix();
+        this.grid.reset(grid_full_reset);
+        this.update_resolution();
+    }
+
+    // ----------------------------------------------------------------------
 
     private update_resolution(widget_size? :number) :void {
         if (!widget_size) {
@@ -228,13 +241,13 @@ export class Viewer extends AmvLevel1.Viewer
 
     public objects_updated() :void {
         super.objects_updated();
-        // if (!this.viewport_initial) {
+        // if (!this._viewport_initial) {
         //     var objects_viewport = (<Objects>this.widget.objects).viewport();
         //     if (!objects_viewport) {
         //         var center = this.widget.objects.center();
         //         objects_viewport = {cx: center.x, cy: center.y, size: Math.ceil(this.widget.objects.diameter() + 0.5)};
         //     }
-        //     this.viewport_initial = this.viewport(objects_viewport);
+        //     this._viewport_initial = this.viewport(objects_viewport);
         // }
         // else {
         //     this.grid.reset(false);
@@ -502,6 +515,7 @@ export class MapElements extends AmvLevel1.MapElements
         if (!this.pixels_per_unit) {
             this.pixels_per_unit = pixels_per_unit;
             this._scale = 1 / pixels_per_unit;
+            this._reset_scale = this._scale;
             this._scale_limits = new AmvLevel1.ScaleLimits(MapElements.min_size / pixels_per_unit / MapElementPoint.default_size,
                                                            widget.size() * MapElements.max_size / pixels_per_unit / MapElementPoint.default_size);
             this.elements.map(o => o.resolution_constructed(pixels_per_unit));

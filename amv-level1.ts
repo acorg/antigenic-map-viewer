@@ -115,7 +115,6 @@ export class Widget implements AntigenicMapViewer.TriggeringEvent
         map_element.set_position(attrs.position[0]);
         this.add_to_scene(map_element);
         this.map_elements.add(map_element);
-        Amv.LOG('add_arrow ', map_element.id, map_element.scale.y);
         return map_element;
     }
 
@@ -134,7 +133,7 @@ export class Widget implements AntigenicMapViewer.TriggeringEvent
     }
 
     public map_elements_scale(scale :number) :void {
-        this.map_elements.scale(scale, this);
+        this.map_elements.scale(scale);
     }
 
     public map_elements_resolution_changed(resolution :number) :void {
@@ -143,7 +142,7 @@ export class Widget implements AntigenicMapViewer.TriggeringEvent
 
     public map_elements_reset() :void {
         $.when(this.viewer_created).done(() => {
-            this.map_elements.reset(this);
+            this.map_elements.reset();
         });
     }
 
@@ -182,12 +181,6 @@ export class Widget implements AntigenicMapViewer.TriggeringEvent
             // this.viewer.trigger(event, data);
         });
     }
-
-    // public reset_objects() :void {
-    //     if (this.objects) {
-    //         this.objects.reset();
-    //     }
-    // }
 
     // in pixels
     public size(size? :number) :number {
@@ -362,7 +355,8 @@ export abstract class MapElements
     private _flip :boolean = false;
     private _center :THREE.Vector3;
     private _diameter :number;
-    protected _scale :number = 1.0;     // keep current scale to be able to reset
+    protected _scale :number = 1.0;     // scale of all elements (when re-scaled)
+    protected _reset_scale :number = 1.0;     // keep current scale to be able to reset
     private _for_intersect :THREE.Object3D[] = [];
     protected _scale_limits :ScaleLimits;
 
@@ -370,11 +364,9 @@ export abstract class MapElements
         this.elements.forEach((o) => o.destroy());
     }
 
-    public reset(widget :Widget) :void {
+    public reset() :void {
         this.flip(false);
-        if (this._scale !== 1.0) {
-            this.scale(1.0 / this._scale, widget);
-        }
+        this.scale(this._reset_scale / this._scale);
     }
 
     public add(map_element :MapElement) :void {
@@ -405,11 +397,13 @@ export abstract class MapElements
         this.elements.map(o => o.view_rotated(quaternion));
     }
 
-    public scale(factor :number, widget :Widget) :void {
-        const new_scale = this._scale_limits.fix(this._scale * factor);
-        factor = new_scale / this._scale;
-        this._scale = new_scale;
-        this.elements.map(o => o.rescale(factor));
+    public scale(factor :number) :void {
+        if (!!this._scale_limits) {
+            const new_scale = this._scale_limits.fix(this._scale * factor);
+            factor = new_scale / this._scale;
+            this._scale = new_scale;
+            this.elements.map(o => o.rescale(factor));
+        }
     }
 
     public abstract resolution_changed(pixels_per_unit :number, widget :Widget) :void;
