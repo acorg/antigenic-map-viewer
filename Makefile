@@ -47,7 +47,6 @@ PKG_CONFIG_PATH = $(firstword $(subst :, ,$(shell pkg-config --variable pc_path 
 
 # ----------------------------------------------------------------------
 
-BUILD = build
 DIST = dist
 
 all: $(TARGET_JS) $(TARGET_CSS) $(TARGET_HTML) $(DIST)/images
@@ -74,9 +73,6 @@ clean:
 RELPATH = $(shell python -c "import os, sys; sys.stdout.write(os.path.relpath('${1}', '${2}'))")
 
 # ----------------------------------------------------------------------
-
-# $(BUILD)/typings-references.ts: typings-references.ts.in | $(BUILD)
-#	sed 's/{TYPINGS-DIR}/$(subst /,\/,$(TYPINGS_DIR))/g' $< >$@
 
 $(DIST)/%.js: %.ts | $(DIST) $(LIB_JS)
 	$(TSC_RUN) -m amd --removeComments -t ES5 --lib DOM,ES5,ScriptHost,ES2015.Iterable --noEmitOnError --noImplicitAny --outDir $(DIST) $<
@@ -113,9 +109,6 @@ $(DIST)/images: external/images | $(DIST)
 
 $(DIST):
 	$(call make_target_dir,$(DIST),DIST)
-
-$(BUILD):
-	$(call make_target_dir,$(BUILD),BUILD)
 
 define make_target_dir
   @if [ -z "$(1)" ]; then echo $(2) is not set >&2; exit 1; fi
