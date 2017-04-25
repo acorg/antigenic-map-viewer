@@ -78,7 +78,7 @@ RELPATH = $(shell python -c "import os, sys; sys.stdout.write(os.path.relpath('$
 # $(BUILD)/typings-references.ts: typings-references.ts.in | $(BUILD)
 #	sed 's/{TYPINGS-DIR}/$(subst /,\/,$(TYPINGS_DIR))/g' $< >$@
 
-$(DIST)/%.js: %.ts | $(TSC) $(DIST) $(LIB_JS)
+$(DIST)/%.js: %.ts | $(DIST) $(LIB_JS)
 	$(TSC_RUN) -m amd --removeComments -t ES5 --lib DOM,ES5,ScriptHost,ES2015.Iterable --noEmitOnError --noImplicitAny --outDir $(DIST) $<
 
 $(DIST)/%.js: %.js | $(DIST)
@@ -93,7 +93,7 @@ $(DIST)/%.js: fonts/%.js | $(DIST)
 $(DIST)/%.json: %.json | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@
 
-$(DIST)/%.css: %.less $(AMV_LESS) | $(DIST) $(LESSC)
+$(DIST)/%.css: %.less $(AMV_LESS) | $(DIST)
 	$(LESSC) $< $@
 
 # Have to copy html to dist, Firefox does not like symbolic links
