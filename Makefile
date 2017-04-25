@@ -66,7 +66,7 @@ install: all
 	/usr/bin/install -vC -m 0644 $(INSTALL_FILES) $(AMV_TYPINGS) $(ANTIGENIC_MAP_VIEWER_INSTALL)
 
 clean:
-	rm -rf $(DIST) $(BUILD)
+	rm -rf $(DIST)
 
 # ----------------------------------------------------------------------
 
