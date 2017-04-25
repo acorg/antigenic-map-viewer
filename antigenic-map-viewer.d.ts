@@ -1,10 +1,12 @@
 // Type definitions for acmacs-plot-data module
 
-declare module AntigenicMapViewer {
+/// <reference path="external/jquery" />
+
+//declare module AntigenicMapViewer {
 
 // ----------------------------------------------------------------------
 
-    interface PlotDataInterface
+export interface PlotDataInterface
     {
         version :number;
         diameter? :number[];
@@ -18,9 +20,9 @@ declare module AntigenicMapViewer {
         transformation? :PlotDataTransformation; //  [[1.0, 0.0], [0.0, 1.0]]
     }
 
-    type PlotDataLayout = number[][];
+export type PlotDataLayout = number[][];
 
-    type PlotDataTransformation = [[number, number], [number, number]];
+export type PlotDataTransformation = [[number, number], [number, number]];
 
     interface PlotDataStyles
     {
@@ -123,4 +125,6 @@ declare module AntigenicMapViewer {
 
 // ----------------------------------------------------------------------
 
-} // module AntigenicMapViewer
+//} // module AntigenicMapViewer
+
+export as namespace AntigenicMapViewer;

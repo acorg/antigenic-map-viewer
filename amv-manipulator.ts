@@ -1,7 +1,5 @@
 "use strict";
 
-import TypingsReferences = require("build/typings-references");
-
 import AmvLevel1 = require("amv-level1");
 
 // ----------------------------------------------------------------------

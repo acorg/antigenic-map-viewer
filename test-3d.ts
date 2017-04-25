@@ -1,6 +1,8 @@
+/// <reference path="external/requirejs" />
+
 "use strict";
 
-import TypingsReferences = require("build/typings-references");
+import * as AntigenicMapViewer from "antigenic-map-viewer";
 
 // ----------------------------------------------------------------------
 

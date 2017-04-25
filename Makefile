@@ -21,18 +21,19 @@ AMV_LESS = acmacs-toolkit.less amv.less
 AMV_TYPINGS = antigenic-map-viewer.d.ts
 AMV_FONTS = fonts/helvetiker_regular.typeface.js fonts/helvetiker_bold.typeface.js
 
-LIB_JS = jquery jquery-ui three.js require.js
+EXTERNAL_JS = require.js jquery.js jquery.mousewheel.js jquery-ui.js three.js css.js json.js text.js
+EXTERNAL_CSS = jquery-ui.css
 
 AMV = $(AMV_LIB) $(AMV_TEST)
 
+TSC_RUN = $(shell which tsc || echo "/usr/bin/env PATH=$$HOME/c2r/bin:$$PATH tsc")
+LESSC = $(shell which lessc || echo "/usr/bin/env PATH=$$HOME/c2r/bin:$$PATH lessc")
+
 # ----------------------------------------------------------------------
 
-TARGET_JS = $(TS_TO_JS) $(patsubst %.js,$(DIST)/%.js,$(filter %.js,$(AMV))) $(patsubst %.json,$(DIST)/%.json,$(filter %.json,$(AMV))) $(patsubst fonts/%.js,$(DIST)/%.js,$(AMV_FONTS))
-  # $(patsubst %,$(DIST)/%.js,$(LIB_JS))
-TARGET_CSS = $(patsubst %.less,$(DIST)/%.css,$(filter %.less,$(AMV)))
+TARGET_JS = $(TS_TO_JS) $(patsubst %.js,$(DIST)/%.js,$(filter %.js,$(AMV))) $(patsubst %.json,$(DIST)/%.json,$(filter %.json,$(AMV))) $(patsubst fonts/%.js,$(DIST)/%.js,$(AMV_FONTS)) $(patsubst %.js,$(DIST)/%.js,$(EXTERNAL_JS))
+TARGET_CSS = $(patsubst %.less,$(DIST)/%.css,$(filter %.less,$(AMV))) $(patsubst %.css,$(DIST)/%.css,$(EXTERNAL_CSS))
 TARGET_HTML = $(patsubst %,$(DIST)/%,$(filter %.html,$(AMV)))
-
-# BUILD_TYPINGS = $(patsubst %,$(BUILD)/%.d.ts,$(LIB_TYPINGS)) $(AMV_TYPINGS)
 
 # ----------------------------------------------------------------------
 
@@ -49,25 +50,10 @@ PKG_CONFIG_PATH = $(firstword $(subst :, ,$(shell pkg-config --variable pc_path 
 BUILD = build
 DIST = dist
 
-all: $(TARGET_JS) $(TARGET_CSS) $(TARGET_HTML)
+all: $(TARGET_JS) $(TARGET_CSS) $(TARGET_HTML) $(DIST)/images
 	@#echo 'rebuilt  ' $?
 	@#echo 'all      ' $^
 	@#echo 'TARGET_JS' $(TARGET_JS)
-
-# ----------------------------------------------------------------------
-
-EUPA_MAKEFILE ?= eupa/Makefile.eupa
-EUPA_DIST ?= dist
-EUPA_BUILD ?= build
-
-ifeq ($(findstring clean,$(MAKECMDGOALS)),)
-ifeq ($(wildcard $(EUPA_MAKEFILE)),)
-  $(shell git clone https://github.com/skepner/eupa.git)
-endif
-include $(EUPA_MAKEFILE)
-endif
-
-TYPINGS_DIR = $(EUPA_BUILD)
 
 # ----------------------------------------------------------------------
 
@@ -81,10 +67,7 @@ install: all
 	/usr/bin/install -vC -m 0644 $(INSTALL_FILES) $(AMV_TYPINGS) $(ANTIGENIC_MAP_VIEWER_INSTALL)
 
 clean:
-	rm -rf $(DIST)
-
-distclean: clean
-	rm -rf $(BUILD) eupa
+	rm -rf $(DIST) $(BUILD)
 
 # ----------------------------------------------------------------------
 
@@ -92,11 +75,11 @@ RELPATH = $(shell python -c "import os, sys; sys.stdout.write(os.path.relpath('$
 
 # ----------------------------------------------------------------------
 
-$(BUILD)/typings-references.ts: typings-references.ts.in | $(BUILD)
-	sed 's/{TYPINGS-DIR}/$(subst /,\/,$(TYPINGS_DIR))/g' $< >$@
+# $(BUILD)/typings-references.ts: typings-references.ts.in | $(BUILD)
+#	sed 's/{TYPINGS-DIR}/$(subst /,\/,$(TYPINGS_DIR))/g' $< >$@
 
-$(DIST)/%.js: %.ts $(BUILD)/typings-references.ts | $(TSC) $(DIST) $(LIB_JS)
-	$(TSC_RUN) --outDir $(DIST) $<
+$(DIST)/%.js: %.ts | $(TSC) $(DIST) $(LIB_JS)
+	$(TSC_RUN) -m amd --removeComments -t ES5 --lib DOM,ES5,ScriptHost,ES2015.Iterable --noEmitOnError --noImplicitAny --outDir $(DIST) $<
 
 $(DIST)/%.js: %.js | $(DIST)
 	ln -s $(call RELPATH,$(dir $^),$(dir $@))/$^ $@
@@ -117,6 +100,15 @@ $(DIST)/%.css: %.less $(AMV_LESS) | $(DIST) $(LESSC)
 $(DIST)/%.html: %.html | $(DIST)
 	cp $^ $@
 
+$(DIST)/%.js: external/%.js | $(DIST)
+	ln -sf $(call RELPATH,$(dir $^),$(dir $@))/$(notdir $^) $@
+
+$(DIST)/%.css: external/%.css | $(DIST)
+	ln -sf $(call RELPATH,$(dir $^),$(dir $@))/$(notdir $^) $@
+
+$(DIST)/images: external/images | $(DIST)
+	ln -sf $(call RELPATH,$(dir $^),$(dir $@))/$(notdir $^) $@
+
 # ----------------------------------------------------------------------
 
 $(DIST):
@@ -124,3 +116,8 @@ $(DIST):
 
 $(BUILD):
 	$(call make_target_dir,$(BUILD),BUILD)
+
+define make_target_dir
+  @if [ -z "$(1)" ]; then echo $(2) is not set >&2; exit 1; fi
+  @if [ ! -d $(1) ]; then mkdir -p $(1); fi
+endef

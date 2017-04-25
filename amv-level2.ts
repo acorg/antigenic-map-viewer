@@ -1,6 +1,6 @@
 "use strict";
 
-import TypingsReferences = require("build/typings-references");
+import {JQueryUI} from "jqueryui";
 
 import AmvUtils = require("amv-utils");
 import AcmacsPlotData = require("acmacs-plot-data");

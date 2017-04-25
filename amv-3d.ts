@@ -1,9 +1,9 @@
 "use strict";
 
-import TypingsReferences = require("build/typings-references");
+import THREE = require("three");
 
 import AmvUtils = require("amv-utils");
-import AmvLevel1 = require("amv-level1");
+import * as AmvLevel1 from "amv-level1";
 import AmvManipulator = require("amv-manipulator");
 import AmvManipulator3d = require("amv-manipulator-3d");
 
@@ -171,7 +171,7 @@ class Grid
 
 // ----------------------------------------------------------------------
 
-export class Object extends AmvLevel1.Object
+export class ObjectL2 extends AmvLevel1.ObjectL1
 {
 }
 
@@ -209,8 +209,8 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
         this.ball_segments = 32;
     }
 
-    public make_object() :Object {
-        return new Object();
+    public make_object() :AmvLevel1.ObjectL1 {
+        return new ObjectL2();
     }
 
     // adds to this.geometries

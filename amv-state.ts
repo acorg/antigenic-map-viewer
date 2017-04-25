@@ -1,8 +1,6 @@
 "use strict";
 
-import TypingsReferences = require("build/typings-references");
-
-"use strict";
+import THREE = require("three");
 
 import AmvLevel1 = require("amv-level1");
 import Amv3d = require("amv-3d");
@@ -53,7 +51,7 @@ export function widget_restore(widget :AmvLevel1.MapWidgetLevel1, state :Antigen
 
 // ======================================================================
 
-function object_state(obj :AmvLevel1.Object) :AntigenicMapViewer.ObjectState
+function object_state(obj :AmvLevel1.ObjectL1) :AntigenicMapViewer.ObjectState
 {
     var body = obj.body;
     var material = body.material && (<THREE.MeshPhongMaterial>body.material);

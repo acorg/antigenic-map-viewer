@@ -4,7 +4,8 @@
 // Level 1 (the most inner) map widget
 // ----------------------------------------------------------------------
 
-import TypingsReferences = require("build/typings-references");
+import THREE = require("three");
+import * as AntigenicMapViewer from "antigenic-map-viewer";
 import AmvUtils = require("amv-utils");
 import Amv3d = require("amv-3d");
 import AmvManipulator = require("amv-manipulator");
@@ -279,7 +280,7 @@ export interface ObjectLabel
 
 // ----------------------------------------------------------------------
 
-export class Object extends THREE.Object3D
+export class ObjectL1 extends THREE.Object3D
 {
     public body :THREE.Mesh;
     public outline :THREE.Object3D;
@@ -352,7 +353,7 @@ export class Object extends THREE.Object3D
 
 export class Objects
 {
-    public objects :Object[];
+    public objects :ObjectL1[];
 
     private _center :THREE.Vector3;
     private _diameter :number;
@@ -474,7 +475,7 @@ export class ObjectFactory
         this.geometries = {};
     }
 
-    public make_object() :Object { // override in derived
+    public make_object() :ObjectL1 { // override in derived
         return null;
     }
 

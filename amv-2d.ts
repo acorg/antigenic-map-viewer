@@ -1,9 +1,11 @@
 "use strict";
 
-import TypingsReferences = require("build/typings-references");
+import THREE = require("three");
+
+import * as AntigenicMapViewer from "antigenic-map-viewer";
 
 import AmvUtils = require("amv-utils");
-import AmvLevel1 = require("amv-level1");
+import * as AmvLevel1 from "amv-level1";
 import AmvManipulator = require("amv-manipulator");
 import AmvManipulator2d = require("amv-manipulator-2d");
 
@@ -580,7 +582,7 @@ class LabelDiv implements AmvLevel1.ObjectLabel
 
 // ----------------------------------------------------------------------
 
-export class Object extends AmvLevel1.Object
+export class ObjectL2 extends AmvLevel1.ObjectL1
 {
     public destroy() {
         this.label && this.label.destroy();
@@ -758,8 +760,8 @@ export class ObjectFactory extends AmvLevel1.ObjectFactory
         this.outline_materials = {};
     }
 
-    public make_object() :Object {
-        return new Object();
+    public make_object() :AmvLevel1.ObjectL1 {
+        return new ObjectL2();
     }
 
     public make_outline(shape :string, outline_width :number, outline_color :any) :THREE.Object3D {

@@ -1,6 +1,7 @@
-"use strict";
+/// <reference path="external/requirejs" />
+/// <reference path="external/jquery" />
 
-import TypingsReferences = require("build/typings-references");
+"use strict";
 
 // ----------------------------------------------------------------------
 

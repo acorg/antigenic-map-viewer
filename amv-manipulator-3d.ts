@@ -1,8 +1,8 @@
 "use strict";
 
-import TypingsReferences = require("build/typings-references");
+import THREE = require("three");
 
-import AmvLevel1 = require("amv-level1");
+import * as AmvLevel1 from "amv-level1";
 import AmvManipulator = require("amv-manipulator");
 import Amv3d = require("amv-3d");
 
