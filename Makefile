@@ -21,7 +21,7 @@ AMV_LESS = acmacs-toolkit.less amv.less
 AMV_TYPINGS = antigenic-map-viewer.d.ts
 AMV_FONTS = fonts/helvetiker_regular.typeface.js fonts/helvetiker_bold.typeface.js
 
-EXTERNAL_JS = require.js jquery.js jquery.mousewheel.js jquery-ui.js three.js css.js json.js text.js
+EXTERNAL_JS = require.js jquery.js jquery.mousewheel.js jquery-ui.js three.js css.js json.js text.js md5.js
 EXTERNAL_CSS = jquery-ui.css
 
 AMV = $(AMV_LIB) $(AMV_TEST)
