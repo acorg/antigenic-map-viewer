@@ -268,14 +268,17 @@ export class ObjectStyle
         var mesh :THREE.Mesh = null;
         // console.log('make', this.shape, this.shown, JSON.stringify(this.plot_style));
         // if (this.shown) {
-        mesh = this.factory.make_mesh(this.plot_style.aspect, this.plot_style.shape || "circle", this.plot_style.fill_color);
+        mesh = this.factory.make_mesh(this.plot_style.aspect, this.plot_style.shape || "circle",
+                                      this.plot_style.fill_color || "transparent");
         mesh.scale.multiplyScalar(this.plot_style.size)
         // }
         return mesh
     }
 
     public make_outline() :THREE.Object3D {
-        return this.factory.make_outline(this.plot_style.shape || "circle", this.plot_style.outline_width, this.plot_style.outline_color);
+        return this.factory.make_outline(this.plot_style.shape || "circle",
+                                         (this.plot_style.outline_width !== null && this.plot_style.outline_width !== undefined) ? this.plot_style.outline_width : 1.0,
+                                         this.plot_style.outline_color || "black");
     }
 
     public make_label(widget :AmvLevel1.MapWidgetLevel1) :AmvLevel1.ObjectLabel {
